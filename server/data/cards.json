@@ -1,0 +1,80 @@
+[
+  {
+    "id": "char_001",
+    "name": "불꽃의 견습검사",
+    "series": "flame_academy",
+    "type": "character",
+    "cost": 3,
+    "atk": 3,
+    "hp": 4,
+    "synergyTags": ["fire", "academy"],
+    "effects": {
+      "battlecry": "placeholder_draw_card",
+      "passive": null
+    }
+  },
+  {
+    "id": "char_002",
+    "name": "얼음호수의 정령사",
+    "series": "frost_lake",
+    "type": "character",
+    "cost": 2,
+    "atk": 1,
+    "hp": 3,
+    "synergyTags": ["ice", "spirit"],
+    "effects": {
+      "battlecry": "placeholder_freeze_enemy",
+      "passive": null
+    }
+  },
+  {
+    "id": "char_003",
+    "name": "번개송곳니 늑대전사",
+    "series": "thunder_tribe",
+    "type": "character",
+    "cost": 5,
+    "atk": 6,
+    "hp": 5,
+    "synergyTags": ["lightning", "beast"],
+    "effects": {
+      "battlecry": null,
+      "passive": "placeholder_charge"
+    }
+  },
+  {
+    "id": "spell_001",
+    "name": "필살! 유성태클",
+    "series": "flame_academy",
+    "type": "spell",
+    "cost": 4,
+    "synergyTags": ["fire"],
+    "effects": {
+      "onCast": "placeholder_deal_damage",
+      "passive": null
+    }
+  },
+  {
+    "id": "spell_002",
+    "name": "정령의 가호",
+    "series": "frost_lake",
+    "type": "spell",
+    "cost": 1,
+    "synergyTags": ["ice", "spirit"],
+    "effects": {
+      "onCast": "placeholder_heal",
+      "passive": null
+    }
+  },
+  {
+    "id": "equip_001",
+    "name": "뇌명의 건틀릿",
+    "series": "thunder_tribe",
+    "type": "equipment",
+    "cost": 2,
+    "synergyTags": ["lightning"],
+    "effects": {
+      "onEquip": "placeholder_buff_atk",
+      "passive": null
+    }
+  }
+]

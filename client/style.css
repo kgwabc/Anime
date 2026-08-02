@@ -1,0 +1,106 @@
+* {
+  box-sizing: border-box;
+  font-family: "Malgun Gothic", sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #1b1f2a;
+  color: #f0f0f0;
+  min-height: 100vh;
+}
+
+.screen {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.hidden {
+  display: none;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background: #4f8cff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #3a72e0;
+}
+
+.player-area {
+  background: #262b3a;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #c9d2e3;
+}
+
+.board {
+  display: flex;
+  gap: 8px;
+  min-height: 90px;
+  padding: 8px;
+  background: #1b1f2a;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+.hand {
+  display: flex;
+  gap: 8px;
+  min-height: 110px;
+  padding: 8px;
+  flex-wrap: wrap;
+}
+
+.card {
+  width: 90px;
+  height: 120px;
+  background: #34405c;
+  border: 2px solid #4f8cff;
+  border-radius: 8px;
+  padding: 6px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.card:hover {
+  border-color: #ffd24f;
+}
+
+.card .name {
+  font-weight: bold;
+}
+
+.card .cost {
+  color: #ffd24f;
+}
+
+.card .atk-hp {
+  display: flex;
+  justify-content: space-between;
+}
+
+#turn-indicator {
+  text-align: center;
+  padding: 8px;
+  font-weight: bold;
+  color: #ffd24f;
+}

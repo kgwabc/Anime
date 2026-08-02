@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>크로스오버 카드게임 (뼈대)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="screen-lobby" class="screen">
+    <h1>크로스오버 카드게임</h1>
+    <button id="btn-join-queue">매칭 시작</button>
+    <p id="lobby-status"></p>
+  </div>
+
+  <div id="screen-waiting" class="screen hidden">
+    <h2>상대를 찾는 중...</h2>
+  </div>
+
+  <div id="screen-game" class="screen hidden">
+    <div id="opponent-area" class="player-area">
+      <h3>상대</h3>
+      <div class="stats">
+        <span>HP: <span id="opp-hp">-</span></span>
+        <span>마나: <span id="opp-mana">-</span>/<span id="opp-max-mana">-</span></span>
+        <span>손패: <span id="opp-hand-count">-</span>장</span>
+        <span>덱: <span id="opp-deck-count">-</span>장</span>
+      </div>
+      <div id="opp-board" class="board"></div>
+    </div>
+
+    <div id="turn-indicator"></div>
+
+    <div id="my-area" class="player-area">
+      <h3>나</h3>
+      <div class="stats">
+        <span>HP: <span id="my-hp">-</span></span>
+        <span>마나: <span id="my-mana">-</span>/<span id="my-max-mana">-</span></span>
+        <span>덱: <span id="my-deck-count">-</span>장</span>
+      </div>
+      <div id="my-board" class="board"></div>
+      <div id="my-hand" class="hand"></div>
+      <button id="btn-end-turn">턴 종료</button>
+    </div>
+  </div>
+
+  <div id="screen-result" class="screen hidden">
+    <h2 id="result-text"></h2>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
