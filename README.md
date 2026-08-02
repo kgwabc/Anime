@@ -18,15 +18,14 @@ npm start
 같은 페이지를 탭 2개(또는 시크릿 창)로 열고 각각 "매칭 시작"을 누르면 서로 매칭됩니다.
 
 ## 배포
-### 서버 (Render 무료 플랜)
-1. 이 저장소를 GitHub에 푸시
-2. Render에서 New Web Service → 이 repo 연결, Root Directory를 `server`로 설정
-3. Build Command: `npm install`, Start Command: `npm start`
-4. 배포 후 발급되는 URL(`https://xxx.onrender.com`)을 클라이언트 `SERVER_URL`에 반영
+### 서버 (Render 무료 플랜) — 배포 완료
+- 저장소: https://github.com/kgwabc/Anime (Root Directory: `server`)
+- Build Command: `npm install`, Start Command: `npm start`
+- 배포 URL: https://animepsykongroo.onrender.com
 
 ### 클라이언트 (Vercel 무료 플랜)
 1. `client` 폴더를 Vercel에 정적 사이트로 배포 (Root Directory: `client`)
-2. `client/main.js`의 `SERVER_URL`을 Render 서버 URL로 교체 후 재배포
+2. `client/main.js`의 `SERVER_URL`은 이미 위 Render URL로 설정되어 있음
 
 ## 알려진 제약사항
 - **Render 무료 플랜은 일정 시간 미사용시 슬립되며, 재시작되면 서버 메모리에 있던 매칭 큐/

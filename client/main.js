@@ -1,5 +1,4 @@
-// 배포시 Render 서버 URL로 교체 (예: "https://your-app.onrender.com")
-const SERVER_URL = "http://localhost:3001";
+const SERVER_URL = "https://animepsykongroo.onrender.com";
 
 const socket = io(SERVER_URL);
 
