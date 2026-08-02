@@ -21,8 +21,12 @@
   URL이 바뀌면 이 값도 같이 갱신하고 재배포해야 함.
 
 ## 인증 시스템
-- 이메일+비밀번호 자체 구현 (bcrypt 해싱 + JWT). 계정은 MongoDB Atlas에 저장
-  (`server/models/User.js`).
+- 이메일+비밀번호 자체 구현 (bcrypt 해싱 + JWT). 계정은 **Turso(libSQL, SQLite 기반)**의
+  `users` 테이블에 저장 (`server/db.js`가 테이블 생성, `server/models/User.js`가 쿼리 함수).
+  - MongoDB Atlas로 시작했다가 사용자가 이미 Turso 경험이 있어서 전환함. 향후 덱/매치기록/
+    랭킹처럼 관계형 데이터가 늘어날 걸 감안해도 SQL(Turso) 쪽이 더 적합하다고 판단.
+  - 로컬 개발/테스트는 실제 Turso 계정 없이 `TURSO_DATABASE_URL=file:local.db`로 대체 가능
+    (libSQL 클라이언트가 로컬 SQLite 파일도 지원함).
 - `server/auth/authRoutes.js` — REST: `POST /auth/signup`, `POST /auth/login`
 - `server/auth/socketAuth.js` — `io.use()` 미들웨어로 소켓 연결 자체를 JWT로 게이트.
   클라이언트는 `io(url, { auth: { token } })` 형태로 연결해야 함, 토큰 없거나 유효하지
@@ -31,7 +35,8 @@
   인증은 그 위에 얹은 게이트일 뿐, 로그인한 유저의 `username`만 `GameRoom`에 전달해 표시용으로 씀.
 - 클라이언트(`client/main.js`)는 로그인 성공시 JWT를 `localStorage`에 저장해 재접속시
   자동 로그인 처리.
-- Render에 배포하려면 `MONGODB_URI`, `JWT_SECRET` 환경변수가 필수 (README 참고).
+- Render에 배포하려면 `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `JWT_SECRET` 환경변수가 필수
+  (README 참고).
 
 ## 알려진 제약사항
 - Render 무료 플랜은 15분 미사용시 슬립 → 재시작시 인메모리 매칭 큐/진행중 매치 상태 유실

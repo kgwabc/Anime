@@ -1,10 +1,27 @@
-const mongoose = require("mongoose");
+const { getClient } = require("../db");
 
-const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true, trim: true },
-  email: { type: String, required: true, unique: true, trim: true, lowercase: true },
-  passwordHash: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-});
+async function findUserByEmailOrUsername(email, username) {
+  const result = await getClient().execute({
+    sql: "SELECT * FROM users WHERE email = ? OR username = ? LIMIT 1",
+    args: [email.toLowerCase(), username],
+  });
+  return result.rows[0] || null;
+}
 
-module.exports = mongoose.model("User", userSchema);
+async function findUserByEmail(email) {
+  const result = await getClient().execute({
+    sql: "SELECT * FROM users WHERE email = ? LIMIT 1",
+    args: [email.toLowerCase()],
+  });
+  return result.rows[0] || null;
+}
+
+async function createUser({ username, email, passwordHash }) {
+  const result = await getClient().execute({
+    sql: "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?) RETURNING id, username, email",
+    args: [username, email.toLowerCase(), passwordHash],
+  });
+  return result.rows[0];
+}
+
+module.exports = { findUserByEmailOrUsername, findUserByEmail, createUser };

@@ -1,12 +1,33 @@
-const mongoose = require("mongoose");
+const { createClient } = require("@libsql/client");
 
-async function connectDB() {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    throw new Error("MONGODB_URI is not set");
+let client;
+
+function getClient() {
+  if (!client) {
+    const url = process.env.TURSO_DATABASE_URL;
+    if (!url) {
+      throw new Error("TURSO_DATABASE_URL is not set");
+    }
+    client = createClient({
+      url,
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    });
   }
-  await mongoose.connect(uri);
-  console.log("MongoDB connected");
+  return client;
 }
 
-module.exports = { connectDB };
+async function connectDB() {
+  const db = getClient();
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL UNIQUE,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  console.log("Turso connected");
+}
+
+module.exports = { connectDB, getClient };

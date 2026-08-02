@@ -12,16 +12,17 @@
 - `client/` — 정적 HTML/JS/CSS 클라이언트 (Vercel 배포 대상)
 
 ## 회원가입/로그인
-게임 시작 전에 이메일/비밀번호로 회원가입 또는 로그인해야 합니다 (JWT 기반, MongoDB Atlas에
+게임 시작 전에 이메일/비밀번호로 회원가입 또는 로그인해야 합니다 (JWT 기반, Turso(libSQL)에
 계정 저장). 로그인 토큰은 브라우저 `localStorage`에 저장되어 재접속시 자동 로그인됩니다.
 
 ## 로컬 실행
 ```bash
 cd server
 npm install
-cp .env.example .env   # MONGODB_URI, JWT_SECRET 값을 채워넣기
+cp .env.example .env   # TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, JWT_SECRET 값을 채워넣기
+                        # (Turso 계정 없이 테스트만 하려면 TURSO_DATABASE_URL=file:local.db 로도 가능)
 npm start
-# -> MongoDB connected
+# -> Turso connected
 # -> Crossover TCG server listening on port 3001
 ```
 그 다음 `client/index.html`을 브라우저에서 직접 열거나 정적 서버로 서빙합니다.
@@ -33,8 +34,8 @@ npm start
 - 저장소: https://github.com/kgwabc/Anime (Root Directory: `server`)
 - Build Command: `npm install`, Start Command: `npm start`
 - 배포 URL: https://animepsykongroo.onrender.com
-- **필요한 환경변수** (Render 대시보드 → Environment): `MONGODB_URI`, `JWT_SECRET`
-  (MongoDB Atlas 무료 클러스터의 연결 문자열과, 임의의 긴 랜덤 문자열)
+- **필요한 환경변수** (Render 대시보드 → Environment): `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `JWT_SECRET`
+  (Turso 무료 DB의 연결 URL/인증 토큰과, 임의의 긴 랜덤 문자열)
 
 ### 클라이언트 (Vercel 무료 플랜) — 배포 완료
 - 저장소: https://github.com/kgwabc/Anime (Root Directory: `client`)
@@ -45,8 +46,8 @@ npm start
 - **Render 무료 플랜은 일정 시간 미사용시 슬립되며, 재시작되면 서버 메모리에 있던 매칭 큐/
   진행중인 매치 상태가 초기화**됩니다. 카드 정의 데이터(`server/data/cards.json`)는 코드에
   포함되어 있어 재시작해도 항상 동일하게 로드되므로 문제 없지만, 게임 도중 서버가 재시작되면
-  그 매치는 유실됩니다. MVP 단계에서는 감수하는 제약이며, 필요시 무료 DB(Supabase 등) 연동이나
-  클라이언트 재연결 로직으로 개선할 수 있습니다.
+  그 매치는 유실됩니다. MVP 단계에서는 감수하는 제약이며 (계정 정보는 Turso에 영속 저장되므로
+  영향 없음), 필요시 클라이언트 재연결 로직으로 개선할 수 있습니다.
 - 카드 효과(전투의 함성, 주문 효과 등)는 `server/game/GameRoom.js`의 `resolveEffect()`에
   키 이름만 연결되어 있고 실제 로직은 미구현 상태입니다 (다음 단계 작업).
 - 덱 빌딩, 랭킹, 비밀번호 찾기/이메일 인증 등은 이번 스켈레톤 범위에 포함되지 않습니다.
