@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
@@ -5,6 +7,9 @@ const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
 
+const { connectDB } = require("./db");
+const authRoutes = require("./auth/authRoutes");
+const { socketAuthMiddleware } = require("./auth/socketAuth");
 const { Matchmaker } = require("./game/matchmaking");
 const { GameRoom } = require("./game/GameRoom");
 
@@ -12,14 +17,17 @@ const PORT = process.env.PORT || 3001;
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 app.get("/", (req, res) => {
   res.json({ status: "ok", service: "crossover-tcg-server" });
 });
+app.use("/auth", authRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: "*" },
 });
+io.use(socketAuthMiddleware);
 
 const allCards = JSON.parse(
   fs.readFileSync(path.join(__dirname, "data", "cards.json"), "utf-8")
@@ -49,7 +57,11 @@ io.on("connection", (socket) => {
 
     const [playerA, playerB] = pair;
     const roomId = `room_${playerA}_${playerB}`;
-    const room = new GameRoom(roomId, [playerA, playerB], allCards);
+    const players = [playerA, playerB].map((id) => ({
+      id,
+      username: io.sockets.sockets.get(id)?.data.username || "Unknown",
+    }));
+    const room = new GameRoom(roomId, players, allCards);
     rooms.set(roomId, room);
     socketToRoom.set(playerA, roomId);
     socketToRoom.set(playerB, roomId);
@@ -115,6 +127,13 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`Crossover TCG server listening on port ${PORT}`);
-});
+connectDB()
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log(`Crossover TCG server listening on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to connect to MongoDB:", err.message);
+    process.exit(1);
+  });

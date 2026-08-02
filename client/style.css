@@ -20,6 +20,28 @@ body {
   display: none;
 }
 
+#screen-auth form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 320px;
+}
+
+#screen-auth input {
+  padding: 10px;
+  font-size: 15px;
+  border-radius: 6px;
+  border: 1px solid #4f8cff;
+  background: #262b3a;
+  color: #f0f0f0;
+}
+
+.error {
+  color: #ff6b6b;
+  min-height: 1.2em;
+  font-size: 14px;
+}
+
 button {
   padding: 10px 20px;
   font-size: 16px;

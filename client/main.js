@@ -1,8 +1,9 @@
 const SERVER_URL = "https://animepsykongroo.onrender.com";
 
-const socket = io(SERVER_URL);
+let socket = null;
 
 const screens = {
+  auth: document.getElementById("screen-auth"),
   lobby: document.getElementById("screen-lobby"),
   waiting: document.getElementById("screen-waiting"),
   game: document.getElementById("screen-game"),
@@ -15,6 +16,118 @@ function showScreen(name) {
   }
 }
 
+// ---------- 인증 ----------
+
+const formLogin = document.getElementById("form-login");
+const formSignup = document.getElementById("form-signup");
+
+document.getElementById("link-to-signup").addEventListener("click", (e) => {
+  e.preventDefault();
+  formLogin.classList.add("hidden");
+  formSignup.classList.remove("hidden");
+});
+
+document.getElementById("link-to-login").addEventListener("click", (e) => {
+  e.preventDefault();
+  formSignup.classList.add("hidden");
+  formLogin.classList.remove("hidden");
+});
+
+formLogin.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("login-email").value;
+  const password = document.getElementById("login-password").value;
+  const errorEl = document.getElementById("login-error");
+  errorEl.textContent = "";
+
+  try {
+    const res = await fetch(`${SERVER_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      errorEl.textContent = data.message;
+      return;
+    }
+    onAuthenticated(data.token, data.username);
+  } catch (err) {
+    errorEl.textContent = "서버에 연결할 수 없습니다.";
+  }
+});
+
+formSignup.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const username = document.getElementById("signup-username").value;
+  const email = document.getElementById("signup-email").value;
+  const password = document.getElementById("signup-password").value;
+  const errorEl = document.getElementById("signup-error");
+  errorEl.textContent = "";
+
+  try {
+    const res = await fetch(`${SERVER_URL}/auth/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, email, password }),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      errorEl.textContent = data.message;
+      return;
+    }
+    onAuthenticated(data.token, data.username);
+  } catch (err) {
+    errorEl.textContent = "서버에 연결할 수 없습니다.";
+  }
+});
+
+document.getElementById("btn-logout").addEventListener("click", () => {
+  logout();
+});
+
+function onAuthenticated(token, username) {
+  localStorage.setItem("tcg_token", token);
+  localStorage.setItem("tcg_username", username);
+  connectSocket(token, username);
+}
+
+function logout() {
+  localStorage.removeItem("tcg_token");
+  localStorage.removeItem("tcg_username");
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
+  showScreen("auth");
+}
+
+function connectSocket(token, username) {
+  socket = io(SERVER_URL, { auth: { token } });
+  registerSocketHandlers();
+
+  socket.on("connect", () => {
+    document.getElementById("lobby-username").textContent = username;
+    showScreen("lobby");
+  });
+
+  socket.on("connect_error", (err) => {
+    console.warn("connect_error:", err.message);
+    logout();
+  });
+}
+
+// 페이지 로드시 저장된 토큰이 있으면 자동 로그인
+const savedToken = localStorage.getItem("tcg_token");
+const savedUsername = localStorage.getItem("tcg_username");
+if (savedToken && savedUsername) {
+  connectSocket(savedToken, savedUsername);
+} else {
+  showScreen("auth");
+}
+
+// ---------- 게임 ----------
+
 document.getElementById("btn-join-queue").addEventListener("click", () => {
   socket.emit("join_queue");
   showScreen("waiting");
@@ -24,29 +137,31 @@ document.getElementById("btn-end-turn").addEventListener("click", () => {
   socket.emit("end_turn");
 });
 
-socket.on("match_found", (state) => {
-  showScreen("game");
-  renderState(state);
-});
+function registerSocketHandlers() {
+  socket.on("match_found", (state) => {
+    showScreen("game");
+    renderState(state);
+  });
 
-socket.on("game_state_update", (state) => {
-  renderState(state);
-});
+  socket.on("game_state_update", (state) => {
+    renderState(state);
+  });
 
-socket.on("action_error", (reason) => {
-  console.warn("action_error:", reason);
-});
+  socket.on("action_error", (reason) => {
+    console.warn("action_error:", reason);
+  });
 
-socket.on("opponent_disconnected", () => {
-  document.getElementById("result-text").textContent = "상대가 접속을 종료했습니다.";
-  showScreen("result");
-});
+  socket.on("opponent_disconnected", () => {
+    document.getElementById("result-text").textContent = "상대가 접속을 종료했습니다.";
+    showScreen("result");
+  });
 
-socket.on("game_over", ({ result }) => {
-  document.getElementById("result-text").textContent =
-    result === "win" ? "승리했습니다!" : "패배했습니다.";
-  showScreen("result");
-});
+  socket.on("game_over", ({ result }) => {
+    document.getElementById("result-text").textContent =
+      result === "win" ? "승리했습니다!" : "패배했습니다.";
+    showScreen("result");
+  });
+}
 
 function renderCard(card, isMine) {
   const el = document.createElement("div");
@@ -69,11 +184,13 @@ function renderCard(card, isMine) {
 }
 
 function renderState(state) {
+  document.getElementById("my-name").textContent = state.me.username || "나";
   document.getElementById("my-hp").textContent = state.me.hp;
   document.getElementById("my-mana").textContent = state.me.mana;
   document.getElementById("my-max-mana").textContent = state.me.maxMana;
   document.getElementById("my-deck-count").textContent = state.me.deckCount;
 
+  document.getElementById("opp-name").textContent = state.opponent.username || "상대";
   document.getElementById("opp-hp").textContent = state.opponent.hp;
   document.getElementById("opp-mana").textContent = state.opponent.mana;
   document.getElementById("opp-max-mana").textContent = state.opponent.maxMana;

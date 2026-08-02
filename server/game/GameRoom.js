@@ -28,18 +28,20 @@ function buildDeck(allCards) {
 }
 
 class GameRoom {
-  constructor(roomId, playerIds, allCards) {
+  /** @param {{id: string, username: string}[]} players */
+  constructor(roomId, players, allCards) {
     this.roomId = roomId;
     this.turnNumber = 1;
     this.currentPlayerIndex = 0;
-    this.playerOrder = [...playerIds];
+    this.playerOrder = players.map((p) => p.id);
 
     this.players = {};
-    for (const playerId of playerIds) {
+    for (const { id: playerId, username } of players) {
       const deck = buildDeck(allCards);
       const hand = deck.splice(0, STARTING_HAND_SIZE);
       this.players[playerId] = {
         id: playerId,
+        username,
         hp: STARTING_HP,
         mana: 1,
         maxMana: 1,
@@ -127,6 +129,7 @@ class GameRoom {
       currentPlayerId: this.playerOrder[this.currentPlayerIndex],
       me: {
         id: me.id,
+        username: me.username,
         hp: me.hp,
         mana: me.mana,
         maxMana: me.maxMana,
@@ -136,6 +139,7 @@ class GameRoom {
       },
       opponent: {
         id: opponent.id,
+        username: opponent.username,
         hp: opponent.hp,
         mana: opponent.mana,
         maxMana: opponent.maxMana,
