@@ -3,6 +3,10 @@
 하스스톤 + 포켓몬카드 + 유희왕의 재미 요소를 섞은 크로스오버 1대1 턴제 카드게임.
 이 저장소는 **뼈대(스켈레톤) 단계**로, 카드 효과의 실제 로직은 아직 자리표시자만 있음.
 
+## 🎮 게임 플레이
+아래 URL로 접속해서 플레이하세요 (탭 2개 또는 다른 브라우저로 각각 접속하면 매칭됨):
+**https://anime-coral-kappa-15.vercel.app/**
+
 ## 폴더 구조
 - `server/` — Node.js + Express + Socket.IO 게임 서버 (Render 배포 대상)
 - `client/` — 정적 HTML/JS/CSS 클라이언트 (Vercel 배포 대상)
@@ -23,9 +27,10 @@ npm start
 - Build Command: `npm install`, Start Command: `npm start`
 - 배포 URL: https://animepsykongroo.onrender.com
 
-### 클라이언트 (Vercel 무료 플랜)
-1. `client` 폴더를 Vercel에 정적 사이트로 배포 (Root Directory: `client`)
-2. `client/main.js`의 `SERVER_URL`은 이미 위 Render URL로 설정되어 있음
+### 클라이언트 (Vercel 무료 플랜) — 배포 완료
+- 저장소: https://github.com/kgwabc/Anime (Root Directory: `client`)
+- 배포 URL(게임 접속 주소): https://anime-coral-kappa-15.vercel.app/
+- `client/main.js`의 `SERVER_URL`은 위 Render URL로 설정되어 있음
 
 ## 알려진 제약사항
 - **Render 무료 플랜은 일정 시간 미사용시 슬립되며, 재시작되면 서버 메모리에 있던 매칭 큐/
