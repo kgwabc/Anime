@@ -437,9 +437,9 @@ function renderAdminCards(cards, token) {
       requiredTagSelect.classList.toggle("hidden", type === "character");
       populateTriggerOptions(triggerSelect, type);
     }
-    triggerSelect.value = existingEffect?.trigger || "";
     typeSelect.addEventListener("change", refreshFieldVisibility);
     refreshFieldVisibility();
+    triggerSelect.value = existingEffect?.trigger || "";
 
     const saveBtn = document.createElement("button");
     saveBtn.textContent = "저장";
