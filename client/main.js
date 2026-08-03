@@ -1,5 +1,6 @@
 const SERVER_URL = "https://animepsykongroo.onrender.com";
 const ADMIN_USERNAME = "kgwabc";
+const DISPLAY_MAX_MANA = 10;
 
 let socket = null;
 let lastState = null;
@@ -1001,13 +1002,13 @@ function renderState(state) {
   document.getElementById("my-name").textContent = state.me.username || "나";
   document.getElementById("my-hp").textContent = state.me.hp;
   document.getElementById("my-mana").textContent = state.me.mana;
-  document.getElementById("my-max-mana").textContent = state.me.maxMana;
+  document.getElementById("my-max-mana").textContent = DISPLAY_MAX_MANA;
   document.getElementById("my-deck-count").textContent = state.me.deckCount;
 
   document.getElementById("opp-name").textContent = state.opponent.username || "상대";
   document.getElementById("opp-hp").textContent = state.opponent.hp;
   document.getElementById("opp-mana").textContent = state.opponent.mana;
-  document.getElementById("opp-max-mana").textContent = state.opponent.maxMana;
+  document.getElementById("opp-max-mana").textContent = DISPLAY_MAX_MANA;
   document.getElementById("opp-hand-count").textContent = state.opponent.handCount;
   document.getElementById("opp-deck-count").textContent = state.opponent.deckCount;
 
