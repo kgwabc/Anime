@@ -261,8 +261,9 @@ button:hover {
 
 #screen-game .card {
   flex: 0 0 auto;
-  width: 92px;
-  height: 128px;
+  width: auto;
+  height: 100%;
+  aspect-ratio: 92 / 128;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -781,11 +782,6 @@ button:hover {
     padding: 6px 6px;
     margin-bottom: 3px;
     gap: 4px;
-  }
-
-  #screen-game .card {
-    width: 68px;
-    height: 94px;
   }
 
   #turn-indicator {
