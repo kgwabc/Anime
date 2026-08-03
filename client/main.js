@@ -267,6 +267,28 @@ function populateTagOptions(selectEl, cards, defaultLabel) {
 document.getElementById("new-card-type").addEventListener("change", updateNewCardFieldVisibility);
 updateNewCardFieldVisibility();
 
+function readImageAsCompressedDataUrl(file, { maxW = 300, maxH = 400, quality = 0.7 } = {}) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("이미지를 읽을 수 없습니다."));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("이미지를 불러올 수 없습니다."));
+      img.onload = () => {
+        const scale = Math.min(1, maxW / img.width, maxH / img.height);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 async function loadAdminCards(token) {
   const listEl = document.getElementById("admin-card-list");
   listEl.textContent = "불러오는 중...";
@@ -334,6 +356,15 @@ function renderAdminCards(cards, token) {
   for (const card of cards) {
     const row = document.createElement("div");
     row.className = "admin-card-row";
+
+    const thumbImg = document.createElement("img");
+    thumbImg.className = "admin-card-thumb";
+    thumbImg.src = card.image || "";
+    thumbImg.classList.toggle("hidden", !card.image);
+
+    const imageInput = document.createElement("input");
+    imageInput.type = "file";
+    imageInput.accept = "image/*";
 
     const nameInput = document.createElement("input");
     nameInput.type = "text";
@@ -443,7 +474,7 @@ function renderAdminCards(cards, token) {
 
     const saveBtn = document.createElement("button");
     saveBtn.textContent = "저장";
-    saveBtn.addEventListener("click", () => {
+    saveBtn.addEventListener("click", async () => {
       const type = typeSelect.value;
       const fields = {
         name: nameInput.value,
@@ -480,6 +511,9 @@ function renderAdminCards(cards, token) {
       if (type === "spell" || type === "equipment") {
         fields.requiredTargetTag = requiredTagSelect.value || null;
       }
+      if (imageInput.files[0]) {
+        fields.image = await readImageAsCompressedDataUrl(imageInput.files[0]);
+      }
       updateAdminCard(card.id, fields, token);
     });
 
@@ -488,6 +522,8 @@ function renderAdminCards(cards, token) {
     deleteBtn.addEventListener("click", () => deleteAdminCard(card.id, token));
 
     row.append(
+      thumbImg,
+      imageInput,
       nameInput,
       seriesInput,
       typeSelect,
@@ -602,6 +638,10 @@ document.getElementById("form-new-card").addEventListener("submit", async (e) =>
   }
   if (type === "spell" || type === "equipment") {
     fields.requiredTargetTag = document.getElementById("new-card-required-tag").value || null;
+  }
+  const imageFile = document.getElementById("new-card-image").files[0];
+  if (imageFile) {
+    fields.image = await readImageAsCompressedDataUrl(imageFile);
   }
 
   try {
@@ -720,6 +760,36 @@ function removeCardFromDeck(cardId) {
   renderDeckBuilder();
 }
 
+function renderCardTile(card, { badgeText, buttonText, buttonDisabled, onButtonClick }) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "card-tile";
+
+  const cardEl = document.createElement("div");
+  cardEl.className = "card";
+  if (card.rarity === "legendary") cardEl.classList.add("legendary");
+  if (!card.image) cardEl.classList.add("no-image");
+  if (card.description) cardEl.title = card.description;
+  cardEl.innerHTML = cardFaceHtml(card);
+  wrapper.appendChild(cardEl);
+
+  const footer = document.createElement("div");
+  footer.className = "card-tile-footer";
+
+  const badge = document.createElement("span");
+  badge.className = "card-tile-badge";
+  badge.textContent = badgeText;
+  footer.appendChild(badge);
+
+  const btn = document.createElement("button");
+  btn.textContent = buttonText;
+  btn.disabled = Boolean(buttonDisabled);
+  btn.addEventListener("click", onButtonClick);
+  footer.appendChild(btn);
+
+  wrapper.appendChild(footer);
+  return wrapper;
+}
+
 function renderDeckBuilder() {
   const cardsById = new Map(deckCatalog.map((card) => [card.id, card]));
   document.getElementById("deck-count").textContent = currentDeckCardIds.length;
@@ -728,24 +798,18 @@ function renderDeckBuilder() {
   const catalogEl = document.getElementById("deck-catalog-list");
   catalogEl.innerHTML = "";
   for (const card of deckCatalog) {
-    const row = document.createElement("div");
-    row.className = "deck-card-row";
-    if (card.rarity === "legendary") row.classList.add("legendary");
-
-    const label = document.createElement("span");
     const copies = countCopiesInDeck(card.id);
-    label.textContent = `${card.name} (${card.rarity === "legendary" ? "전설" : "일반"}, 코스트 ${card.cost}) — ${copies}장 보유중`;
-    row.appendChild(label);
-
-    const addBtn = document.createElement("button");
-    addBtn.textContent = "추가";
     const maxCopies = card.rarity === "legendary" ? MAX_COPIES_LEGENDARY : MAX_COPIES_COMMON;
     const legendaryBlocked = card.rarity === "legendary" && legendaryCountInDeck() >= MAX_LEGENDARY_TOTAL && copies === 0;
-    addBtn.disabled = currentDeckCardIds.length >= DECK_SIZE || copies >= maxCopies || legendaryBlocked;
-    addBtn.addEventListener("click", () => addCardToDeck(card));
-    row.appendChild(addBtn);
 
-    catalogEl.appendChild(row);
+    catalogEl.appendChild(
+      renderCardTile(card, {
+        badgeText: `${copies}장 보유중`,
+        buttonText: "추가",
+        buttonDisabled: currentDeckCardIds.length >= DECK_SIZE || copies >= maxCopies || legendaryBlocked,
+        onButtonClick: () => addCardToDeck(card),
+      })
+    );
   }
 
   const deckEl = document.getElementById("deck-current-list");
@@ -755,20 +819,13 @@ function renderDeckBuilder() {
     const card = cardsById.get(cardId);
     if (!card) continue;
 
-    const row = document.createElement("div");
-    row.className = "deck-card-row";
-    if (card.rarity === "legendary") row.classList.add("legendary");
-
-    const label = document.createElement("span");
-    label.textContent = `${card.name} x${countCopiesInDeck(cardId)}`;
-    row.appendChild(label);
-
-    const removeBtn = document.createElement("button");
-    removeBtn.textContent = "제거";
-    removeBtn.addEventListener("click", () => removeCardFromDeck(cardId));
-    row.appendChild(removeBtn);
-
-    deckEl.appendChild(row);
+    deckEl.appendChild(
+      renderCardTile(card, {
+        badgeText: `x${countCopiesInDeck(cardId)}`,
+        buttonText: "제거",
+        onButtonClick: () => removeCardFromDeck(cardId),
+      })
+    );
   }
 }
 
@@ -827,12 +884,7 @@ function cardNeedsTargetCharacter(card) {
   return (card.effects || []).some((effect) => effect.target === "TARGET_CHARACTER");
 }
 
-function renderCard(card, role, isMyTurn) {
-  const el = document.createElement("div");
-  el.className = "card";
-  if (card.rarity === "legendary") el.classList.add("legendary");
-  if (card.description) el.title = card.description;
-
+function cardBodyHtml(card) {
   let bodyHtml;
   if (card.type === "character") {
     bodyHtml = `<div class="atk-hp"><span>⚔${card.atk}</span><span>❤${card.hp}</span></div>`;
@@ -848,12 +900,29 @@ function renderCard(card, role, isMyTurn) {
     if (card.effects?.length) bodyHtml += `<div class="effect-summary">${describeEffect(card.effects[0])}</div>`;
     if (card.requiredTargetTag) bodyHtml += `<div class="effect-summary">🎯 ${card.requiredTargetTag} 전용</div>`;
   }
+  return bodyHtml;
+}
 
-  el.innerHTML = `
-    <div class="name">${card.name}</div>
-    <div class="cost">코스트 ${card.cost}</div>
-    ${bodyHtml}
+function cardFaceHtml(card) {
+  const artStyle = card.image ? ` style="background-image:url('${card.image}')"` : "";
+  return `
+    <div class="card-art"${artStyle}></div>
+    <div class="card-info">
+      <div class="name">${card.name}</div>
+      <div class="cost">코스트 ${card.cost}</div>
+      ${cardBodyHtml(card)}
+    </div>
   `;
+}
+
+function renderCard(card, role, isMyTurn) {
+  const el = document.createElement("div");
+  el.className = "card";
+  if (card.rarity === "legendary") el.classList.add("legendary");
+  if (!card.image) el.classList.add("no-image");
+  if (card.description) el.title = card.description;
+
+  el.innerHTML = cardFaceHtml(card);
 
   if (role === "hand") {
     if (selectedSpellCardId === card.id || selectedEquipmentCardId === card.id) {

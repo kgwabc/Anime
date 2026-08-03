@@ -69,6 +69,7 @@ function validateCardFields(body, { partial, existingType } = {}) {
     matchupAtkBonus,
     requiredTargetTag,
     rarity,
+    image,
   } = body;
   const effectiveType = type !== undefined ? type : existingType;
 
@@ -131,6 +132,14 @@ function validateCardFields(body, { partial, existingType } = {}) {
   }
   if (rarity !== undefined && !RARITIES.includes(rarity)) {
     return `rarity는 ${RARITIES.join("/")} 중 하나여야 합니다.`;
+  }
+  if (image !== undefined && image !== null) {
+    if (typeof image !== "string" || !image.startsWith("data:image/")) {
+      return "image는 data:image/ 로 시작하는 문자열이어야 합니다.";
+    }
+    if (image.length > 500000) {
+      return "image 용량이 너무 큽니다. 더 작은 이미지를 사용해주세요.";
+    }
   }
 
   const effectsError = validateEffects(effects, effectiveType);

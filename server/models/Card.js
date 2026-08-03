@@ -18,6 +18,7 @@ function rowToCard(row) {
     matchupAtkBonus: row.matchup_atk_bonus ?? null,
     requiredTargetTag: row.required_target_tag ?? null,
     rarity: row.rarity || "common",
+    image: row.image ?? null,
   };
 }
 
@@ -75,12 +76,13 @@ async function createCard({
   matchupAtkBonus,
   requiredTargetTag,
   rarity,
+  image,
 }) {
   const id = await generateCardId(name);
   const isCharacter = type === "character";
   await getClient().execute({
-    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag, rarity)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag, rarity, image)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       name,
@@ -98,6 +100,7 @@ async function createCard({
       isCharacter ? matchupAtkBonus ?? null : null,
       isCharacter ? null : requiredTargetTag ?? null,
       rarity || "common",
+      image ?? null,
     ],
   });
   return getCardById(id);
@@ -112,7 +115,7 @@ async function updateCard(id, fields) {
   await getClient().execute({
     sql: `UPDATE cards SET name = ?, series = ?, type = ?, cost = ?, atk = ?, hp = ?, synergy_tags = ?,
           effects = ?, equip_atk_bonus = ?, equip_hp_bonus = ?, description = ?,
-          matchup_vs_tag = ?, matchup_atk_bonus = ?, required_target_tag = ?, rarity = ?
+          matchup_vs_tag = ?, matchup_atk_bonus = ?, required_target_tag = ?, rarity = ?, image = ?
           WHERE id = ?`,
     args: [
       merged.name,
@@ -130,6 +133,7 @@ async function updateCard(id, fields) {
       isCharacter ? merged.matchupAtkBonus ?? null : null,
       isCharacter ? null : merged.requiredTargetTag ?? null,
       merged.rarity || "common",
+      merged.image ?? null,
       id,
     ],
   });

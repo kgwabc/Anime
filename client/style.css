@@ -174,32 +174,33 @@ button:hover {
 .board {
   display: flex;
   gap: 8px;
-  min-height: 90px;
+  min-height: 140px;
   padding: 8px;
   background: #1b1f2a;
   border-radius: 6px;
   margin-bottom: 10px;
+  flex-wrap: wrap;
 }
 
 .hand {
   display: flex;
   gap: 8px;
-  min-height: 110px;
+  min-height: 160px;
   padding: 8px;
   flex-wrap: wrap;
 }
 
 .card {
-  width: 90px;
-  height: 120px;
+  width: 130px;
+  height: 180px;
   background: #34405c;
   border: 2px solid #4f8cff;
   border-radius: 8px;
-  padding: 6px;
+  padding: 0;
   font-size: 12px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  overflow: hidden;
   cursor: pointer;
 }
 
@@ -207,8 +208,32 @@ button:hover {
   border-color: #ffd24f;
 }
 
+.card-art {
+  flex: 1 1 auto;
+  min-height: 0;
+  background-size: cover;
+  background-position: center;
+  background-color: #1b1f2a;
+}
+
+.card.no-image .card-art {
+  background-image: linear-gradient(160deg, #4f8cff, #262b3a 70%);
+}
+
+.card-info {
+  flex: 0 0 auto;
+  padding: 6px;
+  background: rgba(20, 24, 34, 0.85);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .card .name {
   font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .card .cost {
@@ -274,23 +299,43 @@ button:hover {
   background: #262b3a;
   border-radius: 8px;
   padding: 8px;
-}
-
-.deck-card-row {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-content: flex-start;
+}
+
+.card-tile {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-bottom: 1px solid #34405c;
-  font-size: 13px;
+  gap: 4px;
+  width: 130px;
 }
 
-.deck-card-row.legendary {
-  color: #ffd24f;
+.card-tile-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
 }
 
-.deck-card-row button {
+.card-tile-badge {
+  font-size: 12px;
+  color: #c9d2e3;
+}
+
+.card-tile-footer button {
   padding: 4px 12px;
   font-size: 13px;
+  width: 100%;
+}
+
+.admin-card-thumb {
+  width: 48px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #1b1f2a;
 }

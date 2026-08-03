@@ -55,6 +55,9 @@ async function migrateCardsTable(db) {
   if (!existingCols.has("rarity")) {
     await db.execute("ALTER TABLE cards ADD COLUMN rarity TEXT NOT NULL DEFAULT 'common'");
   }
+  if (!existingCols.has("image")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN image TEXT");
+  }
 }
 
 async function seedCardsIfEmpty(db) {
@@ -118,7 +121,8 @@ async function connectDB() {
       matchup_vs_tag TEXT,
       matchup_atk_bonus INTEGER,
       required_target_tag TEXT,
-      rarity TEXT NOT NULL DEFAULT 'common'
+      rarity TEXT NOT NULL DEFAULT 'common',
+      image TEXT
     )
   `);
   await migrateCardsTable(db);
