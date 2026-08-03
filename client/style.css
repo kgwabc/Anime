@@ -112,8 +112,8 @@ button:hover {
 }
 
 .card {
-  width: 90px;
-  height: 120px;
+  width: 110px;
+  height: 160px;
   background: #34405c;
   border: 2px solid #4f8cff;
   border-radius: 8px;
@@ -122,6 +122,7 @@ button:hover {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: 4px;
   cursor: pointer;
 }
 
@@ -140,6 +141,13 @@ button:hover {
 .card .atk-hp {
   display: flex;
   justify-content: space-between;
+}
+
+.card .desc {
+  font-size: 10px;
+  color: #c9d2e3;
+  line-height: 1.25;
+  overflow: hidden;
 }
 
 #turn-indicator {

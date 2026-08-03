@@ -1,79 +1,147 @@
 [
   {
-    "id": "char_001",
-    "name": "불꽃의 견습검사",
-    "series": "flame_academy",
+    "id": "char_tanjiro",
+    "name": "카마도 탄지로",
+    "series": "demon_slayer_corps",
     "type": "character",
     "cost": 3,
     "atk": 3,
     "hp": 4,
-    "synergyTags": ["fire", "academy"],
+    "synergyTags": ["water_breathing", "demon_slayer"],
+    "description": "전투의 함성: 상대 영웅에게 2 피해 (물의 호흡)",
     "effects": {
-      "battlecry": "placeholder_draw_card",
+      "battlecry": { "type": "damage_enemy_hero", "amount": 2 },
       "passive": null
     }
   },
   {
-    "id": "char_002",
-    "name": "얼음호수의 정령사",
-    "series": "frost_lake",
+    "id": "char_nezuko",
+    "name": "카마도 네즈코",
+    "series": "demon_slayer_corps",
+    "type": "character",
+    "cost": 4,
+    "atk": 2,
+    "hp": 6,
+    "synergyTags": ["demon", "kamado"],
+    "description": "전투의 함성: 자신 체력 3 회복 (혈귀화 재생력)",
+    "effects": {
+      "battlecry": { "type": "heal_self", "amount": 3 },
+      "passive": null
+    }
+  },
+  {
+    "id": "char_zenitsu",
+    "name": "아가츠마 젠이츠",
+    "series": "demon_slayer_corps",
     "type": "character",
     "cost": 2,
     "atk": 1,
-    "hp": 3,
-    "synergyTags": ["ice", "spirit"],
+    "hp": 2,
+    "synergyTags": ["thunder_breathing", "demon_slayer"],
+    "description": "전투의 함성: 카드 1장 드로우 (벼락의 호흡 일섬)",
     "effects": {
-      "battlecry": "placeholder_freeze_enemy",
+      "battlecry": { "type": "draw_card", "amount": 1 },
       "passive": null
     }
   },
   {
-    "id": "char_003",
-    "name": "번개송곳니 늑대전사",
-    "series": "thunder_tribe",
+    "id": "char_inosuke",
+    "name": "하시비라 이노스케",
+    "series": "demon_slayer_corps",
     "type": "character",
     "cost": 5,
-    "atk": 6,
+    "atk": 5,
     "hp": 5,
-    "synergyTags": ["lightning", "beast"],
+    "synergyTags": ["beast_breathing", "demon_slayer"],
+    "description": "전투의 함성: 상대 영웅에게 1 피해, 자신 체력 1 회복 (짐승의 호흡)",
     "effects": {
-      "battlecry": null,
-      "passive": "placeholder_charge"
-    }
-  },
-  {
-    "id": "spell_001",
-    "name": "필살! 유성태클",
-    "series": "flame_academy",
-    "type": "spell",
-    "cost": 4,
-    "synergyTags": ["fire"],
-    "effects": {
-      "onCast": "placeholder_deal_damage",
+      "battlecry": { "type": "damage_enemy_hero", "amount": 1, "healSelf": 1 },
       "passive": null
     }
   },
   {
-    "id": "spell_002",
-    "name": "정령의 가호",
-    "series": "frost_lake",
-    "type": "spell",
-    "cost": 1,
-    "synergyTags": ["ice", "spirit"],
+    "id": "char_giyu",
+    "name": "토미오카 기유",
+    "series": "demon_slayer_corps",
+    "type": "character",
+    "cost": 6,
+    "atk": 4,
+    "hp": 7,
+    "synergyTags": ["water_breathing", "hashira"],
+    "description": "전투의 함성: 상대 영웅에게 3 피해 (물의 호흡 11형)",
     "effects": {
-      "onCast": "placeholder_heal",
+      "battlecry": { "type": "damage_enemy_hero", "amount": 3 },
       "passive": null
     }
   },
   {
-    "id": "equip_001",
-    "name": "뇌명의 건틀릿",
-    "series": "thunder_tribe",
-    "type": "equipment",
+    "id": "char_shinobu",
+    "name": "코쵸 시노부",
+    "series": "demon_slayer_corps",
+    "type": "character",
+    "cost": 3,
+    "atk": 1,
+    "hp": 3,
+    "synergyTags": ["insect_breathing", "hashira"],
+    "description": "전투의 함성: 상대 영웅에게 4 피해 (독무 처형)",
+    "effects": {
+      "battlecry": { "type": "damage_enemy_hero", "amount": 4 },
+      "passive": null
+    }
+  },
+  {
+    "id": "char_rengoku",
+    "name": "렌고쿠 쿄쥬로",
+    "series": "demon_slayer_corps",
+    "type": "character",
+    "cost": 7,
+    "atk": 6,
+    "hp": 6,
+    "synergyTags": ["flame_breathing", "hashira"],
+    "description": "전투의 함성: 상대 영웅에게 2 피해, 자신 체력 2 회복 (염주 아홉번째 형: 안락)",
+    "effects": {
+      "battlecry": { "type": "damage_enemy_hero", "amount": 2, "healSelf": 2 },
+      "passive": null
+    }
+  },
+  {
+    "id": "char_muzan",
+    "name": "키부츠지 무잔",
+    "series": "demon_slayer_corps",
+    "type": "character",
+    "cost": 8,
+    "atk": 8,
+    "hp": 8,
+    "synergyTags": ["demon", "boss"],
+    "description": "전투의 함성: 상대 영웅에게 3 피해 (무한한 재생)",
+    "effects": {
+      "battlecry": { "type": "damage_enemy_hero", "amount": 3 },
+      "passive": null
+    }
+  },
+  {
+    "id": "spell_total_concentration",
+    "name": "전집중 호흡",
+    "series": "demon_slayer_corps",
+    "type": "spell",
     "cost": 2,
-    "synergyTags": ["lightning"],
+    "synergyTags": ["demon_slayer"],
+    "description": "카드 2장 드로우",
     "effects": {
-      "onEquip": "placeholder_buff_atk",
+      "onCast": { "type": "draw_card", "amount": 2 },
+      "passive": null
+    }
+  },
+  {
+    "id": "equip_nichirinto",
+    "name": "니치린도",
+    "series": "demon_slayer_corps",
+    "type": "equipment",
+    "cost": 3,
+    "synergyTags": ["demon_slayer"],
+    "description": "자신 보드의 가장 최근 캐릭터에게 공격력+2/체력+1 부여",
+    "effects": {
+      "onEquip": { "type": "buff_last_character", "atk": 2, "hp": 1 },
       "passive": null
     }
   }

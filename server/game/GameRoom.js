@@ -2,17 +2,6 @@ const MAX_MANA = 10;
 const STARTING_HAND_SIZE = 3;
 const STARTING_HP = 30;
 
-/**
- * 카드 효과 실행 자리표시자.
- * 실제 효과 로직(피해량 계산, 버프, 드로우 등)은 다음 단계에서 구현한다.
- * 지금은 어떤 효과 키가 어떤 시점에 호출되는지 구조만 잡아둔다.
- */
-function resolveEffect(effectKey, context) {
-  if (!effectKey) return;
-  // TODO: 효과 키(placeholder_draw_card 등)별 실제 로직 구현
-  console.log(`[effect] resolveEffect("${effectKey}") for player ${context.playerId}`);
-}
-
 function shuffle(array) {
   const result = [...array];
   for (let i = result.length - 1; i > 0; i--) {
@@ -81,15 +70,52 @@ class GameRoom {
 
     if (card.type === "character") {
       player.board.push(card);
-      resolveEffect(card.effects?.battlecry, { playerId, card });
+      this.resolveEffect(card.effects?.battlecry, { playerId, card });
     } else if (card.type === "spell") {
-      resolveEffect(card.effects?.onCast, { playerId, card });
+      this.resolveEffect(card.effects?.onCast, { playerId, card });
     } else if (card.type === "equipment") {
-      // TODO: 다음 단계에서 대상 캐릭터에 장착하는 로직 구현
-      resolveEffect(card.effects?.onEquip, { playerId, card });
+      this.resolveEffect(card.effects?.onEquip, { playerId, card });
     }
 
     return { ok: true };
+  }
+
+  /** 카드 효과 실행. effect는 { type, ...params } 형태의 구조화된 객체. */
+  resolveEffect(effect, { playerId }) {
+    if (!effect) return;
+
+    const player = this.players[playerId];
+
+    switch (effect.type) {
+      case "damage_enemy_hero": {
+        const opponent = this.players[this.getOpponentId(playerId)];
+        opponent.hp = Math.max(0, opponent.hp - effect.amount);
+        if (effect.healSelf) {
+          player.hp = Math.min(STARTING_HP, player.hp + effect.healSelf);
+        }
+        break;
+      }
+      case "heal_self": {
+        player.hp = Math.min(STARTING_HP, player.hp + effect.amount);
+        break;
+      }
+      case "draw_card": {
+        for (let i = 0; i < effect.amount && player.deck.length > 0; i++) {
+          player.hand.push(player.deck.shift());
+        }
+        break;
+      }
+      case "buff_last_character": {
+        const lastCard = player.board[player.board.length - 1];
+        if (lastCard) {
+          lastCard.atk += effect.atk || 0;
+          lastCard.hp += effect.hp || 0;
+        }
+        break;
+      }
+      default:
+        console.warn(`[effect] Unknown effect type: ${effect.type}`);
+    }
   }
 
   endTurn(playerId) {

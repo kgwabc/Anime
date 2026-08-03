@@ -237,6 +237,7 @@ function registerSocketHandlers() {
 function renderCard(card, isMine) {
   const el = document.createElement("div");
   el.className = "card";
+  el.title = card.description || "";
   el.innerHTML = `
     <div class="name">${card.name}</div>
     <div class="cost">코스트 ${card.cost}</div>
@@ -245,6 +246,7 @@ function renderCard(card, isMine) {
         ? `<div class="atk-hp"><span>⚔${card.atk}</span><span>❤${card.hp}</span></div>`
         : `<div class="atk-hp"><span>${card.type}</span></div>`
     }
+    ${card.description ? `<div class="desc">${card.description}</div>` : ""}
   `;
   if (isMine) {
     el.addEventListener("click", () => {
