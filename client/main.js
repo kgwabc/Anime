@@ -13,6 +13,7 @@ let currentAuthToken = null;
 let deckCatalog = [];
 let currentDeckCardIds = [];
 let lastTurnPlayerId = null;
+let resultAutoReturnTimer = null;
 const pendingInstallEffects = new Map(); // cardId -> { playerId }
 const pendingBuffEffects = new Map(); // targetCharacterId -> { playerId }
 const pendingAttackEffects = []; // { attackerId, attackerCardId, target }
@@ -876,12 +877,14 @@ function registerSocketHandlers() {
   socket.on("opponent_disconnected", () => {
     document.getElementById("result-text").textContent = "상대가 접속을 종료했습니다.";
     showScreen("result");
+    resultAutoReturnTimer = setTimeout(returnToLobby, 15000);
   });
 
   socket.on("game_over", ({ result }) => {
     document.getElementById("result-text").textContent =
       result === "win" ? "승리했습니다!" : "패배했습니다.";
     showScreen("result");
+    resultAutoReturnTimer = setTimeout(returnToLobby, 15000);
   });
 
   socket.on("card_played", ({ playerId, card, targetCharacterId }) => {
@@ -915,6 +918,24 @@ function registerSocketHandlers() {
     applyPendingAttackEffects();
   });
 }
+
+function returnToLobby() {
+  if (resultAutoReturnTimer) {
+    clearTimeout(resultAutoReturnTimer);
+    resultAutoReturnTimer = null;
+  }
+  selectedAttackerId = null;
+  selectedSpellCardId = null;
+  selectedEquipmentCardId = null;
+  lastState = null;
+  lastTurnPlayerId = null;
+  pendingInstallEffects.clear();
+  pendingBuffEffects.clear();
+  pendingAttackEffects.length = 0;
+  showScreen("lobby");
+}
+
+document.getElementById("btn-back-to-lobby").addEventListener("click", returnToLobby);
 
 function showSpellEffect(card) {
   const layer = document.getElementById("spell-effect-layer");
