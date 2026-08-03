@@ -16,8 +16,18 @@ function getClient() {
   return client;
 }
 
+async function migrateUsersTable(db) {
+  const info = await db.execute("PRAGMA table_info(users)");
+  const hasOldSchema = info.rows.some((col) => col.name === "email");
+  if (hasOldSchema) {
+    console.log("Old users table schema detected (email column) — dropping and recreating");
+    await db.execute("DROP TABLE users");
+  }
+}
+
 async function connectDB() {
   const db = getClient();
+  await migrateUsersTable(db);
   await db.execute(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
