@@ -8,6 +8,9 @@ let selectedSpellCardId = null;
 let selectedEquipmentCardId = null;
 let currentAdminToken = null;
 let loadedAdminCards = [];
+let currentAuthToken = null;
+let deckCatalog = [];
+let currentDeckCardIds = [];
 
 const TRIGGER_LABELS = {
   ON_PLAY: "출격시(ON_PLAY)",
@@ -40,6 +43,7 @@ const screens = {
   auth: document.getElementById("screen-auth"),
   lobby: document.getElementById("screen-lobby"),
   waiting: document.getElementById("screen-waiting"),
+  deckBuilder: document.getElementById("screen-deck-builder"),
   game: document.getElementById("screen-game"),
   result: document.getElementById("screen-result"),
 };
@@ -141,6 +145,7 @@ function connectSocket(token, username) {
 
   socket.on("connect", () => {
     document.getElementById("lobby-username").textContent = username;
+    currentAuthToken = token;
     showScreen("lobby");
 
     const adminPanel = document.getElementById("admin-panel");
@@ -351,6 +356,14 @@ function renderAdminCards(cards, token) {
     costInput.min = "0";
     costInput.value = card.cost;
 
+    const raritySelect = createOptionSelect(
+      [
+        ["common", "일반"],
+        ["legendary", "전설"],
+      ],
+      card.rarity || "common"
+    );
+
     const tagsInput = document.createElement("input");
     tagsInput.type = "text";
     tagsInput.value = (card.synergyTags || []).join(", ");
@@ -436,6 +449,7 @@ function renderAdminCards(cards, token) {
         series: seriesInput.value,
         type,
         cost: Number(costInput.value),
+        rarity: raritySelect.value,
         synergyTags: tagsInput.value
           .split(",")
           .map((tag) => tag.trim())
@@ -477,6 +491,7 @@ function renderAdminCards(cards, token) {
       seriesInput,
       typeSelect,
       costInput,
+      raritySelect,
       tagsInput,
       descriptionInput,
       atkInput,
@@ -564,6 +579,7 @@ document.getElementById("form-new-card").addEventListener("submit", async (e) =>
     series: document.getElementById("new-card-series").value,
     type,
     cost: Number(document.getElementById("new-card-cost").value),
+    rarity: document.getElementById("new-card-rarity").value,
     synergyTags: document
       .getElementById("new-card-tags")
       .value.split(",")
@@ -619,6 +635,142 @@ if (savedToken && savedUsername) {
   showScreen("auth");
 }
 
+// ---------- 덱 편집 ----------
+
+const DECK_SIZE = 30;
+const MAX_COPIES_COMMON = 2;
+const MAX_COPIES_LEGENDARY = 1;
+const MAX_LEGENDARY_TOTAL = 2;
+
+document.getElementById("btn-edit-deck").addEventListener("click", async () => {
+  showScreen("deckBuilder");
+  document.getElementById("deck-error").textContent = "";
+
+  try {
+    const [cardsRes, deckRes] = await Promise.all([
+      fetch(`${SERVER_URL}/cards`, { headers: { Authorization: `Bearer ${currentAuthToken}` } }),
+      fetch(`${SERVER_URL}/decks/mine`, { headers: { Authorization: `Bearer ${currentAuthToken}` } }),
+    ]);
+    const cardsData = await cardsRes.json();
+    const deckData = await deckRes.json();
+    if (!cardsData.ok || !deckData.ok) {
+      document.getElementById("deck-error").textContent = cardsData.message || deckData.message;
+      return;
+    }
+    deckCatalog = cardsData.cards;
+    currentDeckCardIds = deckData.cardIds;
+    renderDeckBuilder();
+  } catch (err) {
+    document.getElementById("deck-error").textContent = "덱 정보를 불러올 수 없습니다.";
+  }
+});
+
+document.getElementById("btn-deck-back").addEventListener("click", () => {
+  showScreen("lobby");
+});
+
+document.getElementById("btn-deck-save").addEventListener("click", async () => {
+  const errorEl = document.getElementById("deck-error");
+  errorEl.textContent = "";
+
+  try {
+    const res = await fetch(`${SERVER_URL}/decks/mine`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${currentAuthToken}`,
+      },
+      body: JSON.stringify({ cardIds: currentDeckCardIds }),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      errorEl.textContent = data.message;
+      return;
+    }
+    showScreen("lobby");
+  } catch (err) {
+    errorEl.textContent = "덱 저장 중 오류가 발생했습니다.";
+  }
+});
+
+function countCopiesInDeck(cardId) {
+  return currentDeckCardIds.filter((id) => id === cardId).length;
+}
+
+function legendaryCountInDeck() {
+  const cardsById = new Map(deckCatalog.map((card) => [card.id, card]));
+  return currentDeckCardIds.filter((id) => cardsById.get(id)?.rarity === "legendary").length;
+}
+
+function addCardToDeck(card) {
+  const maxCopies = card.rarity === "legendary" ? MAX_COPIES_LEGENDARY : MAX_COPIES_COMMON;
+  if (currentDeckCardIds.length >= DECK_SIZE) return;
+  if (countCopiesInDeck(card.id) >= maxCopies) return;
+  if (card.rarity === "legendary" && legendaryCountInDeck() >= MAX_LEGENDARY_TOTAL) return;
+
+  currentDeckCardIds.push(card.id);
+  renderDeckBuilder();
+}
+
+function removeCardFromDeck(cardId) {
+  const index = currentDeckCardIds.indexOf(cardId);
+  if (index === -1) return;
+  currentDeckCardIds.splice(index, 1);
+  renderDeckBuilder();
+}
+
+function renderDeckBuilder() {
+  const cardsById = new Map(deckCatalog.map((card) => [card.id, card]));
+  document.getElementById("deck-count").textContent = currentDeckCardIds.length;
+  document.getElementById("deck-legendary-count").textContent = legendaryCountInDeck();
+
+  const catalogEl = document.getElementById("deck-catalog-list");
+  catalogEl.innerHTML = "";
+  for (const card of deckCatalog) {
+    const row = document.createElement("div");
+    row.className = "deck-card-row";
+    if (card.rarity === "legendary") row.classList.add("legendary");
+
+    const label = document.createElement("span");
+    const copies = countCopiesInDeck(card.id);
+    label.textContent = `${card.name} (${card.rarity === "legendary" ? "전설" : "일반"}, 코스트 ${card.cost}) — ${copies}장 보유중`;
+    row.appendChild(label);
+
+    const addBtn = document.createElement("button");
+    addBtn.textContent = "추가";
+    const maxCopies = card.rarity === "legendary" ? MAX_COPIES_LEGENDARY : MAX_COPIES_COMMON;
+    const legendaryBlocked = card.rarity === "legendary" && legendaryCountInDeck() >= MAX_LEGENDARY_TOTAL && copies === 0;
+    addBtn.disabled = currentDeckCardIds.length >= DECK_SIZE || copies >= maxCopies || legendaryBlocked;
+    addBtn.addEventListener("click", () => addCardToDeck(card));
+    row.appendChild(addBtn);
+
+    catalogEl.appendChild(row);
+  }
+
+  const deckEl = document.getElementById("deck-current-list");
+  deckEl.innerHTML = "";
+  const uniqueDeckCardIds = [...new Set(currentDeckCardIds)];
+  for (const cardId of uniqueDeckCardIds) {
+    const card = cardsById.get(cardId);
+    if (!card) continue;
+
+    const row = document.createElement("div");
+    row.className = "deck-card-row";
+    if (card.rarity === "legendary") row.classList.add("legendary");
+
+    const label = document.createElement("span");
+    label.textContent = `${card.name} x${countCopiesInDeck(cardId)}`;
+    row.appendChild(label);
+
+    const removeBtn = document.createElement("button");
+    removeBtn.textContent = "제거";
+    removeBtn.addEventListener("click", () => removeCardFromDeck(cardId));
+    row.appendChild(removeBtn);
+
+    deckEl.appendChild(row);
+  }
+}
+
 // ---------- 게임 ----------
 
 document.getElementById("btn-join-queue").addEventListener("click", () => {
@@ -648,6 +800,11 @@ function registerSocketHandlers() {
     if (lastState) renderState(lastState);
   });
 
+  socket.on("queue_error", (message) => {
+    document.getElementById("lobby-status").textContent = message;
+    showScreen("lobby");
+  });
+
   socket.on("opponent_disconnected", () => {
     document.getElementById("result-text").textContent = "상대가 접속을 종료했습니다.";
     showScreen("result");
@@ -672,6 +829,7 @@ function cardNeedsTargetCharacter(card) {
 function renderCard(card, role, isMyTurn) {
   const el = document.createElement("div");
   el.className = "card";
+  if (card.rarity === "legendary") el.classList.add("legendary");
   if (card.description) el.title = card.description;
 
   let bodyHtml;

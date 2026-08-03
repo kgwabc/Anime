@@ -17,6 +17,7 @@ function rowToCard(row) {
     matchupVsTag: row.matchup_vs_tag ?? null,
     matchupAtkBonus: row.matchup_atk_bonus ?? null,
     requiredTargetTag: row.required_target_tag ?? null,
+    rarity: row.rarity || "common",
   };
 }
 
@@ -73,12 +74,13 @@ async function createCard({
   matchupVsTag,
   matchupAtkBonus,
   requiredTargetTag,
+  rarity,
 }) {
   const id = await generateCardId(name);
   const isCharacter = type === "character";
   await getClient().execute({
-    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag, rarity)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       name,
@@ -95,6 +97,7 @@ async function createCard({
       isCharacter ? matchupVsTag ?? null : null,
       isCharacter ? matchupAtkBonus ?? null : null,
       isCharacter ? null : requiredTargetTag ?? null,
+      rarity || "common",
     ],
   });
   return getCardById(id);
@@ -109,7 +112,7 @@ async function updateCard(id, fields) {
   await getClient().execute({
     sql: `UPDATE cards SET name = ?, series = ?, type = ?, cost = ?, atk = ?, hp = ?, synergy_tags = ?,
           effects = ?, equip_atk_bonus = ?, equip_hp_bonus = ?, description = ?,
-          matchup_vs_tag = ?, matchup_atk_bonus = ?, required_target_tag = ?
+          matchup_vs_tag = ?, matchup_atk_bonus = ?, required_target_tag = ?, rarity = ?
           WHERE id = ?`,
     args: [
       merged.name,
@@ -126,6 +129,7 @@ async function updateCard(id, fields) {
       isCharacter ? merged.matchupVsTag ?? null : null,
       isCharacter ? merged.matchupAtkBonus ?? null : null,
       isCharacter ? null : merged.requiredTargetTag ?? null,
+      merged.rarity || "common",
       id,
     ],
   });

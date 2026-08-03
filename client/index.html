@@ -33,6 +33,7 @@
     <h1>크로스오버 카드게임</h1>
     <p>환영합니다, <strong id="lobby-username"></strong>님</p>
     <button id="btn-join-queue">매칭 시작</button>
+    <button id="btn-edit-deck">덱 편집</button>
     <button id="btn-logout">로그아웃</button>
     <p id="lobby-status"></p>
 
@@ -50,6 +51,10 @@
           <option value="equipment">장비</option>
         </select>
         <input type="number" id="new-card-cost" placeholder="코스트" min="0" required />
+        <select id="new-card-rarity">
+          <option value="common">일반</option>
+          <option value="legendary">전설</option>
+        </select>
         <input type="text" id="new-card-tags" placeholder="시너지태그 (콤마로 구분)" />
         <textarea id="new-card-description" placeholder="카드 설명 (선택)"></textarea>
 
@@ -105,6 +110,27 @@
 
   <div id="screen-waiting" class="screen hidden">
     <h2>상대를 찾는 중...</h2>
+  </div>
+
+  <div id="screen-deck-builder" class="screen hidden">
+    <h2>덱 편집</h2>
+    <p>
+      덱: <span id="deck-count">0</span>/30장 ·
+      전설: <span id="deck-legendary-count">0</span>/2장
+    </p>
+    <button id="btn-deck-save">저장</button>
+    <button id="btn-deck-back">로비로</button>
+    <p id="deck-error" class="error"></p>
+    <div class="deck-builder-columns">
+      <div>
+        <h3>전체 카드</h3>
+        <div id="deck-catalog-list"></div>
+      </div>
+      <div>
+        <h3>내 덱</h3>
+        <div id="deck-current-list"></div>
+      </div>
+    </div>
   </div>
 
   <div id="screen-game" class="screen hidden">

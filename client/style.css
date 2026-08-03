@@ -250,3 +250,47 @@ button:hover {
   cursor: crosshair;
   outline: 2px dashed #ff6b6b;
 }
+
+.card.legendary {
+  border-color: #ffd24f;
+  box-shadow: 0 0 6px #ffd24f;
+}
+
+.deck-builder-columns {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.deck-builder-columns > div {
+  flex: 1 1 320px;
+  min-width: 280px;
+}
+
+#deck-catalog-list,
+#deck-current-list {
+  max-height: 60vh;
+  overflow-y: auto;
+  background: #262b3a;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.deck-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid #34405c;
+  font-size: 13px;
+}
+
+.deck-card-row.legendary {
+  color: #ffd24f;
+}
+
+.deck-card-row button {
+  padding: 4px 12px;
+  font-size: 13px;
+}

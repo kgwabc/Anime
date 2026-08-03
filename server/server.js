@@ -8,8 +8,11 @@ const { Server } = require("socket.io");
 const { connectDB } = require("./db");
 const authRoutes = require("./auth/authRoutes");
 const cardRoutes = require("./routes/cardRoutes");
+const deckRoutes = require("./routes/deckRoutes");
 const { socketAuthMiddleware } = require("./auth/socketAuth");
 const { listCards } = require("./models/Card");
+const { getDeckByUserId } = require("./models/Deck");
+const { validateDeck } = require("./game/deckValidation");
 const { Matchmaker } = require("./game/matchmaking");
 const { GameRoom } = require("./game/GameRoom");
 
@@ -23,6 +26,7 @@ app.get("/", (req, res) => {
 });
 app.use("/auth", authRoutes);
 app.use("/cards", cardRoutes);
+app.use("/decks", deckRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -76,6 +80,20 @@ io.on("connection", (socket) => {
   }
 
   socket.on("join_queue", async () => {
+    const currentCards = await listCards();
+    const cardsById = new Map(currentCards.map((card) => [card.id, card]));
+
+    const cardIds = await getDeckByUserId(socket.data.userId);
+    if (!cardIds) {
+      socket.emit("queue_error", "덱이 설정되어 있지 않습니다. 덱 편집에서 먼저 덱을 구성해주세요.");
+      return;
+    }
+    const validation = validateDeck(cardIds, cardsById);
+    if (!validation.ok) {
+      socket.emit("queue_error", validation.reason);
+      return;
+    }
+
     matchmaker.addToQueue(socket.id);
     console.log(`[queue] ${socket.id} joined. queue size=${matchmaker.waitingQueue.length}`);
 
@@ -89,8 +107,14 @@ io.on("connection", (socket) => {
       username: io.sockets.sockets.get(id)?.data.username || "Unknown",
       userId: io.sockets.sockets.get(id)?.data.userId,
     }));
-    const currentCards = await listCards();
-    const room = new GameRoom(roomId, players, currentCards);
+
+    const deckByPlayerId = {};
+    for (const player of players) {
+      const playerCardIds = await getDeckByUserId(player.userId);
+      deckByPlayerId[player.id] = playerCardIds.map((cardId) => ({ ...cardsById.get(cardId) }));
+    }
+
+    const room = new GameRoom(roomId, players, deckByPlayerId);
     rooms.set(roomId, room);
     socketToRoom.set(playerA, roomId);
     socketToRoom.set(playerB, roomId);

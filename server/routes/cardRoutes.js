@@ -6,6 +6,7 @@ const { requireAuth, requireAdmin } = require("../auth/middleware");
 const router = express.Router();
 
 const CARD_TYPES = ["character", "spell", "equipment"];
+const RARITIES = ["common", "legendary"];
 const TRIGGERS = ["ON_PLAY", "ON_DEATH", "IMMEDIATE", "ON_EQUIP"];
 const ACTIONS = ["DAMAGE", "HEAL", "DRAW", "BUFF"];
 const TARGETS = ["ENEMY_HERO", "ALL_ENEMIES", "TARGET_CHARACTER", "SELF"];
@@ -67,6 +68,7 @@ function validateCardFields(body, { partial, existingType } = {}) {
     matchupVsTag,
     matchupAtkBonus,
     requiredTargetTag,
+    rarity,
   } = body;
   const effectiveType = type !== undefined ? type : existingType;
 
@@ -127,6 +129,9 @@ function validateCardFields(body, { partial, existingType } = {}) {
       return "requiredTargetTag는 비어있지 않은 문자열이어야 합니다.";
     }
   }
+  if (rarity !== undefined && !RARITIES.includes(rarity)) {
+    return `rarity는 ${RARITIES.join("/")} 중 하나여야 합니다.`;
+  }
 
   const effectsError = validateEffects(effects, effectiveType);
   if (effectsError) return effectsError;
@@ -134,7 +139,7 @@ function validateCardFields(body, { partial, existingType } = {}) {
   return null;
 }
 
-router.get("/", requireAuth, requireAdmin, async (req, res) => {
+router.get("/", requireAuth, async (req, res) => {
   try {
     const cards = await listCards();
     return res.json({ ok: true, cards });

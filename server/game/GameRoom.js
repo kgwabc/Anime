@@ -13,14 +13,17 @@ function shuffle(array) {
   return result;
 }
 
-function buildDeck(allCards) {
-  // MVP: 전체 카드 풀을 그대로 셔플해서 덱으로 사용 (덱 빌딩은 다음 단계)
-  return shuffle(allCards).map((card) => ({ ...card }));
+function buildDeck(deckCards) {
+  // 플레이어가 덱 빌더에서 직접 구성한 30장(중복 포함)을 셔플해서 사용
+  return shuffle(deckCards).map((card) => ({ ...card }));
 }
 
 class GameRoom {
-  /** @param {{id: string, username: string, userId: string}[]} players */
-  constructor(roomId, players, allCards) {
+  /**
+   * @param {{id: string, username: string, userId: string}[]} players
+   * @param {Record<string, object[]>} deckByPlayerId 플레이어 id -> 30장 카드 객체 배열
+   */
+  constructor(roomId, players, deckByPlayerId) {
     this.roomId = roomId;
     this.turnNumber = 1;
     this.currentPlayerIndex = 0;
@@ -28,7 +31,7 @@ class GameRoom {
 
     this.players = {};
     players.forEach(({ id: playerId, username, userId }, index) => {
-      const deck = buildDeck(allCards);
+      const deck = buildDeck(deckByPlayerId[playerId]);
       const hand = deck.splice(0, STARTING_HAND_SIZE);
       this.players[playerId] = {
         id: playerId,

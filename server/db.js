@@ -52,6 +52,9 @@ async function migrateCardsTable(db) {
   if (!existingCols.has("required_target_tag")) {
     await db.execute("ALTER TABLE cards ADD COLUMN required_target_tag TEXT");
   }
+  if (!existingCols.has("rarity")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN rarity TEXT NOT NULL DEFAULT 'common'");
+  }
 }
 
 async function seedCardsIfEmpty(db) {
@@ -114,11 +117,19 @@ async function connectDB() {
       description TEXT NOT NULL DEFAULT '',
       matchup_vs_tag TEXT,
       matchup_atk_bonus INTEGER,
-      required_target_tag TEXT
+      required_target_tag TEXT,
+      rarity TEXT NOT NULL DEFAULT 'common'
     )
   `);
   await migrateCardsTable(db);
   await seedCardsIfEmpty(db);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS decks (
+      user_id INTEGER PRIMARY KEY,
+      card_ids TEXT NOT NULL DEFAULT '[]',
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
   console.log("Turso connected");
 }
 
