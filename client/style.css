@@ -156,38 +156,75 @@ button:hover {
   background: #3a72e0;
 }
 
+#screen-game {
+  height: 100vh;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
 .player-area {
   background: #262b3a;
   border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 12px;
+  padding: 10px 12px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.player-area h3 {
+  flex: 0 0 auto;
+  margin: 0 0 4px;
+  font-size: 15px;
 }
 
 .stats {
   display: flex;
+  flex: 0 0 auto;
   gap: 16px;
-  margin-bottom: 10px;
-  font-size: 14px;
+  margin-bottom: 6px;
+  font-size: 13px;
   color: #c9d2e3;
 }
 
 .board {
   display: flex;
+  align-items: center;
   gap: 8px;
-  min-height: 140px;
-  padding: 8px;
+  flex: 1;
+  min-height: 0;
+  padding: 14px 8px;
   background: #1b1f2a;
   border-radius: 6px;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
+  margin-bottom: 6px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .hand {
   display: flex;
+  align-items: center;
   gap: 8px;
-  min-height: 160px;
-  padding: 8px;
-  flex-wrap: wrap;
+  flex: 1;
+  min-height: 0;
+  padding: 14px 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.action-buttons {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
 }
 
 .card {
@@ -202,6 +239,12 @@ button:hover {
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+#screen-game .card {
+  flex: 0 0 auto;
+  width: 92px;
+  height: 128px;
 }
 
 .card:hover {
@@ -275,6 +318,13 @@ button:hover {
   background: radial-gradient(circle at 35% 30%, #ff8f8f, #b32323 65%, #7a1414);
 }
 
+#screen-game .cost-badge,
+#screen-game .card-stats .atk-hp span {
+  min-width: 18px;
+  height: 18px;
+  font-size: 11px;
+}
+
 .card-hover-info {
   position: absolute;
   left: 0;
@@ -300,8 +350,9 @@ button:hover {
 }
 
 #turn-indicator {
+  flex: 0 0 auto;
   text-align: center;
-  padding: 8px;
+  padding: 4px;
   font-weight: bold;
   color: #ffd24f;
 }
