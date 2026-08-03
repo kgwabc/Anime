@@ -3,11 +3,16 @@
   font-family: "Malgun Gothic", sans-serif;
 }
 
+html, body {
+  overscroll-behavior: none;
+}
+
 body {
   margin: 0;
   background: #1b1f2a;
   color: #f0f0f0;
   min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .screen {
@@ -150,6 +155,8 @@ button {
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 button:hover {
@@ -158,6 +165,7 @@ button:hover {
 
 #screen-game {
   height: 100vh;
+  height: 100dvh;
   max-width: 1100px;
   margin: 0 auto;
   padding: 10px 16px;
@@ -210,6 +218,8 @@ button:hover {
   flex-wrap: nowrap;
   overflow-x: auto;
   overflow-y: hidden;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .hand {
@@ -222,6 +232,8 @@ button:hover {
   flex-wrap: nowrap;
   overflow-x: auto;
   overflow-y: hidden;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .action-buttons {
@@ -243,6 +255,8 @@ button:hover {
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 #screen-game .card {
@@ -251,11 +265,13 @@ button:hover {
   height: 128px;
 }
 
-.card:hover {
-  border-color: #ffd24f;
-  transform: translateY(-10px) scale(1.05);
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.45), 0 0 10px rgba(255, 210, 79, 0.5);
-  z-index: 5;
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    border-color: #ffd24f;
+    transform: translateY(-10px) scale(1.05);
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.45), 0 0 10px rgba(255, 210, 79, 0.5);
+    z-index: 5;
+  }
 }
 
 .card-art {
@@ -736,5 +752,53 @@ button:hover {
 @media (max-width: 900px) and (orientation: portrait) {
   #rotate-overlay {
     display: flex;
+  }
+}
+
+@media (max-height: 500px) {
+  #screen-game {
+    padding: 4px 8px;
+    gap: 3px;
+  }
+
+  .player-area {
+    padding: 4px 8px;
+  }
+
+  .player-area h3 {
+    margin: 0 0 2px;
+    font-size: 12px;
+  }
+
+  .stats {
+    gap: 8px;
+    margin-bottom: 3px;
+    font-size: 11px;
+  }
+
+  .board,
+  .hand {
+    padding: 6px 6px;
+    margin-bottom: 3px;
+    gap: 4px;
+  }
+
+  #screen-game .card {
+    width: 68px;
+    height: 94px;
+  }
+
+  #turn-indicator {
+    padding: 2px;
+    font-size: 12px;
+  }
+
+  .action-buttons {
+    margin-top: 3px;
+  }
+
+  .action-buttons button {
+    padding: 6px 12px;
+    font-size: 13px;
   }
 }
