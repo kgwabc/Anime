@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const { createClient } = require("@libsql/client");
 
 let client;
@@ -25,6 +27,32 @@ async function migrateUsersTable(db) {
   }
 }
 
+async function seedCardsIfEmpty(db) {
+  const { rows } = await db.execute("SELECT COUNT(*) AS count FROM cards");
+  if (Number(rows[0].count) > 0) return;
+
+  const seedPath = path.join(__dirname, "data", "cards.json");
+  const seedCards = JSON.parse(fs.readFileSync(seedPath, "utf-8"));
+
+  for (const card of seedCards) {
+    await db.execute({
+      sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        card.id,
+        card.name,
+        card.series,
+        card.type,
+        card.cost,
+        card.atk,
+        card.hp,
+        JSON.stringify(card.synergyTags || []),
+      ],
+    });
+  }
+  console.log(`Seeded ${seedCards.length} cards from cards.json`);
+}
+
 async function connectDB() {
   const db = getClient();
   await migrateUsersTable(db);
@@ -36,6 +64,19 @@ async function connectDB() {
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS cards (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      series TEXT NOT NULL,
+      type TEXT NOT NULL,
+      cost INTEGER NOT NULL,
+      atk INTEGER NOT NULL,
+      hp INTEGER NOT NULL,
+      synergy_tags TEXT NOT NULL DEFAULT '[]'
+    )
+  `);
+  await seedCardsIfEmpty(db);
   console.log("Turso connected");
 }
 

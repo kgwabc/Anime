@@ -39,6 +39,20 @@
     <div id="admin-panel" class="hidden">
       <h2>관리자 패널</h2>
       <div id="admin-user-list"></div>
+
+      <h3>카드 관리</h3>
+      <form id="form-new-card" class="admin-card-form">
+        <input type="text" id="new-card-name" placeholder="이름" required />
+        <input type="text" id="new-card-series" placeholder="계열 (예: demon_slayer_corps)" required />
+        <input type="text" id="new-card-type" placeholder="타입" value="character" required />
+        <input type="number" id="new-card-cost" placeholder="코스트" min="0" required />
+        <input type="number" id="new-card-atk" placeholder="공격력" min="0" required />
+        <input type="number" id="new-card-hp" placeholder="체력" min="0" required />
+        <input type="text" id="new-card-tags" placeholder="시너지태그 (콤마로 구분)" />
+        <button type="submit">카드 생성</button>
+        <p id="new-card-error" class="error"></p>
+      </form>
+      <div id="admin-card-list"></div>
     </div>
   </div>
 

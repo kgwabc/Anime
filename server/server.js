@@ -1,7 +1,5 @@
 require("dotenv").config();
 
-const fs = require("fs");
-const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const http = require("http");
@@ -9,7 +7,9 @@ const { Server } = require("socket.io");
 
 const { connectDB } = require("./db");
 const authRoutes = require("./auth/authRoutes");
+const cardRoutes = require("./routes/cardRoutes");
 const { socketAuthMiddleware } = require("./auth/socketAuth");
+const { listCards } = require("./models/Card");
 const { Matchmaker } = require("./game/matchmaking");
 const { GameRoom } = require("./game/GameRoom");
 
@@ -22,16 +22,13 @@ app.get("/", (req, res) => {
   res.json({ status: "ok", service: "crossover-tcg-server" });
 });
 app.use("/auth", authRoutes);
+app.use("/cards", cardRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: "*" },
 });
 io.use(socketAuthMiddleware);
-
-const allCards = JSON.parse(
-  fs.readFileSync(path.join(__dirname, "data", "cards.json"), "utf-8")
-);
 
 const RECONNECT_GRACE_MS = Number(process.env.RECONNECT_GRACE_MS) || 30000;
 
@@ -78,7 +75,7 @@ io.on("connection", (socket) => {
     }
   }
 
-  socket.on("join_queue", () => {
+  socket.on("join_queue", async () => {
     matchmaker.addToQueue(socket.id);
     console.log(`[queue] ${socket.id} joined. queue size=${matchmaker.waitingQueue.length}`);
 
@@ -92,7 +89,8 @@ io.on("connection", (socket) => {
       username: io.sockets.sockets.get(id)?.data.username || "Unknown",
       userId: io.sockets.sockets.get(id)?.data.userId,
     }));
-    const room = new GameRoom(roomId, players, allCards);
+    const currentCards = await listCards();
+    const room = new GameRoom(roomId, players, currentCards);
     rooms.set(roomId, room);
     socketToRoom.set(playerA, roomId);
     socketToRoom.set(playerB, roomId);

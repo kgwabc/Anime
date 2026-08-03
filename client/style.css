@@ -47,7 +47,40 @@ body {
   padding: 16px;
   background: #262b3a;
   border-radius: 8px;
-  max-width: 400px;
+  max-width: 640px;
+}
+
+.admin-card-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.admin-card-form input {
+  flex: 1 1 120px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.admin-card-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #34405c;
+}
+
+.admin-card-row input {
+  flex: 1 1 90px;
+  padding: 4px 6px;
+  font-size: 13px;
+}
+
+.admin-card-row button {
+  padding: 4px 12px;
+  font-size: 13px;
 }
 
 .admin-user-row {

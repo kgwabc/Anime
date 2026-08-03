@@ -4,6 +4,7 @@ const ADMIN_USERNAME = "kgwabc";
 let socket = null;
 let lastState = null;
 let selectedAttackerId = null;
+let currentAdminToken = null;
 
 const screens = {
   auth: document.getElementById("screen-auth"),
@@ -115,7 +116,9 @@ function connectSocket(token, username) {
     const adminPanel = document.getElementById("admin-panel");
     if (username === ADMIN_USERNAME) {
       adminPanel.classList.remove("hidden");
+      currentAdminToken = token;
       loadAdminUsers(token);
+      loadAdminCards(token);
     } else {
       adminPanel.classList.add("hidden");
     }
@@ -189,6 +192,187 @@ async function deleteAdminUser(username, token) {
     alert("계정 삭제 중 오류가 발생했습니다.");
   }
 }
+
+async function loadAdminCards(token) {
+  const listEl = document.getElementById("admin-card-list");
+  listEl.textContent = "불러오는 중...";
+
+  try {
+    const res = await fetch(`${SERVER_URL}/cards`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      listEl.textContent = data.message;
+      return;
+    }
+    renderAdminCards(data.cards, token);
+  } catch (err) {
+    listEl.textContent = "카드 목록을 불러올 수 없습니다.";
+  }
+}
+
+function renderAdminCards(cards, token) {
+  const listEl = document.getElementById("admin-card-list");
+  listEl.innerHTML = "";
+
+  for (const card of cards) {
+    const row = document.createElement("div");
+    row.className = "admin-card-row";
+
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.value = card.name;
+
+    const seriesInput = document.createElement("input");
+    seriesInput.type = "text";
+    seriesInput.value = card.series;
+
+    const typeInput = document.createElement("input");
+    typeInput.type = "text";
+    typeInput.value = card.type;
+
+    const costInput = document.createElement("input");
+    costInput.type = "number";
+    costInput.min = "0";
+    costInput.value = card.cost;
+
+    const atkInput = document.createElement("input");
+    atkInput.type = "number";
+    atkInput.min = "0";
+    atkInput.value = card.atk;
+
+    const hpInput = document.createElement("input");
+    hpInput.type = "number";
+    hpInput.min = "0";
+    hpInput.value = card.hp;
+
+    const tagsInput = document.createElement("input");
+    tagsInput.type = "text";
+    tagsInput.value = (card.synergyTags || []).join(", ");
+
+    const saveBtn = document.createElement("button");
+    saveBtn.textContent = "저장";
+    saveBtn.addEventListener("click", () => {
+      updateAdminCard(
+        card.id,
+        {
+          name: nameInput.value,
+          series: seriesInput.value,
+          type: typeInput.value,
+          cost: Number(costInput.value),
+          atk: Number(atkInput.value),
+          hp: Number(hpInput.value),
+          synergyTags: tagsInput.value
+            .split(",")
+            .map((tag) => tag.trim())
+            .filter(Boolean),
+        },
+        token
+      );
+    });
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "삭제";
+    deleteBtn.addEventListener("click", () => deleteAdminCard(card.id, token));
+
+    row.append(
+      nameInput,
+      seriesInput,
+      typeInput,
+      costInput,
+      atkInput,
+      hpInput,
+      tagsInput,
+      saveBtn,
+      deleteBtn
+    );
+    listEl.appendChild(row);
+  }
+}
+
+async function updateAdminCard(id, fields, token) {
+  try {
+    const res = await fetch(`${SERVER_URL}/cards/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(fields),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      alert(data.message);
+      return;
+    }
+    loadAdminCards(token);
+  } catch (err) {
+    alert("카드 수정 중 오류가 발생했습니다.");
+  }
+}
+
+async function deleteAdminCard(id, token) {
+  if (!confirm("이 카드를 삭제하시겠습니까?")) return;
+
+  try {
+    const res = await fetch(`${SERVER_URL}/cards/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      alert(data.message);
+      return;
+    }
+    loadAdminCards(token);
+  } catch (err) {
+    alert("카드 삭제 중 오류가 발생했습니다.");
+  }
+}
+
+document.getElementById("form-new-card").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const errorEl = document.getElementById("new-card-error");
+  errorEl.textContent = "";
+
+  if (!currentAdminToken) return;
+
+  const fields = {
+    name: document.getElementById("new-card-name").value,
+    series: document.getElementById("new-card-series").value,
+    type: document.getElementById("new-card-type").value,
+    cost: Number(document.getElementById("new-card-cost").value),
+    atk: Number(document.getElementById("new-card-atk").value),
+    hp: Number(document.getElementById("new-card-hp").value),
+    synergyTags: document
+      .getElementById("new-card-tags")
+      .value.split(",")
+      .map((tag) => tag.trim())
+      .filter(Boolean),
+  };
+
+  try {
+    const res = await fetch(`${SERVER_URL}/cards`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${currentAdminToken}`,
+      },
+      body: JSON.stringify(fields),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      errorEl.textContent = data.message;
+      return;
+    }
+    e.target.reset();
+    document.getElementById("new-card-type").value = "character";
+    loadAdminCards(currentAdminToken);
+  } catch (err) {
+    errorEl.textContent = "카드 생성 중 오류가 발생했습니다.";
+  }
+});
 
 // 페이지 로드시 저장된 토큰이 있으면 자동 로그인
 const savedToken = localStorage.getItem("tcg_token");
