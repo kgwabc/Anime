@@ -35,6 +35,7 @@ const ACTION_LABELS = {
 const TARGET_LABELS = {
   ENEMY_HERO: "적 영웅",
   ALL_ENEMIES: "적 전체",
+  ALL_ALLIES: "내 캐릭터 전체",
   TARGET_CHARACTER: "지정 캐릭터",
   SELF: "자신",
 };
