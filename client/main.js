@@ -4,8 +4,8 @@ const ADMIN_USERNAME = "kgwabc";
 let socket = null;
 let lastState = null;
 let selectedAttackerId = null;
-let selectedSpellCardId = null;
-let selectedEquipmentCardId = null;
+let dragState = null;
+let pendingRenderState = null;
 let currentAdminToken = null;
 let loadedAdminCards = [];
 let currentAuthToken = null;
@@ -867,14 +867,16 @@ function registerSocketHandlers() {
   });
 
   socket.on("game_state_update", (state) => {
+    if (dragState) {
+      pendingRenderState = state;
+      return;
+    }
     renderState(state);
   });
 
   socket.on("action_error", (reason) => {
     console.warn("action_error:", reason);
     selectedAttackerId = null;
-    selectedSpellCardId = null;
-    selectedEquipmentCardId = null;
     if (lastState) renderState(lastState);
   });
 
@@ -921,8 +923,8 @@ function returnToLobby() {
     resultAutoReturnTimer = null;
   }
   selectedAttackerId = null;
-  selectedSpellCardId = null;
-  selectedEquipmentCardId = null;
+  dragState = null;
+  pendingRenderState = null;
   lastState = null;
   lastTurnPlayerId = null;
   pendingInstallEffects.clear();
@@ -1021,75 +1023,140 @@ function renderCard(card, role, isMyTurn) {
   el.innerHTML = cardFaceHtml(card);
 
   if (role === "hand") {
-    if (selectedSpellCardId === card.id || selectedEquipmentCardId === card.id) {
-      el.classList.add("selected-attacker");
-    }
-    el.addEventListener("click", () => {
-      if (card.type === "equipment") {
-        selectedSpellCardId = null;
-        selectedEquipmentCardId = selectedEquipmentCardId === card.id ? null : card.id;
-        renderState(lastState);
-        return;
-      }
-      if (card.type === "spell" && cardNeedsTargetCharacter(card)) {
-        selectedEquipmentCardId = null;
-        selectedSpellCardId = selectedSpellCardId === card.id ? null : card.id;
-        renderState(lastState);
-        return;
-      }
-      socket.emit("play_card", { cardId: card.id });
-    });
+    el.style.touchAction = "none";
+    el.addEventListener("pointerdown", (e) => startCardDrag(e, card, el));
   } else if (role === "my-board") {
-    if (selectedEquipmentCardId) {
-      el.classList.add("attack-target");
-      el.addEventListener("click", (e) => {
-        e.stopPropagation();
-        socket.emit("equip_card", { equipmentCardId: selectedEquipmentCardId, targetCharacterId: card.id });
-        selectedEquipmentCardId = null;
-      });
-    } else if (selectedSpellCardId) {
-      el.classList.add("attack-target");
-      el.addEventListener("click", (e) => {
-        e.stopPropagation();
-        socket.emit("play_card", { cardId: selectedSpellCardId, target: { cardId: card.id } });
-        selectedSpellCardId = null;
+    const canSelect = isMyTurn && card.canAttack && !card.hasAttacked;
+    if (canSelect) {
+      el.classList.add("attackable");
+      if (selectedAttackerId === card.id) el.classList.add("selected-attacker");
+      el.addEventListener("click", () => {
+        selectedAttackerId = selectedAttackerId === card.id ? null : card.id;
+        renderState(lastState);
       });
     } else {
-      const canSelect = isMyTurn && card.canAttack && !card.hasAttacked;
-      if (canSelect) {
-        el.classList.add("attackable");
-        if (selectedAttackerId === card.id) el.classList.add("selected-attacker");
-        el.addEventListener("click", () => {
-          selectedAttackerId = selectedAttackerId === card.id ? null : card.id;
-          renderState(lastState);
-        });
-      } else {
-        el.classList.add("cannot-attack");
-      }
+      el.classList.add("cannot-attack");
     }
   } else if (role === "opp-board") {
-    if (selectedSpellCardId) {
-      el.classList.add("attack-target");
-      el.addEventListener("click", (e) => {
-        e.stopPropagation();
-        socket.emit("play_card", { cardId: selectedSpellCardId, target: { cardId: card.id } });
-        selectedSpellCardId = null;
+    if (selectedAttackerId) el.classList.add("attack-target");
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!selectedAttackerId) return;
+      socket.emit("attack_card", {
+        attackerCardId: selectedAttackerId,
+        target: { type: "character", cardId: card.id },
       });
-    } else {
-      if (selectedAttackerId) el.classList.add("attack-target");
-      el.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (!selectedAttackerId) return;
-        socket.emit("attack_card", {
-          attackerCardId: selectedAttackerId,
-          target: { type: "character", cardId: card.id },
-        });
-        selectedAttackerId = null;
-      });
-    }
+      selectedAttackerId = null;
+    });
   }
 
   return el;
+}
+
+function findDropTarget(x, y) {
+  const el = document.elementFromPoint(x, y);
+  if (!el) return null;
+  const cardEl = el.closest(".card");
+  const myBoardEl = document.getElementById("my-board");
+  const oppBoardEl = document.getElementById("opp-board");
+  if (cardEl && cardEl.dataset.cardId && (myBoardEl.contains(cardEl) || oppBoardEl.contains(cardEl))) {
+    return { boardSide: myBoardEl.contains(cardEl) ? "my" : "opp", cardEl };
+  }
+  if (el.closest("#my-board")) return { boardSide: "my", cardEl: null };
+  if (el.closest("#opp-board")) return { boardSide: "opp", cardEl: null };
+  return null;
+}
+
+function dropIsValid(card, dropTarget) {
+  if (!dropTarget) return false;
+  if (card.type === "character") {
+    return dropTarget.boardSide === "my";
+  }
+  if (card.type === "equipment") {
+    return dropTarget.boardSide === "my" && Boolean(dropTarget.cardEl);
+  }
+  if (card.type === "spell") {
+    if (cardNeedsTargetCharacter(card)) return Boolean(dropTarget.cardEl);
+    return true;
+  }
+  return false;
+}
+
+function clearDropHints() {
+  for (const el of document.querySelectorAll(".drop-hint")) {
+    el.classList.remove("drop-hint");
+  }
+}
+
+function updateDropHint(card, x, y) {
+  clearDropHints();
+  const dropTarget = findDropTarget(x, y);
+  if (!dropIsValid(card, dropTarget)) return;
+  if (dropTarget.cardEl) {
+    dropTarget.cardEl.classList.add("drop-hint");
+  } else {
+    document.getElementById(dropTarget.boardSide === "my" ? "my-board" : "opp-board").classList.add("drop-hint");
+  }
+}
+
+function startCardDrag(e, card, el) {
+  if (dragState) return;
+  e.preventDefault();
+  const rect = el.getBoundingClientRect();
+  el.setPointerCapture(e.pointerId);
+  el.classList.add("dragging");
+  el.style.position = "fixed";
+  el.style.left = `${rect.left}px`;
+  el.style.top = `${rect.top}px`;
+  el.style.width = `${rect.width}px`;
+  el.style.zIndex = "200";
+
+  const offsetX = e.clientX - rect.left;
+  const offsetY = e.clientY - rect.top;
+
+  function onMove(ev) {
+    el.style.left = `${ev.clientX - offsetX}px`;
+    el.style.top = `${ev.clientY - offsetY}px`;
+    updateDropHint(card, ev.clientX, ev.clientY);
+  }
+
+  function onUp(ev) {
+    const dropTarget = findDropTarget(ev.clientX, ev.clientY);
+    if (dropIsValid(card, dropTarget)) {
+      if (card.type === "character" || (card.type === "spell" && !cardNeedsTargetCharacter(card))) {
+        socket.emit("play_card", { cardId: card.id });
+      } else if (card.type === "spell") {
+        socket.emit("play_card", { cardId: card.id, target: { cardId: dropTarget.cardEl.dataset.cardId } });
+      } else if (card.type === "equipment") {
+        socket.emit("equip_card", { equipmentCardId: card.id, targetCharacterId: dropTarget.cardEl.dataset.cardId });
+      }
+    }
+    endCardDrag(el, onMove, onUp);
+  }
+
+  el.addEventListener("pointermove", onMove);
+  el.addEventListener("pointerup", onUp);
+  el.addEventListener("pointercancel", onUp);
+  dragState = { card, el };
+}
+
+function endCardDrag(el, onMove, onUp) {
+  el.removeEventListener("pointermove", onMove);
+  el.removeEventListener("pointerup", onUp);
+  el.removeEventListener("pointercancel", onUp);
+  el.classList.remove("dragging");
+  el.style.position = "";
+  el.style.left = "";
+  el.style.top = "";
+  el.style.width = "";
+  el.style.zIndex = "";
+  clearDropHints();
+  dragState = null;
+  if (pendingRenderState) {
+    const state = pendingRenderState;
+    pendingRenderState = null;
+    renderState(state);
+  }
 }
 
 function flashClass(el, className, durationMs) {

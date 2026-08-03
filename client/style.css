@@ -681,3 +681,60 @@ button:hover {
     opacity: 0;
   }
 }
+
+#my-hand .card {
+  cursor: grab;
+}
+
+.card.dragging {
+  cursor: grabbing;
+  transform: scale(1.1);
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.55), 0 0 14px rgba(79, 140, 255, 0.6);
+  pointer-events: none;
+}
+
+.card.drop-hint {
+  border-color: #6bff8a;
+  box-shadow: 0 0 14px rgba(107, 255, 138, 0.8);
+}
+
+.board.drop-hint {
+  outline: 2px dashed #6bff8a;
+  outline-offset: -2px;
+}
+
+#rotate-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #0d0f16;
+  color: #f0f0f0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+  padding: 24px;
+}
+
+#rotate-icon {
+  font-size: 64px;
+  animation: rotate-hint 1.6s ease-in-out infinite;
+}
+
+@keyframes rotate-hint {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(90deg);
+  }
+}
+
+@media (max-width: 900px) and (orientation: portrait) {
+  #rotate-overlay {
+    display: flex;
+  }
+}
