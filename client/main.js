@@ -12,6 +12,10 @@ let loadedAdminCards = [];
 let currentAuthToken = null;
 let deckCatalog = [];
 let currentDeckCardIds = [];
+let lastTurnPlayerId = null;
+const pendingInstallEffects = new Map(); // cardId -> { playerId }
+const pendingBuffEffects = new Map(); // targetCharacterId -> { playerId }
+const pendingAttackEffects = []; // { attackerId, attackerCardId, target }
 
 const TRIGGER_LABELS = {
   ON_PLAY: "출격시(ON_PLAY)",
@@ -879,6 +883,47 @@ function registerSocketHandlers() {
       result === "win" ? "승리했습니다!" : "패배했습니다.";
     showScreen("result");
   });
+
+  socket.on("card_played", ({ playerId, card, targetCharacterId }) => {
+    if (card?.type === "spell") {
+      showSpellEffect(card);
+      return;
+    }
+
+    if (targetCharacterId) {
+      const boardEl = playerId === socket.id ? document.getElementById("my-board") : document.getElementById("opp-board");
+      const targetEl = boardEl.querySelector(`.card[data-card-id="${targetCharacterId}"]`);
+      if (targetEl) {
+        flashClass(targetEl, "buff-flash", 600);
+      } else {
+        pendingBuffEffects.set(targetCharacterId, { playerId });
+      }
+      return;
+    }
+
+    const boardEl = playerId === socket.id ? document.getElementById("my-board") : document.getElementById("opp-board");
+    const cardEl = boardEl.querySelector(`.card[data-card-id="${card.id}"]`);
+    if (cardEl) {
+      flashClass(cardEl, "card-slam", 500);
+    } else {
+      pendingInstallEffects.set(card.id, { playerId });
+    }
+  });
+
+  socket.on("attack_occurred", ({ attackerId, attackerCardId, target }) => {
+    pendingAttackEffects.push({ attackerId, attackerCardId, target });
+    applyPendingAttackEffects();
+  });
+}
+
+function showSpellEffect(card) {
+  const layer = document.getElementById("spell-effect-layer");
+  const el = document.createElement("div");
+  el.className = "spell-effect-card";
+  if (card.image) el.style.backgroundImage = `url('${card.image}')`;
+  el.innerHTML = `<div class="spell-effect-name">${card.name}</div>`;
+  layer.appendChild(el);
+  setTimeout(() => el.remove(), 1100);
 }
 
 function describeEffect(effect) {
@@ -892,10 +937,10 @@ function cardNeedsTargetCharacter(card) {
 
 function cardStatsHtml(card) {
   if (card.type === "character") {
-    return `<div class="atk-hp"><span>⚔${card.atk}</span><span>❤${card.hp}</span></div>`;
+    return `<div class="atk-hp"><span class="atk">⚔${card.atk}</span><span class="hp">❤${card.hp}</span></div>`;
   }
   if (card.type === "equipment") {
-    return `<div class="atk-hp"><span>+${card.equipAtkBonus || 0}</span><span>+${card.equipHpBonus || 0}</span></div>`;
+    return `<div class="atk-hp"><span class="atk">+${card.equipAtkBonus || 0}</span><span class="hp">+${card.equipHpBonus || 0}</span></div>`;
   }
   return "";
 }
@@ -931,6 +976,7 @@ function cardFaceHtml(card) {
 function renderCard(card, role, isMyTurn) {
   const el = document.createElement("div");
   el.className = "card";
+  el.dataset.cardId = card.id;
   if (card.rarity === "legendary") el.classList.add("legendary");
   if (!card.image) el.classList.add("no-image");
 
@@ -1008,6 +1054,46 @@ function renderCard(card, role, isMyTurn) {
   return el;
 }
 
+function flashClass(el, className, durationMs) {
+  if (!el) return;
+  el.classList.add(className);
+  const clear = () => el.classList.remove(className);
+  el.addEventListener("animationend", clear, { once: true });
+  setTimeout(clear, durationMs);
+}
+
+function applyPendingCardEffects(boardEl, role) {
+  for (const card of boardEl.querySelectorAll(".card")) {
+    const cardId = card.dataset.cardId;
+    if (pendingInstallEffects.has(cardId)) {
+      pendingInstallEffects.delete(cardId);
+      flashClass(card, "card-slam", 500);
+    }
+    if (pendingBuffEffects.has(cardId)) {
+      pendingBuffEffects.delete(cardId);
+      flashClass(card, "buff-flash", 600);
+    }
+  }
+}
+
+function applyPendingAttackEffects() {
+  while (pendingAttackEffects.length > 0) {
+    const { attackerId, attackerCardId, target } = pendingAttackEffects.shift();
+    const attackerBoardEl = attackerId === socket.id ? document.getElementById("my-board") : document.getElementById("opp-board");
+    const attackerEl = attackerBoardEl.querySelector(`.card[data-card-id="${attackerCardId}"]`);
+    flashClass(attackerEl, attackerId === socket.id ? "attack-lunge-up" : "attack-lunge-down", 350);
+
+    if (target?.type === "character") {
+      const targetBoardEl = attackerId === socket.id ? document.getElementById("opp-board") : document.getElementById("my-board");
+      const targetEl = targetBoardEl.querySelector(`.card[data-card-id="${target.cardId}"]`);
+      flashClass(targetEl, "impact-flash", 500);
+    } else if (target?.type === "hero") {
+      const heroAreaEl = attackerId === socket.id ? document.getElementById("opponent-area") : document.getElementById("my-area");
+      flashClass(heroAreaEl, "impact-flash", 500);
+    }
+  }
+}
+
 function renderState(state) {
   lastState = state;
   document.getElementById("my-name").textContent = state.me.username || "나";
@@ -1029,10 +1115,23 @@ function renderState(state) {
     : `상대 턴 (턴 ${state.turnNumber})`;
   document.getElementById("btn-end-turn").disabled = !isMyTurn;
 
+  if (lastTurnPlayerId !== null && lastTurnPlayerId !== state.currentPlayerId) {
+    flashClass(document.getElementById("turn-indicator"), "turn-flash", 600);
+  }
+  lastTurnPlayerId = state.currentPlayerId;
+
   const myHandEl = document.getElementById("my-hand");
   myHandEl.innerHTML = "";
   for (const card of state.me.hand) {
     myHandEl.appendChild(renderCard(card, "hand"));
+  }
+
+  const oppHandEl = document.getElementById("opp-hand");
+  oppHandEl.innerHTML = "";
+  for (let i = 0; i < state.opponent.handCount; i++) {
+    const back = document.createElement("div");
+    back.className = "card card-back";
+    oppHandEl.appendChild(back);
   }
 
   const myBoardEl = document.getElementById("my-board");
@@ -1046,6 +1145,10 @@ function renderState(state) {
   for (const card of state.opponent.board) {
     oppBoardEl.appendChild(renderCard(card, "opp-board"));
   }
+
+  applyPendingCardEffects(myBoardEl, "my-board");
+  applyPendingCardEffects(oppBoardEl, "opp-board");
+  applyPendingAttackEffects();
 
   const opponentAreaEl = document.getElementById("opponent-area");
   opponentAreaEl.classList.toggle(

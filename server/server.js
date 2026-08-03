@@ -50,6 +50,12 @@ function broadcastGameState(room) {
   }
 }
 
+function broadcastEffect(room, event, payload) {
+  for (const playerId of room.playerOrder) {
+    io.to(playerId).emit(event, payload);
+  }
+}
+
 function handleGameOver(room, roomId) {
   if (!room.isGameOver()) return;
 
@@ -136,6 +142,7 @@ io.on("connection", (socket) => {
       return;
     }
 
+    broadcastEffect(room, "card_played", { playerId: socket.id, card: result.card });
     broadcastGameState(room);
     handleGameOver(room, roomId);
   });
@@ -151,6 +158,7 @@ io.on("connection", (socket) => {
       return;
     }
 
+    broadcastEffect(room, "card_played", { playerId: socket.id, card: result.card, targetCharacterId });
     broadcastGameState(room);
     handleGameOver(room, roomId);
   });
@@ -166,6 +174,7 @@ io.on("connection", (socket) => {
       return;
     }
 
+    broadcastEffect(room, "attack_occurred", { attackerId: socket.id, attackerCardId, target });
     broadcastGameState(room);
     handleGameOver(room, roomId);
   });

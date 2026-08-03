@@ -201,10 +201,14 @@ button:hover {
   font-size: 12px;
   overflow: hidden;
   cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
 .card:hover {
   border-color: #ffd24f;
+  transform: translateY(-10px) scale(1.05);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.45), 0 0 10px rgba(255, 210, 79, 0.5);
+  z-index: 5;
 }
 
 .card-art {
@@ -231,19 +235,44 @@ button:hover {
 }
 
 .cost-badge {
-  background: rgba(20, 24, 34, 0.75);
-  color: #ffd24f;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  background: radial-gradient(circle at 35% 30%, #6fa8ff, #1f4fbf 65%, #12306e);
+  color: #fff;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: 50%;
+  border: 1px solid #9fc2ff;
   font-weight: bold;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 .card-stats .atk-hp {
   display: flex;
   gap: 4px;
-  background: rgba(20, 24, 34, 0.75);
-  padding: 2px 6px;
-  border-radius: 4px;
+}
+
+.card-stats .atk-hp span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-weight: bold;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.card-stats .atk-hp .atk {
+  background: radial-gradient(circle at 35% 30%, #ffdb7a, #b8790d 65%, #7a4c05);
+}
+
+.card-stats .atk-hp .hp {
+  background: radial-gradient(circle at 35% 30%, #ff8f8f, #b32323 65%, #7a1414);
 }
 
 .card-hover-info {
@@ -363,4 +392,201 @@ button:hover {
   object-fit: cover;
   border-radius: 4px;
   background: #1b1f2a;
+}
+
+/* ---------- 상대 손패 카드 뒷면 ---------- */
+
+.opp-hand {
+  min-height: 0;
+}
+
+.card-back {
+  background: repeating-linear-gradient(45deg, #262b3a 0 6px, #2f3648 6px 12px);
+  border: 2px solid #ffd24f;
+  cursor: default;
+}
+
+.card-back::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px solid #ffd24f;
+  border-radius: 6px;
+}
+
+.card-back::after {
+  content: "★";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: #ffd24f;
+  text-shadow: 0 0 8px rgba(255, 210, 79, 0.7);
+}
+
+.card-back:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: #ffd24f;
+}
+
+/* ---------- 카드 설치 / 스펠 / 공격 이펙트 ---------- */
+
+@keyframes card-slam {
+  0% {
+    transform: scale(1.35);
+    opacity: 0;
+    box-shadow: 0 0 0 rgba(255, 210, 79, 0);
+  }
+  60% {
+    transform: scale(0.97);
+    opacity: 1;
+    box-shadow: 0 0 18px rgba(255, 210, 79, 0.9);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(255, 210, 79, 0);
+  }
+}
+
+.card.card-slam {
+  animation: card-slam 0.4s ease-out;
+}
+
+@keyframes buff-flash {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(255, 210, 79, 0);
+  }
+  40% {
+    box-shadow: 0 0 20px 4px rgba(255, 210, 79, 0.9);
+  }
+}
+
+.card.buff-flash {
+  animation: buff-flash 0.5s ease-out;
+}
+
+@keyframes impact-flash {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(255, 107, 107, 0);
+  }
+  40% {
+    box-shadow: 0 0 20px 4px rgba(255, 107, 107, 0.95);
+    border-color: #ff6b6b;
+  }
+}
+
+.card.impact-flash {
+  animation: impact-flash 0.45s ease-out;
+}
+
+#opponent-area.impact-flash,
+#my-area.impact-flash {
+  animation: impact-flash 0.45s ease-out;
+}
+
+@keyframes attack-lunge-up {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-24px);
+  }
+}
+
+@keyframes attack-lunge-down {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(24px);
+  }
+}
+
+.card.attack-lunge-up {
+  animation: attack-lunge-up 0.3s ease-in-out;
+}
+
+.card.attack-lunge-down {
+  animation: attack-lunge-down 0.3s ease-in-out;
+}
+
+#spell-effect-layer {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 100;
+}
+
+@keyframes spell-cast {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  20% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  30% {
+    transform: scale(1);
+  }
+  75% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 0;
+  }
+}
+
+.spell-effect-card {
+  width: 220px;
+  height: 300px;
+  border-radius: 14px;
+  border: 3px solid #ffd24f;
+  background-color: #1b1f2a;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 0 40px 12px rgba(255, 210, 79, 0.7), 0 0 90px 30px rgba(79, 140, 255, 0.4);
+  animation: spell-cast 1.1s ease-out forwards;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 10px;
+  text-align: center;
+}
+
+.spell-effect-name {
+  background: rgba(20, 24, 34, 0.85);
+  color: #ffd24f;
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 6px;
+  width: 100%;
+}
+
+@keyframes turn-flash {
+  0%,
+  100% {
+    text-shadow: none;
+    transform: scale(1);
+  }
+  50% {
+    text-shadow: 0 0 12px #ffd24f;
+    transform: scale(1.15);
+  }
+}
+
+#turn-indicator.turn-flash {
+  animation: turn-flash 0.6s ease-out;
 }

@@ -120,7 +120,7 @@ class GameRoom {
       applyEffectList(this, playerId, card.effects, "ON_PLAY", context);
     }
 
-    return { ok: true };
+    return { ok: true, card: { id: card.id, type: card.type, name: card.name, image: card.image } };
   }
 
   equipCard(playerId, equipmentCardId, targetCharacterId) {
@@ -160,7 +160,7 @@ class GameRoom {
       chosenTargetCardId: target.id,
     });
 
-    return { ok: true };
+    return { ok: true, card: { id: card.id, type: card.type, name: card.name, image: card.image } };
   }
 
   attack(playerId, attackerCardId, target) {
