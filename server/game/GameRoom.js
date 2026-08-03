@@ -73,6 +73,16 @@ class GameRoom {
     return this.playerOrder[this.currentPlayerIndex] === playerId;
   }
 
+  /** 기권: 턴 여부와 무관하게 언제든 가능. HP를 0으로 만들어 기존 승패 판정 로직을 재사용 */
+  surrender(playerId) {
+    const player = this.players[playerId];
+    if (!player) {
+      return { ok: false, reason: "player_not_found" };
+    }
+    player.hp = 0;
+    return { ok: true };
+  }
+
   playCard(playerId, cardId, chosenTargetCardId) {
     if (!this.isPlayersTurn(playerId)) {
       return { ok: false, reason: "not_your_turn" };

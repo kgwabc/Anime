@@ -184,6 +184,18 @@ io.on("connection", (socket) => {
     broadcastGameState(room);
   });
 
+  socket.on("surrender", () => {
+    const roomId = socketToRoom.get(socket.id);
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    const result = room.surrender(socket.id);
+    if (!result.ok) return;
+
+    broadcastGameState(room);
+    handleGameOver(room, roomId);
+  });
+
   socket.on("disconnect", () => {
     console.log(`[disconnect] ${socket.id}`);
     matchmaker.removeFromQueue(socket.id);

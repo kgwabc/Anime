@@ -840,6 +840,12 @@ document.getElementById("btn-end-turn").addEventListener("click", () => {
   socket.emit("end_turn");
 });
 
+document.getElementById("btn-surrender").addEventListener("click", () => {
+  if (confirm("정말 기권하시겠습니까?")) {
+    socket.emit("surrender");
+  }
+});
+
 function registerSocketHandlers() {
   socket.on("match_found", (state) => {
     showScreen("game");
