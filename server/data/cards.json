@@ -8,7 +8,7 @@
     "atk": 3,
     "hp": 4,
     "synergyTags": ["water_breathing", "demon_slayer"],
-    "description": "전투의 함성: 상대 영웅에게 2 피해 (물의 호흡)",
+    "description": "낼 때: 상대에게 2 피해",
     "effects": {
       "battlecry": { "type": "damage_enemy_hero", "amount": 2 },
       "passive": null
@@ -23,7 +23,7 @@
     "atk": 2,
     "hp": 6,
     "synergyTags": ["demon", "kamado"],
-    "description": "전투의 함성: 자신 체력 3 회복 (혈귀화 재생력)",
+    "description": "낼 때: 내 체력 3 회복",
     "effects": {
       "battlecry": { "type": "heal_self", "amount": 3 },
       "passive": null
@@ -38,7 +38,7 @@
     "atk": 1,
     "hp": 2,
     "synergyTags": ["thunder_breathing", "demon_slayer"],
-    "description": "전투의 함성: 카드 1장 드로우 (벼락의 호흡 일섬)",
+    "description": "낼 때: 카드 1장 뽑기",
     "effects": {
       "battlecry": { "type": "draw_card", "amount": 1 },
       "passive": null
@@ -53,7 +53,7 @@
     "atk": 5,
     "hp": 5,
     "synergyTags": ["beast_breathing", "demon_slayer"],
-    "description": "전투의 함성: 상대 영웅에게 1 피해, 자신 체력 1 회복 (짐승의 호흡)",
+    "description": "낼 때: 상대에게 1 피해, 내 체력 1 회복",
     "effects": {
       "battlecry": { "type": "damage_enemy_hero", "amount": 1, "healSelf": 1 },
       "passive": null
@@ -68,7 +68,7 @@
     "atk": 4,
     "hp": 7,
     "synergyTags": ["water_breathing", "hashira"],
-    "description": "전투의 함성: 상대 영웅에게 3 피해 (물의 호흡 11형)",
+    "description": "낼 때: 상대에게 3 피해",
     "effects": {
       "battlecry": { "type": "damage_enemy_hero", "amount": 3 },
       "passive": null
@@ -83,7 +83,7 @@
     "atk": 1,
     "hp": 3,
     "synergyTags": ["insect_breathing", "hashira"],
-    "description": "전투의 함성: 상대 영웅에게 4 피해 (독무 처형)",
+    "description": "낼 때: 상대에게 4 피해",
     "effects": {
       "battlecry": { "type": "damage_enemy_hero", "amount": 4 },
       "passive": null
@@ -98,7 +98,7 @@
     "atk": 6,
     "hp": 6,
     "synergyTags": ["flame_breathing", "hashira"],
-    "description": "전투의 함성: 상대 영웅에게 2 피해, 자신 체력 2 회복 (염주 아홉번째 형: 안락)",
+    "description": "낼 때: 상대에게 2 피해, 내 체력 2 회복",
     "effects": {
       "battlecry": { "type": "damage_enemy_hero", "amount": 2, "healSelf": 2 },
       "passive": null
@@ -113,7 +113,7 @@
     "atk": 8,
     "hp": 8,
     "synergyTags": ["demon", "boss"],
-    "description": "전투의 함성: 상대 영웅에게 3 피해 (무한한 재생)",
+    "description": "낼 때: 상대에게 3 피해",
     "effects": {
       "battlecry": { "type": "damage_enemy_hero", "amount": 3 },
       "passive": null
@@ -126,7 +126,7 @@
     "type": "spell",
     "cost": 2,
     "synergyTags": ["demon_slayer"],
-    "description": "카드 2장 드로우",
+    "description": "카드 2장 뽑기",
     "effects": {
       "onCast": { "type": "draw_card", "amount": 2 },
       "passive": null
@@ -139,7 +139,7 @@
     "type": "equipment",
     "cost": 3,
     "synergyTags": ["demon_slayer"],
-    "description": "자신 보드의 가장 최근 캐릭터에게 공격력+2/체력+1 부여",
+    "description": "가장 최근에 낸 캐릭터: 공격력+2, 체력+1",
     "effects": {
       "onEquip": { "type": "buff_last_character", "atk": 2, "hp": 1 },
       "passive": null
