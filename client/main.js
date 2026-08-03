@@ -281,7 +281,16 @@ function renderAdminCards(cards, token) {
   const listEl = document.getElementById("admin-card-list");
   listEl.innerHTML = "";
 
+  let lastSeries = null;
   for (const card of cards) {
+    if (card.series !== lastSeries) {
+      const header = document.createElement("h4");
+      header.className = "admin-series-header";
+      header.textContent = `계열: ${card.series}`;
+      listEl.appendChild(header);
+      lastSeries = card.series;
+    }
+
     const row = document.createElement("div");
     row.className = "admin-card-row";
 
@@ -310,6 +319,10 @@ function renderAdminCards(cards, token) {
     const tagsInput = document.createElement("input");
     tagsInput.type = "text";
     tagsInput.value = (card.synergyTags || []).join(", ");
+
+    const descriptionInput = document.createElement("textarea");
+    descriptionInput.placeholder = "카드 설명 (선택)";
+    descriptionInput.value = card.description || "";
 
     const atkInput = document.createElement("input");
     atkInput.type = "number";
@@ -375,6 +388,7 @@ function renderAdminCards(cards, token) {
           .split(",")
           .map((tag) => tag.trim())
           .filter(Boolean),
+        description: descriptionInput.value,
         effects: triggerSelect.value
           ? [
               {
@@ -407,6 +421,7 @@ function renderAdminCards(cards, token) {
       typeSelect,
       costInput,
       tagsInput,
+      descriptionInput,
       atkInput,
       hpInput,
       equipAtkInput,
@@ -495,6 +510,7 @@ document.getElementById("form-new-card").addEventListener("submit", async (e) =>
       .map((tag) => tag.trim())
       .filter(Boolean),
     effects: buildEffectsFromEditor("new-card-trigger", "new-card-action", "new-card-target", "new-card-value"),
+    description: document.getElementById("new-card-description").value,
   };
 
   if (type === "character") {
@@ -591,6 +607,7 @@ function cardNeedsTargetCharacter(card) {
 function renderCard(card, role, isMyTurn) {
   const el = document.createElement("div");
   el.className = "card";
+  if (card.description) el.title = card.description;
 
   let bodyHtml;
   if (card.type === "character") {

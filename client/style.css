@@ -88,6 +88,30 @@ body {
   font-size: 13px;
 }
 
+.admin-card-form textarea,
+.admin-card-row textarea {
+  flex: 1 1 100%;
+  min-height: 40px;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.admin-series-header {
+  margin: 16px 0 4px;
+  padding-top: 8px;
+  border-top: 1px solid #4f8cff;
+  color: #ffd24f;
+  font-size: 14px;
+}
+
+.admin-series-header:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
 .effect-editor {
   display: flex;
   flex-wrap: wrap;

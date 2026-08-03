@@ -40,6 +40,9 @@ async function migrateCardsTable(db) {
   if (!existingCols.has("equip_hp_bonus")) {
     await db.execute("ALTER TABLE cards ADD COLUMN equip_hp_bonus INTEGER");
   }
+  if (!existingCols.has("description")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN description TEXT NOT NULL DEFAULT ''");
+  }
 }
 
 async function seedCardsIfEmpty(db) {
@@ -51,8 +54,8 @@ async function seedCardsIfEmpty(db) {
 
   for (const card of seedCards) {
     await db.execute({
-      sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         card.id,
         card.name,
@@ -65,6 +68,7 @@ async function seedCardsIfEmpty(db) {
         JSON.stringify(card.effects || []),
         card.equipAtkBonus ?? null,
         card.equipHpBonus ?? null,
+        card.description || "",
       ],
     });
   }
@@ -94,7 +98,8 @@ async function connectDB() {
       synergy_tags TEXT NOT NULL DEFAULT '[]',
       effects TEXT NOT NULL DEFAULT '[]',
       equip_atk_bonus INTEGER,
-      equip_hp_bonus INTEGER
+      equip_hp_bonus INTEGER,
+      description TEXT NOT NULL DEFAULT ''
     )
   `);
   await migrateCardsTable(db);

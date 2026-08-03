@@ -13,6 +13,7 @@ function rowToCard(row) {
     effects: JSON.parse(row.effects || "[]"),
     equipAtkBonus: row.equip_atk_bonus ?? null,
     equipHpBonus: row.equip_hp_bonus ?? null,
+    description: row.description || "",
   };
 }
 
@@ -65,12 +66,13 @@ async function createCard({
   effects,
   equipAtkBonus,
   equipHpBonus,
+  description,
 }) {
   const id = await generateCardId(name);
   const isCharacter = type === "character";
   await getClient().execute({
-    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       name,
@@ -83,6 +85,7 @@ async function createCard({
       JSON.stringify(effects || []),
       equipAtkBonus ?? null,
       equipHpBonus ?? null,
+      description || "",
     ],
   });
   return getCardById(id);
@@ -96,7 +99,7 @@ async function updateCard(id, fields) {
   const isCharacter = merged.type === "character";
   await getClient().execute({
     sql: `UPDATE cards SET name = ?, series = ?, type = ?, cost = ?, atk = ?, hp = ?, synergy_tags = ?,
-          effects = ?, equip_atk_bonus = ?, equip_hp_bonus = ?
+          effects = ?, equip_atk_bonus = ?, equip_hp_bonus = ?, description = ?
           WHERE id = ?`,
     args: [
       merged.name,
@@ -109,6 +112,7 @@ async function updateCard(id, fields) {
       JSON.stringify(merged.effects || []),
       merged.equipAtkBonus ?? null,
       merged.equipHpBonus ?? null,
+      merged.description || "",
       id,
     ],
   });

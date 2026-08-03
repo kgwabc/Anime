@@ -52,7 +52,7 @@ function validateEffects(effects, effectiveType) {
 }
 
 function validateCardFields(body, { partial, existingType } = {}) {
-  const { name, series, type, cost, atk, hp, synergyTags, effects, equipAtkBonus, equipHpBonus } = body;
+  const { name, series, type, cost, atk, hp, synergyTags, effects, equipAtkBonus, equipHpBonus, description } = body;
   const effectiveType = type !== undefined ? type : existingType;
 
   if (!partial || name !== undefined) {
@@ -93,6 +93,9 @@ function validateCardFields(body, { partial, existingType } = {}) {
     if (!Array.isArray(synergyTags) || !synergyTags.every((tag) => typeof tag === "string")) {
       return "synergyTags는 문자열 배열이어야 합니다.";
     }
+  }
+  if (description !== undefined && typeof description !== "string") {
+    return "description은 문자열이어야 합니다.";
   }
 
   const effectsError = validateEffects(effects, effectiveType);
