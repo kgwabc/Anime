@@ -7,6 +7,7 @@ let selectedAttackerId = null;
 let selectedSpellCardId = null;
 let selectedEquipmentCardId = null;
 let currentAdminToken = null;
+let loadedAdminCards = [];
 
 const TRIGGER_LABELS = {
   ON_PLAY: "출격시(ON_PLAY)",
@@ -259,11 +260,38 @@ async function loadAdminCards(token) {
       listEl.textContent = data.message;
       return;
     }
-    renderAdminCards(data.cards, token);
+    loadedAdminCards = data.cards;
+    populateSeriesFilterOptions(loadedAdminCards);
+    renderAdminCards(getFilteredAdminCards(), token);
   } catch (err) {
     listEl.textContent = "카드 목록을 불러올 수 없습니다.";
   }
 }
+
+function populateSeriesFilterOptions(cards) {
+  const filterEl = document.getElementById("admin-card-series-filter");
+  const previousValue = filterEl.value;
+  const seriesValues = [...new Set(cards.map((card) => card.series))].sort();
+
+  filterEl.innerHTML = '<option value="">전체 계열</option>';
+  for (const series of seriesValues) {
+    const option = document.createElement("option");
+    option.value = series;
+    option.textContent = series;
+    filterEl.appendChild(option);
+  }
+  if (seriesValues.includes(previousValue)) filterEl.value = previousValue;
+}
+
+function getFilteredAdminCards() {
+  const selected = document.getElementById("admin-card-series-filter").value;
+  if (!selected) return loadedAdminCards;
+  return loadedAdminCards.filter((card) => card.series === selected);
+}
+
+document.getElementById("admin-card-series-filter").addEventListener("change", () => {
+  renderAdminCards(getFilteredAdminCards(), currentAdminToken);
+});
 
 function createOptionSelect(options, selectedValue) {
   const select = document.createElement("select");
@@ -281,16 +309,7 @@ function renderAdminCards(cards, token) {
   const listEl = document.getElementById("admin-card-list");
   listEl.innerHTML = "";
 
-  let lastSeries = null;
   for (const card of cards) {
-    if (card.series !== lastSeries) {
-      const header = document.createElement("h4");
-      header.className = "admin-series-header";
-      header.textContent = `계열: ${card.series}`;
-      listEl.appendChild(header);
-      lastSeries = card.series;
-    }
-
     const row = document.createElement("div");
     row.className = "admin-card-row";
 

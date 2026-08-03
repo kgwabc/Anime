@@ -98,18 +98,14 @@ body {
   resize: vertical;
 }
 
-.admin-series-header {
-  margin: 16px 0 4px;
-  padding-top: 8px;
-  border-top: 1px solid #4f8cff;
-  color: #ffd24f;
-  font-size: 14px;
-}
-
-.admin-series-header:first-child {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: none;
+#admin-card-series-filter {
+  padding: 6px 8px;
+  font-size: 13px;
+  margin-bottom: 10px;
+  background: #262b3a;
+  color: #f0f0f0;
+  border: 1px solid #4f8cff;
+  border-radius: 4px;
 }
 
 .effect-editor {
