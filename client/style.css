@@ -645,3 +645,39 @@ button:hover {
 #turn-indicator.turn-flash {
   animation: turn-flash 0.6s ease-out;
 }
+
+.attack-name-popup {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #fff6d8;
+  text-shadow: 0 0 8px #ff6b6b, 0 0 18px #ff6b6b, 2px 2px 0 #000, -2px -2px 0 #000,
+    2px -2px 0 #000, -2px 2px 0 #000;
+  animation: attack-name-pop 0.7s ease-out forwards;
+  z-index: 101;
+  pointer-events: none;
+}
+
+@keyframes attack-name-pop {
+  0% {
+    transform: translate(-50%, -50%) scale(0.4);
+    opacity: 0;
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+  40% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -60%) scale(1.05);
+    opacity: 0;
+  }
+}

@@ -444,6 +444,12 @@ function renderAdminCards(cards, token) {
     matchupBonusInput.value = card.matchupAtkBonus || 0;
     matchupBonusInput.placeholder = "상성 공격력 보너스";
 
+    const attackNameInput = document.createElement("input");
+    attackNameInput.type = "text";
+    attackNameInput.maxLength = 30;
+    attackNameInput.value = card.attackName || "";
+    attackNameInput.placeholder = "공격 이름 (선택)";
+
     const requiredTagSelect = document.createElement("select");
     populateTagOptions(requiredTagSelect, loadedAdminCards, "대상 제한 없음");
     requiredTagSelect.value = card.requiredTargetTag || "";
@@ -469,6 +475,7 @@ function renderAdminCards(cards, token) {
       hpInput.classList.toggle("hidden", type !== "character");
       matchupTagSelect.classList.toggle("hidden", type !== "character");
       matchupBonusInput.classList.toggle("hidden", type !== "character");
+      attackNameInput.classList.toggle("hidden", type !== "character");
       equipAtkInput.classList.toggle("hidden", type !== "equipment");
       equipHpInput.classList.toggle("hidden", type !== "equipment");
       requiredTagSelect.classList.toggle("hidden", type === "character");
@@ -509,6 +516,7 @@ function renderAdminCards(cards, token) {
         fields.hp = Number(hpInput.value);
         fields.matchupVsTag = matchupTagSelect.value || null;
         fields.matchupAtkBonus = Number(matchupBonusInput.value) || 0;
+        fields.attackName = attackNameInput.value || null;
       }
       if (type === "equipment") {
         fields.equipAtkBonus = Number(equipAtkInput.value) || 0;
@@ -541,6 +549,7 @@ function renderAdminCards(cards, token) {
       hpInput,
       matchupTagSelect,
       matchupBonusInput,
+      attackNameInput,
       equipAtkInput,
       equipHpInput,
       requiredTagSelect,
@@ -637,6 +646,7 @@ document.getElementById("form-new-card").addEventListener("submit", async (e) =>
     fields.hp = Number(document.getElementById("new-card-hp").value);
     fields.matchupVsTag = document.getElementById("new-card-matchup-tag").value || null;
     fields.matchupAtkBonus = Number(document.getElementById("new-card-matchup-bonus").value) || 0;
+    fields.attackName = document.getElementById("new-card-attack-name").value || null;
   }
   if (type === "equipment") {
     fields.equipAtkBonus = Number(document.getElementById("new-card-equip-atk").value) || 0;
@@ -894,28 +904,15 @@ function registerSocketHandlers() {
     }
 
     if (targetCharacterId) {
-      const boardEl = playerId === socket.id ? document.getElementById("my-board") : document.getElementById("opp-board");
-      const targetEl = boardEl.querySelector(`.card[data-card-id="${targetCharacterId}"]`);
-      if (targetEl) {
-        flashClass(targetEl, "buff-flash", 600);
-      } else {
-        pendingBuffEffects.set(targetCharacterId, { playerId });
-      }
+      pendingBuffEffects.set(targetCharacterId, { playerId });
       return;
     }
 
-    const boardEl = playerId === socket.id ? document.getElementById("my-board") : document.getElementById("opp-board");
-    const cardEl = boardEl.querySelector(`.card[data-card-id="${card.id}"]`);
-    if (cardEl) {
-      flashClass(cardEl, "card-slam", 500);
-    } else {
-      pendingInstallEffects.set(card.id, { playerId });
-    }
+    pendingInstallEffects.set(card.id, { playerId });
   });
 
-  socket.on("attack_occurred", ({ attackerId, attackerCardId, target }) => {
-    pendingAttackEffects.push({ attackerId, attackerCardId, target });
-    applyPendingAttackEffects();
+  socket.on("attack_occurred", ({ attackerId, attackerCardId, target, attackerCard }) => {
+    pendingAttackEffects.push({ attackerId, attackerCardId, target, attackerCard });
   });
 }
 
@@ -936,6 +933,19 @@ function returnToLobby() {
 }
 
 document.getElementById("btn-back-to-lobby").addEventListener("click", returnToLobby);
+
+function showAttackNamePopup(attackerEl, text) {
+  if (!attackerEl || !text) return;
+  const rect = attackerEl.getBoundingClientRect();
+  const layer = document.getElementById("spell-effect-layer");
+  const el = document.createElement("div");
+  el.className = "attack-name-popup";
+  el.textContent = text;
+  el.style.left = `${rect.left + rect.width / 2}px`;
+  el.style.top = `${rect.top + rect.height / 2}px`;
+  layer.appendChild(el);
+  setTimeout(() => el.remove(), 700);
+}
 
 function showSpellEffect(card) {
   const layer = document.getElementById("spell-effect-layer");
@@ -1099,10 +1109,13 @@ function applyPendingCardEffects(boardEl, role) {
 
 function applyPendingAttackEffects() {
   while (pendingAttackEffects.length > 0) {
-    const { attackerId, attackerCardId, target } = pendingAttackEffects.shift();
+    const { attackerId, attackerCardId, target, attackerCard } = pendingAttackEffects.shift();
     const attackerBoardEl = attackerId === socket.id ? document.getElementById("my-board") : document.getElementById("opp-board");
     const attackerEl = attackerBoardEl.querySelector(`.card[data-card-id="${attackerCardId}"]`);
     flashClass(attackerEl, attackerId === socket.id ? "attack-lunge-up" : "attack-lunge-down", 350);
+    if (attackerCard?.attackName) {
+      showAttackNamePopup(attackerEl, attackerCard.attackName);
+    }
 
     if (target?.type === "character") {
       const targetBoardEl = attackerId === socket.id ? document.getElementById("opp-board") : document.getElementById("my-board");

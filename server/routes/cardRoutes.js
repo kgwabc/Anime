@@ -70,6 +70,7 @@ function validateCardFields(body, { partial, existingType } = {}) {
     requiredTargetTag,
     rarity,
     image,
+    attackName,
   } = body;
   const effectiveType = type !== undefined ? type : existingType;
 
@@ -139,6 +140,14 @@ function validateCardFields(body, { partial, existingType } = {}) {
     }
     if (image.length > 500000) {
       return "image 용량이 너무 큽니다. 더 작은 이미지를 사용해주세요.";
+    }
+  }
+  if (attackName !== undefined && attackName !== null) {
+    if (typeof attackName !== "string") {
+      return "attackName은 문자열이어야 합니다.";
+    }
+    if (attackName.length > 30) {
+      return "attackName은 30자 이하여야 합니다.";
     }
   }
 

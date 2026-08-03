@@ -211,7 +211,10 @@ class GameRoom {
     }
 
     attacker.hasAttacked = true;
-    return { ok: true };
+    return {
+      ok: true,
+      attackerCard: { id: attacker.id, name: attacker.name, attackName: attacker.attackName || null },
+    };
   }
 
   endTurn(playerId) {

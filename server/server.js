@@ -174,7 +174,12 @@ io.on("connection", (socket) => {
       return;
     }
 
-    broadcastEffect(room, "attack_occurred", { attackerId: socket.id, attackerCardId, target });
+    broadcastEffect(room, "attack_occurred", {
+      attackerId: socket.id,
+      attackerCardId,
+      target,
+      attackerCard: result.attackerCard,
+    });
     broadcastGameState(room);
     handleGameOver(room, roomId);
   });
