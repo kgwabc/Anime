@@ -16,7 +16,8 @@
 ## 현재 배포 상태
 - GitHub: https://github.com/kgwabc/Anime (branch: `main`)
 - Render 서버: https://animepsykongroo.onrender.com
-- Vercel 게임 화면: https://anime-coral-kappa-15.vercel.app/ (프로젝트명 변경 관련 이슈는 해결됨)
+- Vercel 게임 화면: https://animepsykongroo.vercel.app/ (예전 anime-coral-kappa-15.vercel.app
+  주소는 더 이상 유효하지 않음 — 프로젝트명을 이걸로 바꿈)
 - `client/main.js`의 `SERVER_URL`은 위 Render 주소를 가리키도록 설정되어 있음. Render
   URL이 바뀌면 이 값도 같이 갱신하고 재배포해야 함.
 
