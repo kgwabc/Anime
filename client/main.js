@@ -988,6 +988,14 @@ function cardDescHtml(card) {
   return descHtml;
 }
 
+function nameFontSize(name) {
+  const length = (name || "").length;
+  if (length <= 5) return 13;
+  if (length <= 8) return 11;
+  if (length <= 11) return 9.5;
+  return 8;
+}
+
 function cardFaceHtml(card) {
   const artStyle = card.image ? ` style="background-image:url('${card.image}')"` : "";
   return `
@@ -997,7 +1005,7 @@ function cardFaceHtml(card) {
       ${cardStatsHtml(card)}
     </div>
     <div class="card-hover-info">
-      <div class="name">${card.name}</div>
+      <div class="name" style="font-size: ${nameFontSize(card.name)}px">${card.name}</div>
       ${cardDescHtml(card)}
     </div>
   `;
