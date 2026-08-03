@@ -180,28 +180,88 @@ button:hover {
   display: none;
 }
 
+#arena {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(ellipse at 50% 50%, #2b3247 0%, #1c202c 75%);
+  border: 2px solid #4a3a1a;
+  outline: 1px solid rgba(255, 210, 79, 0.35);
+  outline-offset: -4px;
+  border-radius: 14px;
+  padding: 8px 12px;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
 .player-area {
-  background: #262b3a;
-  border-radius: 10px;
-  padding: 10px 12px;
+  padding: 6px 4px;
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
-.player-area h3 {
+.hero-badge {
   flex: 0 0 auto;
-  margin: 0 0 4px;
-  font-size: 15px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 2px 0;
+}
+
+.hero-portrait {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  background: radial-gradient(circle at 35% 30%, #3a4568, #1c2135 70%);
+  border: 2px solid #ffd24f;
+  box-shadow: 0 0 10px rgba(255, 210, 79, 0.5);
+}
+
+.hero-hp-badge,
+.hero-mana-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.hero-hp-badge {
+  background: radial-gradient(circle at 35% 30%, #ff8f8f, #b32323 65%, #7a1414);
+  color: #fff;
+}
+
+.hero-mana-badge {
+  background: radial-gradient(circle at 35% 30%, #6fa8ff, #1f4fbf 65%, #12306e);
+  color: #fff;
+}
+
+.hero-name {
+  flex: 0 0 auto;
+  text-align: center;
+  font-weight: bold;
+  font-size: 13px;
+  color: #ffd24f;
 }
 
 .stats {
   display: flex;
   flex: 0 0 auto;
+  justify-content: center;
   gap: 16px;
-  margin-bottom: 6px;
-  font-size: 13px;
+  margin-bottom: 4px;
+  font-size: 11px;
   color: #c9d2e3;
 }
 
@@ -374,8 +434,12 @@ button:hover {
   flex: 0 0 auto;
   text-align: center;
   padding: 4px;
+  margin: 2px 0;
   font-weight: bold;
+  font-size: 13px;
   color: #ffd24f;
+  border-top: 1px solid rgba(255, 210, 79, 0.4);
+  border-bottom: 1px solid rgba(255, 210, 79, 0.4);
 }
 
 .card.cannot-attack {
@@ -762,13 +826,28 @@ button:hover {
     gap: 3px;
   }
 
-  .player-area {
-    padding: 4px 8px;
+  #arena {
+    padding: 4px 6px;
   }
 
-  .player-area h3 {
-    margin: 0 0 2px;
-    font-size: 12px;
+  .player-area {
+    padding: 2px 4px;
+  }
+
+  .hero-portrait {
+    width: 24px;
+    height: 24px;
+    font-size: 13px;
+  }
+
+  .hero-hp-badge,
+  .hero-mana-badge {
+    padding: 1px 6px;
+    font-size: 10px;
+  }
+
+  .hero-name {
+    font-size: 11px;
   }
 
   .stats {

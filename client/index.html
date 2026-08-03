@@ -145,32 +145,40 @@
   </div>
 
   <div id="screen-game" class="screen hidden">
-    <div id="opponent-area" class="player-area">
-      <h3 id="opp-name">상대</h3>
-      <div class="stats">
-        <span>HP: <span id="opp-hp">-</span></span>
-        <span>마나: <span id="opp-mana">-</span>/<span id="opp-max-mana">-</span></span>
-        <span>손패: <span id="opp-hand-count">-</span>장</span>
-        <span>덱: <span id="opp-deck-count">-</span>장</span>
+    <div id="arena">
+      <div id="opponent-area" class="player-area">
+        <div id="opp-hand" class="hand opp-hand"></div>
+        <div class="hero-badge">
+          <div class="hero-portrait">🛡</div>
+          <div class="hero-hp-badge">❤ <span id="opp-hp">-</span></div>
+          <div class="hero-mana-badge">💧 <span id="opp-mana">-</span>/<span id="opp-max-mana">-</span></div>
+        </div>
+        <div class="hero-name" id="opp-name">상대</div>
+        <div class="stats">
+          <span>손패: <span id="opp-hand-count">-</span>장</span>
+          <span>덱: <span id="opp-deck-count">-</span>장</span>
+        </div>
+        <div id="opp-board" class="board"></div>
       </div>
-      <div id="opp-board" class="board"></div>
-      <div id="opp-hand" class="hand opp-hand"></div>
-    </div>
 
-    <div id="turn-indicator"></div>
+      <div id="turn-indicator"></div>
 
-    <div id="my-area" class="player-area">
-      <h3 id="my-name">나</h3>
-      <div class="stats">
-        <span>HP: <span id="my-hp">-</span></span>
-        <span>마나: <span id="my-mana">-</span>/<span id="my-max-mana">-</span></span>
-        <span>덱: <span id="my-deck-count">-</span>장</span>
-      </div>
-      <div id="my-board" class="board"></div>
-      <div id="my-hand" class="hand"></div>
-      <div class="action-buttons">
-        <button id="btn-end-turn">턴 종료</button>
-        <button id="btn-surrender">기권</button>
+      <div id="my-area" class="player-area">
+        <div id="my-board" class="board"></div>
+        <div class="stats">
+          <span>덱: <span id="my-deck-count">-</span>장</span>
+        </div>
+        <div class="hero-name" id="my-name">나</div>
+        <div class="hero-badge">
+          <div class="hero-portrait">🛡</div>
+          <div class="hero-hp-badge">❤ <span id="my-hp">-</span></div>
+          <div class="hero-mana-badge">💧 <span id="my-mana">-</span>/<span id="my-max-mana">-</span></div>
+        </div>
+        <div id="my-hand" class="hand"></div>
+        <div class="action-buttons">
+          <button id="btn-end-turn">턴 종료</button>
+          <button id="btn-surrender">기권</button>
+        </div>
       </div>
     </div>
 
