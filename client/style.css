@@ -168,6 +168,10 @@ button:hover {
   overflow: hidden;
 }
 
+#screen-game.hidden {
+  display: none;
+}
+
 .player-area {
   background: #262b3a;
   border-radius: 10px;
