@@ -2,6 +2,8 @@ const SERVER_URL = "https://animepsykongroo.onrender.com";
 const ADMIN_USERNAME = "kgwabc";
 
 let socket = null;
+let lastState = null;
+let selectedAttackerId = null;
 
 const screens = {
   auth: document.getElementById("screen-auth"),
@@ -220,6 +222,8 @@ function registerSocketHandlers() {
 
   socket.on("action_error", (reason) => {
     console.warn("action_error:", reason);
+    selectedAttackerId = null;
+    if (lastState) renderState(lastState);
   });
 
   socket.on("opponent_disconnected", () => {
@@ -234,7 +238,7 @@ function registerSocketHandlers() {
   });
 }
 
-function renderCard(card, isMine) {
+function renderCard(card, role, isMyTurn) {
   const el = document.createElement("div");
   el.className = "card";
   el.innerHTML = `
@@ -246,15 +250,41 @@ function renderCard(card, isMine) {
         : `<div class="atk-hp"><span>${card.type}</span></div>`
     }
   `;
-  if (isMine) {
+
+  if (role === "hand") {
     el.addEventListener("click", () => {
       socket.emit("play_card", { cardId: card.id });
     });
+  } else if (role === "my-board") {
+    const canSelect = isMyTurn && card.canAttack && !card.hasAttacked;
+    if (canSelect) {
+      el.classList.add("attackable");
+      if (selectedAttackerId === card.id) el.classList.add("selected-attacker");
+      el.addEventListener("click", () => {
+        selectedAttackerId = selectedAttackerId === card.id ? null : card.id;
+        renderState(lastState);
+      });
+    } else {
+      el.classList.add("cannot-attack");
+    }
+  } else if (role === "opp-board") {
+    if (selectedAttackerId) el.classList.add("attack-target");
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!selectedAttackerId) return;
+      socket.emit("attack_card", {
+        attackerCardId: selectedAttackerId,
+        target: { type: "character", cardId: card.id },
+      });
+      selectedAttackerId = null;
+    });
   }
+
   return el;
 }
 
 function renderState(state) {
+  lastState = state;
   document.getElementById("my-name").textContent = state.me.username || "나";
   document.getElementById("my-hp").textContent = state.me.hp;
   document.getElementById("my-mana").textContent = state.me.mana;
@@ -277,18 +307,36 @@ function renderState(state) {
   const myHandEl = document.getElementById("my-hand");
   myHandEl.innerHTML = "";
   for (const card of state.me.hand) {
-    myHandEl.appendChild(renderCard(card, true));
+    myHandEl.appendChild(renderCard(card, "hand"));
   }
 
   const myBoardEl = document.getElementById("my-board");
   myBoardEl.innerHTML = "";
   for (const card of state.me.board) {
-    myBoardEl.appendChild(renderCard(card, false));
+    myBoardEl.appendChild(renderCard(card, "my-board", isMyTurn));
   }
 
   const oppBoardEl = document.getElementById("opp-board");
   oppBoardEl.innerHTML = "";
   for (const card of state.opponent.board) {
-    oppBoardEl.appendChild(renderCard(card, false));
+    oppBoardEl.appendChild(renderCard(card, "opp-board"));
   }
+
+  const opponentAreaEl = document.getElementById("opponent-area");
+  opponentAreaEl.classList.toggle(
+    "hero-target",
+    Boolean(selectedAttackerId) && state.opponent.board.length === 0
+  );
 }
+
+document.getElementById("opponent-area").addEventListener("click", (e) => {
+  if (!selectedAttackerId || !lastState) return;
+  if (e.target.closest("#opp-board")) return;
+  if (lastState.opponent.board.length > 0) return;
+
+  socket.emit("attack_card", {
+    attackerCardId: selectedAttackerId,
+    target: { type: "hero" },
+  });
+  selectedAttackerId = null;
+});

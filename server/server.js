@@ -45,6 +45,18 @@ function broadcastGameState(room) {
   }
 }
 
+function handleGameOver(room, roomId) {
+  if (!room.isGameOver()) return;
+
+  const loserId = room.playerOrder.find((id) => room.players[id].hp <= 0);
+  const winnerId = room.getOpponentId(loserId);
+  io.to(winnerId).emit("game_over", { result: "win" });
+  io.to(loserId).emit("game_over", { result: "lose" });
+  rooms.delete(roomId);
+  socketToRoom.delete(loserId);
+  socketToRoom.delete(winnerId);
+}
+
 io.on("connection", (socket) => {
   console.log(`[connect] ${socket.id}`);
 
@@ -84,16 +96,22 @@ io.on("connection", (socket) => {
     }
 
     broadcastGameState(room);
+    handleGameOver(room, roomId);
+  });
 
-    if (room.isGameOver()) {
-      const loserId = room.playerOrder.find((id) => room.players[id].hp <= 0);
-      const winnerId = room.getOpponentId(loserId);
-      io.to(winnerId).emit("game_over", { result: "win" });
-      io.to(loserId).emit("game_over", { result: "lose" });
-      rooms.delete(roomId);
-      socketToRoom.delete(loserId);
-      socketToRoom.delete(winnerId);
+  socket.on("attack_card", ({ attackerCardId, target }) => {
+    const roomId = socketToRoom.get(socket.id);
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    const result = room.attack(socket.id, attackerCardId, target);
+    if (!result.ok) {
+      socket.emit("action_error", result.reason);
+      return;
     }
+
+    broadcastGameState(room);
+    handleGameOver(room, roomId);
   });
 
   socket.on("end_turn", () => {

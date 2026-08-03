@@ -57,10 +57,26 @@
   피드백으로 다시 제거함. 지금은 캐릭터 카드 8장에 `id/name/series/type/cost/atk/hp/
   synergyTags`만 있고 `effects`/`description` 필드 없음 — 순수 스탯 카드 상태.
   `GameRoom.js`에는 `resolveEffect` 관련 코드가 전혀 없음(카드를 내면 그냥 보드에 배치만 됨).
-- **구조적 제약**: 게임에는 여전히 "공격(attack)" 액션이나 보드 위 미니언 간 전투, 타겟 선택
-  UI가 없음 — 카드를 내면 자원 소모 후 보드에 배치되는 것으로 끝. 전투/효과 시스템은
-  다음에 다시 설계해야 할 때 위 이력을 참고할 것 (구조화된 `{type, amount}` effect 객체 +
-  `GameRoom` 메서드로 처리하는 패턴이 한 번 검증됨).
+## 전투 시스템 (공격)
+- `GameRoom.attack(playerId, attackerCardId, target)` — 보드 위 캐릭터로 공격하는 유일한 방법.
+  `target`은 `{type:"hero"}` 또는 `{type:"character", cardId}`.
+- **서모닝 시크니스**: 카드를 낸 턴엔 `canAttack=false`라 공격 불가. 그 플레이어의 다음 턴이
+  시작될 때(`endTurn()`에서) 보드의 모든 카드가 `canAttack=true, hasAttacked=false`로 리셋됨.
+- **영웅 직공 제한**: 상대 보드에 캐릭터가 하나라도 있으면 영웅을 공격 대상으로 선택 불가
+  (`must_attack_character_first` 에러) — 보드를 비워야만 영웅 공격 가능. 클라이언트도 이에 맞춰
+  상대 보드가 비었을 때만 영웅 영역이 공격 대상으로 활성화됨(`client/main.js`의
+  `#opponent-area` 클릭 핸들러, `.hero-target` 클래스).
+- **미니언 전투는 상호 데미지**(하스스톤 방식): 공격자와 피격자 둘 다 서로의 공격력만큼
+  체력이 깎이고, 0 이하가 된 쪽은 보드에서 제거됨. 영웅은 반격하지 않음(영웅 공격시 영웅만 피해).
+- 캐릭터당 턴에 한 번만 공격 가능(`hasAttacked`).
+- 소켓 이벤트 `attack_card`(서버) — `play_card`/`end_turn`과 동일한 패턴으로 처리, 성공시
+  `game_state_update` 브로드캐스트 + `isGameOver()` 체크.
+
+## 알려졌던 버그(수정됨)
+- 예전엔 `endTurn()`이 전역 `turnNumber` 기준으로 다음 플레이어 마나를 올리고 무조건 드로우
+  시켜서, 2번째로 매칭된 플레이어가 자신의 진짜 첫 턴에 손패4/덱4/마나2로 시작하는 비대칭
+  버그가 있었음. 지금은 플레이어별 `turnsPlayed` 카운터로 관리해서, 두 플레이어 모두 자신의
+  첫 턴엔 손패3/덱5/마나1로 동일하게 시작함 (`GameRoom.js` 생성자 + `endTurn()` 참고).
 
 ## 알려진 제약사항
 - Render 무료 플랜은 15분 미사용시 슬립 → 재시작시 인메모리 매칭 큐/진행중 매치 상태 유실

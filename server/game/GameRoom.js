@@ -25,7 +25,7 @@ class GameRoom {
     this.playerOrder = players.map((p) => p.id);
 
     this.players = {};
-    for (const { id: playerId, username } of players) {
+    players.forEach(({ id: playerId, username }, index) => {
       const deck = buildDeck(allCards);
       const hand = deck.splice(0, STARTING_HAND_SIZE);
       this.players[playerId] = {
@@ -34,11 +34,12 @@ class GameRoom {
         hp: STARTING_HP,
         mana: 1,
         maxMana: 1,
+        turnsPlayed: index === 0 ? 1 : 0,
         hand,
         deck,
         board: [],
       };
-    }
+    });
   }
 
   getOpponentId(playerId) {
@@ -67,8 +68,53 @@ class GameRoom {
 
     player.hand.splice(cardIndex, 1);
     player.mana -= card.cost;
+    card.canAttack = false;
+    card.hasAttacked = false;
     player.board.push(card);
 
+    return { ok: true };
+  }
+
+  attack(playerId, attackerCardId, target) {
+    if (!this.isPlayersTurn(playerId)) {
+      return { ok: false, reason: "not_your_turn" };
+    }
+
+    const player = this.players[playerId];
+    const opponent = this.players[this.getOpponentId(playerId)];
+    const attacker = player.board.find((card) => card.id === attackerCardId);
+    if (!attacker) {
+      return { ok: false, reason: "attacker_not_on_board" };
+    }
+    if (!attacker.canAttack || attacker.hasAttacked) {
+      return { ok: false, reason: "cannot_attack" };
+    }
+
+    if (target?.type === "hero") {
+      if (opponent.board.length > 0) {
+        return { ok: false, reason: "must_attack_character_first" };
+      }
+      opponent.hp = Math.max(0, opponent.hp - attacker.atk);
+    } else if (target?.type === "character") {
+      const defenderIndex = opponent.board.findIndex((card) => card.id === target.cardId);
+      if (defenderIndex === -1) {
+        return { ok: false, reason: "target_not_on_board" };
+      }
+      const defender = opponent.board[defenderIndex];
+      defender.hp -= attacker.atk;
+      attacker.hp -= defender.atk;
+
+      if (defender.hp <= 0) {
+        opponent.board.splice(defenderIndex, 1);
+      }
+      if (attacker.hp <= 0) {
+        player.board = player.board.filter((card) => card.id !== attacker.id);
+      }
+    } else {
+      return { ok: false, reason: "invalid_target" };
+    }
+
+    attacker.hasAttacked = true;
     return { ok: true };
   }
 
@@ -82,13 +128,24 @@ class GameRoom {
 
     const nextPlayerId = this.playerOrder[this.currentPlayerIndex];
     const nextPlayer = this.players[nextPlayerId];
-    nextPlayer.maxMana = Math.min(nextPlayer.maxMana + 1, MAX_MANA);
-    nextPlayer.mana = nextPlayer.maxMana;
+    nextPlayer.turnsPlayed += 1;
 
-    if (nextPlayer.deck.length > 0) {
-      nextPlayer.hand.push(nextPlayer.deck.shift());
+    if (nextPlayer.turnsPlayed === 1) {
+      nextPlayer.maxMana = 1;
+      nextPlayer.mana = 1;
+    } else {
+      nextPlayer.maxMana = Math.min(nextPlayer.turnsPlayed, MAX_MANA);
+      nextPlayer.mana = nextPlayer.maxMana;
+      if (nextPlayer.deck.length > 0) {
+        nextPlayer.hand.push(nextPlayer.deck.shift());
+      }
+      // TODO: 덱이 비었을 때 피로 데미지(fatigue) 등 페널티 로직
     }
-    // TODO: 덱이 비었을 때 피로 데미지(fatigue) 등 페널티 로직
+
+    for (const card of nextPlayer.board) {
+      card.canAttack = true;
+      card.hasAttacked = false;
+    }
 
     return { ok: true };
   }

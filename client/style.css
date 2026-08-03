@@ -148,3 +148,27 @@ button:hover {
   font-weight: bold;
   color: #ffd24f;
 }
+
+.card.cannot-attack {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.card.attackable {
+  border-color: #6bff8a;
+}
+
+.card.selected-attacker {
+  border-color: #ffd24f;
+  box-shadow: 0 0 8px #ffd24f;
+}
+
+.card.attack-target:hover {
+  border-color: #ff6b6b;
+  cursor: crosshair;
+}
+
+#opponent-area.hero-target {
+  cursor: crosshair;
+  outline: 2px dashed #ff6b6b;
+}
