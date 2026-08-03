@@ -2,7 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const { findUserByEmailOrUsername, findUserByEmail, createUser } = require("../models/User");
+const { findUserByUsername, createUser } = require("../models/User");
 
 const router = express.Router();
 
@@ -18,9 +18,9 @@ function signToken(user) {
 }
 
 router.post("/signup", async (req, res) => {
-  const { username, email, password } = req.body || {};
+  const { username, password } = req.body || {};
 
-  if (!username || !email || !password) {
+  if (!username || !password) {
     return res.status(400).json({ ok: false, message: "모든 필드를 입력해주세요." });
   }
   if (username.length < 2 || username.length > 20) {
@@ -31,13 +31,13 @@ router.post("/signup", async (req, res) => {
   }
 
   try {
-    const existing = await findUserByEmailOrUsername(email, username);
+    const existing = await findUserByUsername(username);
     if (existing) {
-      return res.status(409).json({ ok: false, message: "이미 사용중인 이메일 또는 닉네임입니다." });
+      return res.status(409).json({ ok: false, message: "이미 사용중인 닉네임입니다." });
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-    const user = await createUser({ username, email, passwordHash });
+    const user = await createUser({ username, passwordHash });
 
     return res.json({ ok: true, token: signToken(user), username: user.username });
   } catch (err) {
@@ -47,21 +47,21 @@ router.post("/signup", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body || {};
+  const { username, password } = req.body || {};
 
-  if (!email || !password) {
-    return res.status(400).json({ ok: false, message: "이메일과 비밀번호를 입력해주세요." });
+  if (!username || !password) {
+    return res.status(400).json({ ok: false, message: "닉네임과 비밀번호를 입력해주세요." });
   }
 
   try {
-    const user = await findUserByEmail(email);
+    const user = await findUserByUsername(username);
     if (!user) {
-      return res.status(401).json({ ok: false, message: "이메일 또는 비밀번호가 올바르지 않습니다." });
+      return res.status(401).json({ ok: false, message: "닉네임 또는 비밀번호가 올바르지 않습니다." });
     }
 
     const passwordMatches = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatches) {
-      return res.status(401).json({ ok: false, message: "이메일 또는 비밀번호가 올바르지 않습니다." });
+      return res.status(401).json({ ok: false, message: "닉네임 또는 비밀번호가 올바르지 않습니다." });
     }
 
     return res.json({ ok: true, token: signToken(user), username: user.username });

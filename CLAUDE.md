@@ -21,8 +21,9 @@
   URL이 바뀌면 이 값도 같이 갱신하고 재배포해야 함.
 
 ## 인증 시스템
-- 이메일+비밀번호 자체 구현 (bcrypt 해싱 + JWT). 계정은 **Turso(libSQL, SQLite 기반)**의
-  `users` 테이블에 저장 (`server/db.js`가 테이블 생성, `server/models/User.js`가 쿼리 함수).
+- 닉네임+비밀번호 자체 구현 (bcryptjs 해싱 + JWT, 이메일 필드 없음). 계정은
+  **Turso(libSQL, SQLite 기반)**의 `users` 테이블에 저장 (`server/db.js`가 테이블 생성,
+  `server/models/User.js`가 쿼리 함수).
   - MongoDB Atlas로 시작했다가 사용자가 이미 Turso 경험이 있어서 전환함. 향후 덱/매치기록/
     랭킹처럼 관계형 데이터가 늘어날 걸 감안해도 SQL(Turso) 쪽이 더 적합하다고 판단.
   - 로컬 개발/테스트는 실제 Turso 계정 없이 `TURSO_DATABASE_URL=file:local.db`로 대체 가능
@@ -43,7 +44,7 @@
   (감수하기로 한 제약, DB 미사용). `cards.json`은 코드에 포함되어 재시작해도 항상 동일하게 로드됨.
 - 카드 효과(전투의 함성, 주문 효과 등)는 `server/game/GameRoom.js`의 `resolveEffect()`에
   키만 연결되어 있고 실제 로직은 미구현 (다음 단계 작업 대상).
-- 덱 빌딩, 랭킹 시스템, 비밀번호 찾기/이메일 인증은 범위 밖.
+- 덱 빌딩, 랭킹 시스템, 비밀번호 찾기는 범위 밖.
 
 ## 로컬 개발 환경
 - 이 저장소는 로컬 전용 git 사용자(`user.name`/`user.email`)로 커밋함 — 전역 git config는

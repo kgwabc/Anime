@@ -35,7 +35,7 @@ document.getElementById("link-to-login").addEventListener("click", (e) => {
 
 formLogin.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const email = document.getElementById("login-email").value;
+  const username = document.getElementById("login-username").value;
   const password = document.getElementById("login-password").value;
   const errorEl = document.getElementById("login-error");
   errorEl.textContent = "";
@@ -44,7 +44,7 @@ formLogin.addEventListener("submit", async (e) => {
     const res = await fetch(`${SERVER_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username, password }),
     });
     const data = await res.json();
     if (!data.ok) {
@@ -60,7 +60,6 @@ formLogin.addEventListener("submit", async (e) => {
 formSignup.addEventListener("submit", async (e) => {
   e.preventDefault();
   const username = document.getElementById("signup-username").value;
-  const email = document.getElementById("signup-email").value;
   const password = document.getElementById("signup-password").value;
   const errorEl = document.getElementById("signup-error");
   errorEl.textContent = "";
@@ -69,7 +68,7 @@ formSignup.addEventListener("submit", async (e) => {
     const res = await fetch(`${SERVER_URL}/auth/signup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify({ username, password }),
     });
     const data = await res.json();
     if (!data.ok) {

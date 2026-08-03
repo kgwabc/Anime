@@ -1,27 +1,19 @@
 const { getClient } = require("../db");
 
-async function findUserByEmailOrUsername(email, username) {
+async function findUserByUsername(username) {
   const result = await getClient().execute({
-    sql: "SELECT * FROM users WHERE email = ? OR username = ? LIMIT 1",
-    args: [email.toLowerCase(), username],
+    sql: "SELECT * FROM users WHERE username = ? LIMIT 1",
+    args: [username],
   });
   return result.rows[0] || null;
 }
 
-async function findUserByEmail(email) {
+async function createUser({ username, passwordHash }) {
   const result = await getClient().execute({
-    sql: "SELECT * FROM users WHERE email = ? LIMIT 1",
-    args: [email.toLowerCase()],
-  });
-  return result.rows[0] || null;
-}
-
-async function createUser({ username, email, passwordHash }) {
-  const result = await getClient().execute({
-    sql: "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?) RETURNING id, username, email",
-    args: [username, email.toLowerCase(), passwordHash],
+    sql: "INSERT INTO users (username, password_hash) VALUES (?, ?) RETURNING id, username",
+    args: [username, passwordHash],
   });
   return result.rows[0];
 }
 
-module.exports = { findUserByEmailOrUsername, findUserByEmail, createUser };
+module.exports = { findUserByUsername, createUser };
