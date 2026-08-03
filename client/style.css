@@ -191,6 +191,7 @@ button:hover {
 }
 
 .card {
+  position: relative;
   width: 130px;
   height: 180px;
   background: #34405c;
@@ -198,8 +199,6 @@ button:hover {
   border-radius: 8px;
   padding: 0;
   font-size: 12px;
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
   cursor: pointer;
 }
@@ -209,8 +208,8 @@ button:hover {
 }
 
 .card-art {
-  flex: 1 1 auto;
-  min-height: 0;
+  position: absolute;
+  inset: 0;
   background-size: cover;
   background-position: center;
   background-color: #1b1f2a;
@@ -220,13 +219,48 @@ button:hover {
   background-image: linear-gradient(160deg, #4f8cff, #262b3a 70%);
 }
 
-.card-info {
-  flex: 0 0 auto;
-  padding: 6px;
-  background: rgba(20, 24, 34, 0.85);
+.card-stats {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  z-index: 2;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.cost-badge {
+  background: rgba(20, 24, 34, 0.75);
+  color: #ffd24f;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.card-stats .atk-hp {
+  display: flex;
+  gap: 4px;
+  background: rgba(20, 24, 34, 0.75);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.card-hover-info {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  padding: 6px;
+  background: rgba(20, 24, 34, 0.92);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.card:hover .card-hover-info {
+  opacity: 1;
 }
 
 .card .name {
@@ -234,15 +268,6 @@ button:hover {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.card .cost {
-  color: #ffd24f;
-}
-
-.card .atk-hp {
-  display: flex;
-  justify-content: space-between;
 }
 
 #turn-indicator {

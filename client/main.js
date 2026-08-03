@@ -769,7 +769,6 @@ function renderCardTile(card, { badgeText, buttonText, buttonDisabled, onButtonC
   cardEl.className = "card";
   if (card.rarity === "legendary") cardEl.classList.add("legendary");
   if (!card.image) cardEl.classList.add("no-image");
-  if (card.description) cardEl.title = card.description;
   cardEl.innerHTML = cardFaceHtml(card);
   wrapper.appendChild(cardEl);
 
@@ -885,33 +884,40 @@ function cardNeedsTargetCharacter(card) {
   return (card.effects || []).some((effect) => effect.target === "TARGET_CHARACTER");
 }
 
-function cardBodyHtml(card) {
-  let bodyHtml;
+function cardStatsHtml(card) {
   if (card.type === "character") {
-    bodyHtml = `<div class="atk-hp"><span>⚔${card.atk}</span><span>❤${card.hp}</span></div>`;
-    if (card.effects?.length) bodyHtml += `<div class="effect-summary">${describeEffect(card.effects[0])}</div>`;
-    if (card.matchupVsTag) {
-      bodyHtml += `<div class="effect-summary">⚔ ${card.matchupVsTag} 상대 +${card.matchupAtkBonus || 0}</div>`;
-    }
-  } else if (card.type === "spell") {
-    bodyHtml = `<div class="effect-summary">${describeEffect(card.effects?.[0])}</div>`;
-    if (card.requiredTargetTag) bodyHtml += `<div class="effect-summary">🎯 ${card.requiredTargetTag} 전용</div>`;
-  } else {
-    bodyHtml = `<div class="atk-hp"><span>+${card.equipAtkBonus || 0}</span><span>+${card.equipHpBonus || 0}</span></div>`;
-    if (card.effects?.length) bodyHtml += `<div class="effect-summary">${describeEffect(card.effects[0])}</div>`;
-    if (card.requiredTargetTag) bodyHtml += `<div class="effect-summary">🎯 ${card.requiredTargetTag} 전용</div>`;
+    return `<div class="atk-hp"><span>⚔${card.atk}</span><span>❤${card.hp}</span></div>`;
   }
-  return bodyHtml;
+  if (card.type === "equipment") {
+    return `<div class="atk-hp"><span>+${card.equipAtkBonus || 0}</span><span>+${card.equipHpBonus || 0}</span></div>`;
+  }
+  return "";
+}
+
+function cardDescHtml(card) {
+  let descHtml = "";
+  if (card.effects?.length) descHtml += `<div class="effect-summary">${describeEffect(card.effects[0])}</div>`;
+  if (card.matchupVsTag) {
+    descHtml += `<div class="effect-summary">⚔ ${card.matchupVsTag} 상대 +${card.matchupAtkBonus || 0}</div>`;
+  }
+  if (card.requiredTargetTag) {
+    descHtml += `<div class="effect-summary">🎯 ${card.requiredTargetTag} 전용</div>`;
+  }
+  if (card.description) descHtml += `<div class="effect-summary">${card.description}</div>`;
+  return descHtml;
 }
 
 function cardFaceHtml(card) {
   const artStyle = card.image ? ` style="background-image:url('${card.image}')"` : "";
   return `
     <div class="card-art"${artStyle}></div>
-    <div class="card-info">
+    <div class="card-stats">
+      <span class="cost-badge">${card.cost}</span>
+      ${cardStatsHtml(card)}
+    </div>
+    <div class="card-hover-info">
       <div class="name">${card.name}</div>
-      <div class="cost">코스트 ${card.cost}</div>
-      ${cardBodyHtml(card)}
+      ${cardDescHtml(card)}
     </div>
   `;
 }
@@ -921,7 +927,6 @@ function renderCard(card, role, isMyTurn) {
   el.className = "card";
   if (card.rarity === "legendary") el.classList.add("legendary");
   if (!card.image) el.classList.add("no-image");
-  if (card.description) el.title = card.description;
 
   el.innerHTML = cardFaceHtml(card);
 
