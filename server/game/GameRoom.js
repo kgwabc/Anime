@@ -17,7 +17,7 @@ function buildDeck(allCards) {
 }
 
 class GameRoom {
-  /** @param {{id: string, username: string}[]} players */
+  /** @param {{id: string, username: string, userId: string}[]} players */
   constructor(roomId, players, allCards) {
     this.roomId = roomId;
     this.turnNumber = 1;
@@ -25,11 +25,12 @@ class GameRoom {
     this.playerOrder = players.map((p) => p.id);
 
     this.players = {};
-    players.forEach(({ id: playerId, username }, index) => {
+    players.forEach(({ id: playerId, username, userId }, index) => {
       const deck = buildDeck(allCards);
       const hand = deck.splice(0, STARTING_HAND_SIZE);
       this.players[playerId] = {
         id: playerId,
+        userId,
         username,
         hp: STARTING_HP,
         mana: 1,
@@ -44,6 +45,22 @@ class GameRoom {
 
   getOpponentId(playerId) {
     return this.playerOrder.find((id) => id !== playerId);
+  }
+
+  findPlayerIdByUserId(userId) {
+    return this.playerOrder.find((id) => this.players[id].userId === userId);
+  }
+
+  /** 소켓 재연결시 예전 socket.id로 등록된 플레이어를 새 socket.id로 교체 */
+  rebindPlayer(oldId, newId) {
+    const player = this.players[oldId];
+    if (!player) return false;
+
+    player.id = newId;
+    this.players[newId] = player;
+    delete this.players[oldId];
+    this.playerOrder = this.playerOrder.map((id) => (id === oldId ? newId : id));
+    return true;
   }
 
   isPlayersTurn(playerId) {

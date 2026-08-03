@@ -32,8 +32,9 @@
 - `server/auth/socketAuth.js` — `io.use()` 미들웨어로 소켓 연결 자체를 JWT로 게이트.
   클라이언트는 `io(url, { auth: { token } })` 형태로 연결해야 함, 토큰 없거나 유효하지
   않으면 연결 거부됨.
-- 기존 게임 로직(`GameRoom`, `Matchmaker`)은 여전히 `socket.id`를 플레이어 식별자로 사용 —
-  인증은 그 위에 얹은 게이트일 뿐, 로그인한 유저의 `username`만 `GameRoom`에 전달해 표시용으로 씀.
+- 게임 로직(`GameRoom`, `Matchmaker`)은 실시간 통신 주소로 `socket.id`를 계속 사용하지만,
+  재연결시 같은 사람인지 식별하기 위해 JWT의 `userId`도 각 플레이어 상태에 함께 저장함
+  (아래 "재연결" 항목 참고).
 - 클라이언트(`client/main.js`)는 로그인 성공시 JWT를 `localStorage`에 저장해 재접속시
   자동 로그인 처리.
 - Render에 배포하려면 `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `JWT_SECRET` 환경변수가 필수
@@ -72,11 +73,28 @@
 - 소켓 이벤트 `attack_card`(서버) — `play_card`/`end_turn`과 동일한 패턴으로 처리, 성공시
   `game_state_update` 브로드캐스트 + `isGameOver()` 체크.
 
+## 재연결(끊김 유예)
+- 예전엔 소켓이 끊기면(`server/server.js`의 `disconnect`) **즉시** 방을 삭제하고 상대에게
+  `opponent_disconnected`를 보냈음 — 그래서 탭을 전환하거나 잠깐 자리를 비워 브라우저가
+  백그라운드에서 소켓 연결을 끊었다 자동 재연결하면(Render 무료망이 불안정할 때 흔함),
+  새 `socket.id`는 완전히 다른 사람 취급되어 게임 화면이 멈춰버리는 버그가 있었음.
+- 지금은 끊겨도 `RECONNECT_GRACE_MS`(기본 30초, env로 조절 가능) 동안 방을 유지하고
+  `pendingDisconnects`(userId 기준)에 등록해둠. 그 안에 같은 유저(JWT의 `userId`)가 다시
+  접속하면 `GameRoom.rebindPlayer(oldSocketId, newSocketId)`로 예전 소켓 id를 새 id로
+  교체하고 `match_found`를 재전송해서 게임 화면으로 복귀시킴. 유예 시간 안에 재접속 안 하면
+  그때 비로소 상대에게 `opponent_disconnected`를 보내고 방을 정리함.
+- 매칭 큐 대기중(아직 방 배정 전) 끊김은 유예 없이 그냥 큐에서 제거됨 — 유예는 "이미 진행중인
+  매치"에만 적용.
+
 ## 알려졌던 버그(수정됨)
 - 예전엔 `endTurn()`이 전역 `turnNumber` 기준으로 다음 플레이어 마나를 올리고 무조건 드로우
   시켜서, 2번째로 매칭된 플레이어가 자신의 진짜 첫 턴에 손패4/덱4/마나2로 시작하는 비대칭
   버그가 있었음. 지금은 플레이어별 `turnsPlayed` 카운터로 관리해서, 두 플레이어 모두 자신의
   첫 턴엔 손패3/덱5/마나1로 동일하게 시작함 (`GameRoom.js` 생성자 + `endTurn()` 참고).
+- 공격 시스템 추가 직후, "카드를 낸 다음 턴이 와도 계속 공격 불가로 보인다"는 버그 제보가
+  있었음 — 실제 원인은 `GameRoom` 로직이 아니라 위 "재연결" 항목의 소켓 재연결 문제였음
+  (탭 전환/자리비움으로 소켓이 끊겼다 재연결되면서 게임 화면이 멈춘 것). 재연결 유예
+  기능으로 해결됨.
 
 ## 알려진 제약사항
 - Render 무료 플랜은 15분 미사용시 슬립 → 재시작시 인메모리 매칭 큐/진행중 매치 상태 유실

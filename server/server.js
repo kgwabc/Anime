@@ -33,11 +33,15 @@ const allCards = JSON.parse(
   fs.readFileSync(path.join(__dirname, "data", "cards.json"), "utf-8")
 );
 
+const RECONNECT_GRACE_MS = Number(process.env.RECONNECT_GRACE_MS) || 30000;
+
 const matchmaker = new Matchmaker();
 /** @type {Map<string, GameRoom>} roomId -> GameRoom */
 const rooms = new Map();
 /** @type {Map<string, string>} socketId -> roomId, 소켓이 어느 방에 있는지 조회용 */
 const socketToRoom = new Map();
+/** @type {Map<string, {roomId: string, oldSocketId: string, timeoutHandle: NodeJS.Timeout}>} userId -> 재연결 유예 정보 */
+const pendingDisconnects = new Map();
 
 function broadcastGameState(room) {
   for (const playerId of room.playerOrder) {
@@ -60,6 +64,20 @@ function handleGameOver(room, roomId) {
 io.on("connection", (socket) => {
   console.log(`[connect] ${socket.id}`);
 
+  const pending = pendingDisconnects.get(socket.data.userId);
+  if (pending) {
+    clearTimeout(pending.timeoutHandle);
+    pendingDisconnects.delete(socket.data.userId);
+
+    const room = rooms.get(pending.roomId);
+    if (room && room.rebindPlayer(pending.oldSocketId, socket.id)) {
+      socketToRoom.set(socket.id, pending.roomId);
+      console.log(`[reconnect] ${socket.data.username} resumed room ${pending.roomId}`);
+      io.to(socket.id).emit("match_found", room.toClientState(socket.id));
+      broadcastGameState(room);
+    }
+  }
+
   socket.on("join_queue", () => {
     matchmaker.addToQueue(socket.id);
     console.log(`[queue] ${socket.id} joined. queue size=${matchmaker.waitingQueue.length}`);
@@ -72,6 +90,7 @@ io.on("connection", (socket) => {
     const players = [playerA, playerB].map((id) => ({
       id,
       username: io.sockets.sockets.get(id)?.data.username || "Unknown",
+      userId: io.sockets.sockets.get(id)?.data.userId,
     }));
     const room = new GameRoom(roomId, players, allCards);
     rooms.set(roomId, room);
@@ -133,15 +152,25 @@ io.on("connection", (socket) => {
     matchmaker.removeFromQueue(socket.id);
 
     const roomId = socketToRoom.get(socket.id);
+    socketToRoom.delete(socket.id);
     if (!roomId) return;
     const room = rooms.get(roomId);
     if (!room) return;
 
-    const opponentId = room.getOpponentId(socket.id);
-    io.to(opponentId).emit("opponent_disconnected");
-    rooms.delete(roomId);
-    socketToRoom.delete(socket.id);
-    socketToRoom.delete(opponentId);
+    // 재연결 유예: 바로 방을 없애지 않고, 같은 유저가 다시 접속하면 복귀시킴
+    const timeoutHandle = setTimeout(() => {
+      pendingDisconnects.delete(socket.data.userId);
+      const opponentId = room.getOpponentId(socket.id);
+      io.to(opponentId).emit("opponent_disconnected");
+      rooms.delete(roomId);
+      socketToRoom.delete(opponentId);
+    }, RECONNECT_GRACE_MS);
+
+    pendingDisconnects.set(socket.data.userId, {
+      roomId,
+      oldSocketId: socket.id,
+      timeoutHandle,
+    });
   });
 });
 
