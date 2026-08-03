@@ -27,6 +27,21 @@ async function migrateUsersTable(db) {
   }
 }
 
+async function migrateCardsTable(db) {
+  const info = await db.execute("PRAGMA table_info(cards)");
+  const existingCols = new Set(info.rows.map((col) => col.name));
+
+  if (!existingCols.has("effects")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN effects TEXT NOT NULL DEFAULT '[]'");
+  }
+  if (!existingCols.has("equip_atk_bonus")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN equip_atk_bonus INTEGER");
+  }
+  if (!existingCols.has("equip_hp_bonus")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN equip_hp_bonus INTEGER");
+  }
+}
+
 async function seedCardsIfEmpty(db) {
   const { rows } = await db.execute("SELECT COUNT(*) AS count FROM cards");
   if (Number(rows[0].count) > 0) return;
@@ -36,8 +51,8 @@ async function seedCardsIfEmpty(db) {
 
   for (const card of seedCards) {
     await db.execute({
-      sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         card.id,
         card.name,
@@ -47,6 +62,9 @@ async function seedCardsIfEmpty(db) {
         card.atk,
         card.hp,
         JSON.stringify(card.synergyTags || []),
+        JSON.stringify(card.effects || []),
+        card.equipAtkBonus ?? null,
+        card.equipHpBonus ?? null,
       ],
     });
   }
@@ -73,9 +91,13 @@ async function connectDB() {
       cost INTEGER NOT NULL,
       atk INTEGER NOT NULL,
       hp INTEGER NOT NULL,
-      synergy_tags TEXT NOT NULL DEFAULT '[]'
+      synergy_tags TEXT NOT NULL DEFAULT '[]',
+      effects TEXT NOT NULL DEFAULT '[]',
+      equip_atk_bonus INTEGER,
+      equip_hp_bonus INTEGER
     )
   `);
+  await migrateCardsTable(db);
   await seedCardsIfEmpty(db);
   console.log("Turso connected");
 }

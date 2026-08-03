@@ -83,6 +83,31 @@ body {
   font-size: 13px;
 }
 
+.admin-card-form select {
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.effect-editor {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  border: 1px solid #34405c;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.effect-editor select,
+.effect-editor input {
+  flex: 1 1 100px;
+}
+
+.card .effect-summary {
+  font-size: 10px;
+  color: #c9d2e3;
+  line-height: 1.2;
+}
+
 .admin-user-row {
   display: flex;
   justify-content: space-between;

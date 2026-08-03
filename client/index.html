@@ -44,11 +44,44 @@
       <form id="form-new-card" class="admin-card-form">
         <input type="text" id="new-card-name" placeholder="이름" required />
         <input type="text" id="new-card-series" placeholder="계열 (예: demon_slayer_corps)" required />
-        <input type="text" id="new-card-type" placeholder="타입" value="character" required />
+        <select id="new-card-type" required>
+          <option value="character">캐릭터</option>
+          <option value="spell">스펠</option>
+          <option value="equipment">장비</option>
+        </select>
         <input type="number" id="new-card-cost" placeholder="코스트" min="0" required />
-        <input type="number" id="new-card-atk" placeholder="공격력" min="0" required />
-        <input type="number" id="new-card-hp" placeholder="체력" min="0" required />
         <input type="text" id="new-card-tags" placeholder="시너지태그 (콤마로 구분)" />
+
+        <span data-type-group="character">
+          <input type="number" id="new-card-atk" placeholder="공격력" min="0" />
+          <input type="number" id="new-card-hp" placeholder="체력" min="0" />
+        </span>
+
+        <span data-type-group="equipment">
+          <input type="number" id="new-card-equip-atk" placeholder="장착 공격력 보너스" min="0" />
+          <input type="number" id="new-card-equip-hp" placeholder="장착 체력 보너스" min="0" />
+        </span>
+
+        <fieldset class="effect-editor">
+          <legend>효과 (선택)</legend>
+          <select id="new-card-trigger">
+            <option value="">없음</option>
+          </select>
+          <select id="new-card-action">
+            <option value="DAMAGE">피해(DAMAGE)</option>
+            <option value="HEAL">회복(HEAL)</option>
+            <option value="DRAW">카드뽑기(DRAW)</option>
+            <option value="BUFF">스탯부여(BUFF)</option>
+          </select>
+          <select id="new-card-target">
+            <option value="ENEMY_HERO">적 영웅</option>
+            <option value="ALL_ENEMIES">적 전체</option>
+            <option value="TARGET_CHARACTER">지정 캐릭터</option>
+            <option value="SELF">자신</option>
+          </select>
+          <input type="number" id="new-card-value" placeholder="수치" />
+        </fieldset>
+
         <button type="submit">카드 생성</button>
         <p id="new-card-error" class="error"></p>
       </form>

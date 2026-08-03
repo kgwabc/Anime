@@ -101,12 +101,27 @@ io.on("connection", (socket) => {
     console.log(`[match] ${roomId} started`);
   });
 
-  socket.on("play_card", ({ cardId }) => {
+  socket.on("play_card", ({ cardId, target }) => {
     const roomId = socketToRoom.get(socket.id);
     const room = rooms.get(roomId);
     if (!room) return;
 
-    const result = room.playCard(socket.id, cardId);
+    const result = room.playCard(socket.id, cardId, target?.cardId);
+    if (!result.ok) {
+      socket.emit("action_error", result.reason);
+      return;
+    }
+
+    broadcastGameState(room);
+    handleGameOver(room, roomId);
+  });
+
+  socket.on("equip_card", ({ equipmentCardId, targetCharacterId }) => {
+    const roomId = socketToRoom.get(socket.id);
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    const result = room.equipCard(socket.id, equipmentCardId, targetCharacterId);
     if (!result.ok) {
       socket.emit("action_error", result.reason);
       return;

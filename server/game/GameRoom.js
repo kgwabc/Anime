@@ -1,3 +1,5 @@
+const { applyEffectList, hasUnresolvableTarget } = require("./effects");
+
 const MAX_MANA = 10;
 const STARTING_HAND_SIZE = 3;
 const STARTING_HP = 30;
@@ -39,6 +41,7 @@ class GameRoom {
         hand,
         deck,
         board: [],
+        // graveyard 의도적으로 생략 — 죽은 카드 기록을 나중에 참조하는 효과가 없음
       };
     });
   }
@@ -67,7 +70,7 @@ class GameRoom {
     return this.playerOrder[this.currentPlayerIndex] === playerId;
   }
 
-  playCard(playerId, cardId) {
+  playCard(playerId, cardId, chosenTargetCardId) {
     if (!this.isPlayersTurn(playerId)) {
       return { ok: false, reason: "not_your_turn" };
     }
@@ -82,12 +85,64 @@ class GameRoom {
     if (card.cost > player.mana) {
       return { ok: false, reason: "not_enough_mana" };
     }
+    if (card.type === "equipment") {
+      return { ok: false, reason: "use_equip_card" };
+    }
+
+    const trigger = card.type === "spell" ? "IMMEDIATE" : "ON_PLAY";
+    const context = { sourceCardId: card.id, chosenTargetCardId };
+    if (hasUnresolvableTarget(this, playerId, card.effects, trigger, context)) {
+      return { ok: false, reason: "target_required" };
+    }
 
     player.hand.splice(cardIndex, 1);
     player.mana -= card.cost;
-    card.canAttack = false;
-    card.hasAttacked = false;
-    player.board.push(card);
+
+    if (card.type === "spell") {
+      applyEffectList(this, playerId, card.effects, "IMMEDIATE", context);
+    } else {
+      card.canAttack = false;
+      card.hasAttacked = false;
+      player.board.push(card);
+      applyEffectList(this, playerId, card.effects, "ON_PLAY", context);
+    }
+
+    return { ok: true };
+  }
+
+  equipCard(playerId, equipmentCardId, targetCharacterId) {
+    if (!this.isPlayersTurn(playerId)) {
+      return { ok: false, reason: "not_your_turn" };
+    }
+
+    const player = this.players[playerId];
+    const cardIndex = player.hand.findIndex((card) => card.id === equipmentCardId);
+    if (cardIndex === -1) {
+      return { ok: false, reason: "card_not_in_hand" };
+    }
+
+    const card = player.hand[cardIndex];
+    if (card.type !== "equipment") {
+      return { ok: false, reason: "not_equipment" };
+    }
+    if (card.cost > player.mana) {
+      return { ok: false, reason: "not_enough_mana" };
+    }
+
+    const target = player.board.find((c) => c.id === targetCharacterId);
+    if (!target) {
+      return { ok: false, reason: "target_not_on_board" };
+    }
+
+    player.hand.splice(cardIndex, 1);
+    player.mana -= card.cost;
+
+    target.atk += card.equipAtkBonus || 0;
+    target.hp += card.equipHpBonus || 0;
+    applyEffectList(this, playerId, card.effects, "ON_EQUIP", {
+      sourceCardId: card.id,
+      chosenTargetCardId: target.id,
+    });
 
     return { ok: true };
   }
@@ -123,9 +178,13 @@ class GameRoom {
 
       if (defender.hp <= 0) {
         opponent.board.splice(defenderIndex, 1);
+        applyEffectList(this, this.getOpponentId(playerId), defender.effects, "ON_DEATH", {
+          sourceCardId: defender.id,
+        });
       }
       if (attacker.hp <= 0) {
         player.board = player.board.filter((card) => card.id !== attacker.id);
+        applyEffectList(this, playerId, attacker.effects, "ON_DEATH", { sourceCardId: attacker.id });
       }
     } else {
       return { ok: false, reason: "invalid_target" };

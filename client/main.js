@@ -4,7 +4,36 @@ const ADMIN_USERNAME = "kgwabc";
 let socket = null;
 let lastState = null;
 let selectedAttackerId = null;
+let selectedSpellCardId = null;
+let selectedEquipmentCardId = null;
 let currentAdminToken = null;
+
+const TRIGGER_LABELS = {
+  ON_PLAY: "출격시(ON_PLAY)",
+  ON_DEATH: "파괴시(ON_DEATH)",
+  IMMEDIATE: "사용즉시(IMMEDIATE)",
+  ON_EQUIP: "장착시(ON_EQUIP)",
+};
+
+const ALLOWED_TRIGGERS_BY_TYPE = {
+  character: ["ON_PLAY", "ON_DEATH"],
+  spell: ["IMMEDIATE"],
+  equipment: ["ON_EQUIP"],
+};
+
+const ACTION_LABELS = {
+  DAMAGE: "피해",
+  HEAL: "회복",
+  DRAW: "카드뽑기",
+  BUFF: "스탯부여",
+};
+
+const TARGET_LABELS = {
+  ENEMY_HERO: "적 영웅",
+  ALL_ENEMIES: "적 전체",
+  TARGET_CHARACTER: "지정 캐릭터",
+  SELF: "자신",
+};
 
 const screens = {
   auth: document.getElementById("screen-auth"),
@@ -193,6 +222,30 @@ async function deleteAdminUser(username, token) {
   }
 }
 
+function populateTriggerOptions(selectEl, type) {
+  const allowed = ALLOWED_TRIGGERS_BY_TYPE[type] || [];
+  const previousValue = selectEl.value;
+  selectEl.innerHTML = '<option value="">없음</option>';
+  for (const trigger of allowed) {
+    const option = document.createElement("option");
+    option.value = trigger;
+    option.textContent = TRIGGER_LABELS[trigger];
+    selectEl.appendChild(option);
+  }
+  if (allowed.includes(previousValue)) selectEl.value = previousValue;
+}
+
+function updateNewCardFieldVisibility() {
+  const type = document.getElementById("new-card-type").value;
+  for (const group of document.querySelectorAll("#form-new-card [data-type-group]")) {
+    group.classList.toggle("hidden", group.dataset.typeGroup !== type);
+  }
+  populateTriggerOptions(document.getElementById("new-card-trigger"), type);
+}
+
+document.getElementById("new-card-type").addEventListener("change", updateNewCardFieldVisibility);
+updateNewCardFieldVisibility();
+
 async function loadAdminCards(token) {
   const listEl = document.getElementById("admin-card-list");
   listEl.textContent = "불러오는 중...";
@@ -212,6 +265,18 @@ async function loadAdminCards(token) {
   }
 }
 
+function createOptionSelect(options, selectedValue) {
+  const select = document.createElement("select");
+  for (const [value, label] of options) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    select.appendChild(option);
+  }
+  select.value = selectedValue;
+  return select;
+}
+
 function renderAdminCards(cards, token) {
   const listEl = document.getElementById("admin-card-list");
   listEl.innerHTML = "";
@@ -228,48 +293,108 @@ function renderAdminCards(cards, token) {
     seriesInput.type = "text";
     seriesInput.value = card.series;
 
-    const typeInput = document.createElement("input");
-    typeInput.type = "text";
-    typeInput.value = card.type;
+    const typeSelect = createOptionSelect(
+      [
+        ["character", "캐릭터"],
+        ["spell", "스펠"],
+        ["equipment", "장비"],
+      ],
+      card.type
+    );
 
     const costInput = document.createElement("input");
     costInput.type = "number";
     costInput.min = "0";
     costInput.value = card.cost;
 
+    const tagsInput = document.createElement("input");
+    tagsInput.type = "text";
+    tagsInput.value = (card.synergyTags || []).join(", ");
+
     const atkInput = document.createElement("input");
     atkInput.type = "number";
     atkInput.min = "0";
     atkInput.value = card.atk;
+    atkInput.placeholder = "공격력";
 
     const hpInput = document.createElement("input");
     hpInput.type = "number";
     hpInput.min = "0";
     hpInput.value = card.hp;
+    hpInput.placeholder = "체력";
 
-    const tagsInput = document.createElement("input");
-    tagsInput.type = "text";
-    tagsInput.value = (card.synergyTags || []).join(", ");
+    const equipAtkInput = document.createElement("input");
+    equipAtkInput.type = "number";
+    equipAtkInput.min = "0";
+    equipAtkInput.value = card.equipAtkBonus || 0;
+    equipAtkInput.placeholder = "장착 공격력 보너스";
+
+    const equipHpInput = document.createElement("input");
+    equipHpInput.type = "number";
+    equipHpInput.min = "0";
+    equipHpInput.value = card.equipHpBonus || 0;
+    equipHpInput.placeholder = "장착 체력 보너스";
+
+    const existingEffect = (card.effects || [])[0];
+    const triggerSelect = document.createElement("select");
+    const actionSelect = createOptionSelect(
+      Object.entries(ACTION_LABELS),
+      existingEffect?.action || "DAMAGE"
+    );
+    const targetSelect = createOptionSelect(
+      Object.entries(TARGET_LABELS),
+      existingEffect?.target || "ENEMY_HERO"
+    );
+    const valueInput = document.createElement("input");
+    valueInput.type = "number";
+    valueInput.placeholder = "수치";
+    valueInput.value = existingEffect?.value ?? "";
+
+    function refreshFieldVisibility() {
+      const type = typeSelect.value;
+      atkInput.classList.toggle("hidden", type !== "character");
+      hpInput.classList.toggle("hidden", type !== "character");
+      equipAtkInput.classList.toggle("hidden", type !== "equipment");
+      equipHpInput.classList.toggle("hidden", type !== "equipment");
+      populateTriggerOptions(triggerSelect, type);
+    }
+    triggerSelect.value = existingEffect?.trigger || "";
+    typeSelect.addEventListener("change", refreshFieldVisibility);
+    refreshFieldVisibility();
 
     const saveBtn = document.createElement("button");
     saveBtn.textContent = "저장";
     saveBtn.addEventListener("click", () => {
-      updateAdminCard(
-        card.id,
-        {
-          name: nameInput.value,
-          series: seriesInput.value,
-          type: typeInput.value,
-          cost: Number(costInput.value),
-          atk: Number(atkInput.value),
-          hp: Number(hpInput.value),
-          synergyTags: tagsInput.value
-            .split(",")
-            .map((tag) => tag.trim())
-            .filter(Boolean),
-        },
-        token
-      );
+      const type = typeSelect.value;
+      const fields = {
+        name: nameInput.value,
+        series: seriesInput.value,
+        type,
+        cost: Number(costInput.value),
+        synergyTags: tagsInput.value
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean),
+        effects: triggerSelect.value
+          ? [
+              {
+                trigger: triggerSelect.value,
+                action: actionSelect.value,
+                target: targetSelect.value,
+                value: Number(valueInput.value),
+              },
+            ]
+          : [],
+      };
+      if (type === "character") {
+        fields.atk = Number(atkInput.value);
+        fields.hp = Number(hpInput.value);
+      }
+      if (type === "equipment") {
+        fields.equipAtkBonus = Number(equipAtkInput.value) || 0;
+        fields.equipHpBonus = Number(equipHpInput.value) || 0;
+      }
+      updateAdminCard(card.id, fields, token);
     });
 
     const deleteBtn = document.createElement("button");
@@ -279,11 +404,17 @@ function renderAdminCards(cards, token) {
     row.append(
       nameInput,
       seriesInput,
-      typeInput,
+      typeSelect,
       costInput,
+      tagsInput,
       atkInput,
       hpInput,
-      tagsInput,
+      equipAtkInput,
+      equipHpInput,
+      triggerSelect,
+      actionSelect,
+      targetSelect,
+      valueInput,
       saveBtn,
       deleteBtn
     );
@@ -331,6 +462,20 @@ async function deleteAdminCard(id, token) {
   }
 }
 
+function buildEffectsFromEditor(triggerId, actionId, targetId, valueId) {
+  const trigger = document.getElementById(triggerId).value;
+  if (!trigger) return [];
+  const value = Number(document.getElementById(valueId).value);
+  return [
+    {
+      trigger,
+      action: document.getElementById(actionId).value,
+      target: document.getElementById(targetId).value,
+      value,
+    },
+  ];
+}
+
 document.getElementById("form-new-card").addEventListener("submit", async (e) => {
   e.preventDefault();
   const errorEl = document.getElementById("new-card-error");
@@ -338,19 +483,28 @@ document.getElementById("form-new-card").addEventListener("submit", async (e) =>
 
   if (!currentAdminToken) return;
 
+  const type = document.getElementById("new-card-type").value;
   const fields = {
     name: document.getElementById("new-card-name").value,
     series: document.getElementById("new-card-series").value,
-    type: document.getElementById("new-card-type").value,
+    type,
     cost: Number(document.getElementById("new-card-cost").value),
-    atk: Number(document.getElementById("new-card-atk").value),
-    hp: Number(document.getElementById("new-card-hp").value),
     synergyTags: document
       .getElementById("new-card-tags")
       .value.split(",")
       .map((tag) => tag.trim())
       .filter(Boolean),
+    effects: buildEffectsFromEditor("new-card-trigger", "new-card-action", "new-card-target", "new-card-value"),
   };
+
+  if (type === "character") {
+    fields.atk = Number(document.getElementById("new-card-atk").value);
+    fields.hp = Number(document.getElementById("new-card-hp").value);
+  }
+  if (type === "equipment") {
+    fields.equipAtkBonus = Number(document.getElementById("new-card-equip-atk").value) || 0;
+    fields.equipHpBonus = Number(document.getElementById("new-card-equip-hp").value) || 0;
+  }
 
   try {
     const res = await fetch(`${SERVER_URL}/cards`, {
@@ -368,6 +522,7 @@ document.getElementById("form-new-card").addEventListener("submit", async (e) =>
     }
     e.target.reset();
     document.getElementById("new-card-type").value = "character";
+    updateNewCardFieldVisibility();
     loadAdminCards(currentAdminToken);
   } catch (err) {
     errorEl.textContent = "카드 생성 중 오류가 발생했습니다.";
@@ -407,6 +562,8 @@ function registerSocketHandlers() {
   socket.on("action_error", (reason) => {
     console.warn("action_error:", reason);
     selectedAttackerId = null;
+    selectedSpellCardId = null;
+    selectedEquipmentCardId = null;
     if (lastState) renderState(lastState);
   });
 
@@ -422,46 +579,103 @@ function registerSocketHandlers() {
   });
 }
 
+function describeEffect(effect) {
+  if (!effect) return "";
+  return `${ACTION_LABELS[effect.action] || effect.action} ${effect.value} (${TARGET_LABELS[effect.target] || effect.target})`;
+}
+
+function cardNeedsTargetCharacter(card) {
+  return (card.effects || []).some((effect) => effect.target === "TARGET_CHARACTER");
+}
+
 function renderCard(card, role, isMyTurn) {
   const el = document.createElement("div");
   el.className = "card";
+
+  let bodyHtml;
+  if (card.type === "character") {
+    bodyHtml = `<div class="atk-hp"><span>⚔${card.atk}</span><span>❤${card.hp}</span></div>`;
+    if (card.effects?.length) bodyHtml += `<div class="effect-summary">${describeEffect(card.effects[0])}</div>`;
+  } else if (card.type === "spell") {
+    bodyHtml = `<div class="effect-summary">${describeEffect(card.effects?.[0])}</div>`;
+  } else {
+    bodyHtml = `<div class="atk-hp"><span>+${card.equipAtkBonus || 0}</span><span>+${card.equipHpBonus || 0}</span></div>`;
+    if (card.effects?.length) bodyHtml += `<div class="effect-summary">${describeEffect(card.effects[0])}</div>`;
+  }
+
   el.innerHTML = `
     <div class="name">${card.name}</div>
     <div class="cost">코스트 ${card.cost}</div>
-    ${
-      card.type === "character"
-        ? `<div class="atk-hp"><span>⚔${card.atk}</span><span>❤${card.hp}</span></div>`
-        : `<div class="atk-hp"><span>${card.type}</span></div>`
-    }
+    ${bodyHtml}
   `;
 
   if (role === "hand") {
+    if (selectedSpellCardId === card.id || selectedEquipmentCardId === card.id) {
+      el.classList.add("selected-attacker");
+    }
     el.addEventListener("click", () => {
+      if (card.type === "equipment") {
+        selectedSpellCardId = null;
+        selectedEquipmentCardId = selectedEquipmentCardId === card.id ? null : card.id;
+        renderState(lastState);
+        return;
+      }
+      if (card.type === "spell" && cardNeedsTargetCharacter(card)) {
+        selectedEquipmentCardId = null;
+        selectedSpellCardId = selectedSpellCardId === card.id ? null : card.id;
+        renderState(lastState);
+        return;
+      }
       socket.emit("play_card", { cardId: card.id });
     });
   } else if (role === "my-board") {
-    const canSelect = isMyTurn && card.canAttack && !card.hasAttacked;
-    if (canSelect) {
-      el.classList.add("attackable");
-      if (selectedAttackerId === card.id) el.classList.add("selected-attacker");
-      el.addEventListener("click", () => {
-        selectedAttackerId = selectedAttackerId === card.id ? null : card.id;
-        renderState(lastState);
+    if (selectedEquipmentCardId) {
+      el.classList.add("attack-target");
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        socket.emit("equip_card", { equipmentCardId: selectedEquipmentCardId, targetCharacterId: card.id });
+        selectedEquipmentCardId = null;
+      });
+    } else if (selectedSpellCardId) {
+      el.classList.add("attack-target");
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        socket.emit("play_card", { cardId: selectedSpellCardId, target: { cardId: card.id } });
+        selectedSpellCardId = null;
       });
     } else {
-      el.classList.add("cannot-attack");
+      const canSelect = isMyTurn && card.canAttack && !card.hasAttacked;
+      if (canSelect) {
+        el.classList.add("attackable");
+        if (selectedAttackerId === card.id) el.classList.add("selected-attacker");
+        el.addEventListener("click", () => {
+          selectedAttackerId = selectedAttackerId === card.id ? null : card.id;
+          renderState(lastState);
+        });
+      } else {
+        el.classList.add("cannot-attack");
+      }
     }
   } else if (role === "opp-board") {
-    if (selectedAttackerId) el.classList.add("attack-target");
-    el.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (!selectedAttackerId) return;
-      socket.emit("attack_card", {
-        attackerCardId: selectedAttackerId,
-        target: { type: "character", cardId: card.id },
+    if (selectedSpellCardId) {
+      el.classList.add("attack-target");
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        socket.emit("play_card", { cardId: selectedSpellCardId, target: { cardId: card.id } });
+        selectedSpellCardId = null;
       });
-      selectedAttackerId = null;
-    });
+    } else {
+      if (selectedAttackerId) el.classList.add("attack-target");
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!selectedAttackerId) return;
+        socket.emit("attack_card", {
+          attackerCardId: selectedAttackerId,
+          target: { type: "character", cardId: card.id },
+        });
+        selectedAttackerId = null;
+      });
+    }
   }
 
   return el;

@@ -10,6 +10,9 @@ function rowToCard(row) {
     atk: row.atk,
     hp: row.hp,
     synergyTags: JSON.parse(row.synergy_tags || "[]"),
+    effects: JSON.parse(row.effects || "[]"),
+    equipAtkBonus: row.equip_atk_bonus ?? null,
+    equipHpBonus: row.equip_hp_bonus ?? null,
   };
 }
 
@@ -51,12 +54,36 @@ async function getCardById(id) {
   return result.rows[0] ? rowToCard(result.rows[0]) : null;
 }
 
-async function createCard({ name, series, type, cost, atk, hp, synergyTags }) {
+async function createCard({
+  name,
+  series,
+  type,
+  cost,
+  atk,
+  hp,
+  synergyTags,
+  effects,
+  equipAtkBonus,
+  equipHpBonus,
+}) {
   const id = await generateCardId(name);
+  const isCharacter = type === "character";
   await getClient().execute({
-    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    args: [id, name, series, type, cost, atk, hp, JSON.stringify(synergyTags || [])],
+    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      id,
+      name,
+      series,
+      type,
+      cost,
+      isCharacter ? atk : 0,
+      isCharacter ? hp : 0,
+      JSON.stringify(synergyTags || []),
+      JSON.stringify(effects || []),
+      equipAtkBonus ?? null,
+      equipHpBonus ?? null,
+    ],
   });
   return getCardById(id);
 }
@@ -66,17 +93,22 @@ async function updateCard(id, fields) {
   if (!existing) return null;
 
   const merged = { ...existing, ...fields };
+  const isCharacter = merged.type === "character";
   await getClient().execute({
-    sql: `UPDATE cards SET name = ?, series = ?, type = ?, cost = ?, atk = ?, hp = ?, synergy_tags = ?
+    sql: `UPDATE cards SET name = ?, series = ?, type = ?, cost = ?, atk = ?, hp = ?, synergy_tags = ?,
+          effects = ?, equip_atk_bonus = ?, equip_hp_bonus = ?
           WHERE id = ?`,
     args: [
       merged.name,
       merged.series,
       merged.type,
       merged.cost,
-      merged.atk,
-      merged.hp,
+      isCharacter ? merged.atk : 0,
+      isCharacter ? merged.hp : 0,
       JSON.stringify(merged.synergyTags || []),
+      JSON.stringify(merged.effects || []),
+      merged.equipAtkBonus ?? null,
+      merged.equipHpBonus ?? null,
       id,
     ],
   });
