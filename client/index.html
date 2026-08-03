@@ -56,11 +56,21 @@
         <span data-type-group="character">
           <input type="number" id="new-card-atk" placeholder="공격력" min="0" />
           <input type="number" id="new-card-hp" placeholder="체력" min="0" />
+          <select id="new-card-matchup-tag">
+            <option value="">상성 없음</option>
+          </select>
+          <input type="number" id="new-card-matchup-bonus" placeholder="상성 공격력 보너스" min="0" />
         </span>
 
         <span data-type-group="equipment">
           <input type="number" id="new-card-equip-atk" placeholder="장착 공격력 보너스" min="0" />
           <input type="number" id="new-card-equip-hp" placeholder="장착 체력 보너스" min="0" />
+        </span>
+
+        <span data-type-group="spell,equipment">
+          <select id="new-card-required-tag">
+            <option value="">대상 제한 없음</option>
+          </select>
         </span>
 
         <fieldset class="effect-editor">

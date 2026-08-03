@@ -239,9 +239,23 @@ function populateTriggerOptions(selectEl, type) {
 function updateNewCardFieldVisibility() {
   const type = document.getElementById("new-card-type").value;
   for (const group of document.querySelectorAll("#form-new-card [data-type-group]")) {
-    group.classList.toggle("hidden", group.dataset.typeGroup !== type);
+    group.classList.toggle("hidden", !group.dataset.typeGroup.split(",").includes(type));
   }
   populateTriggerOptions(document.getElementById("new-card-trigger"), type);
+}
+
+function populateTagOptions(selectEl, cards, defaultLabel) {
+  const previousValue = selectEl.value;
+  const tags = [...new Set(cards.flatMap((card) => card.synergyTags || []))].sort();
+
+  selectEl.innerHTML = `<option value="">${defaultLabel}</option>`;
+  for (const tag of tags) {
+    const option = document.createElement("option");
+    option.value = tag;
+    option.textContent = tag;
+    selectEl.appendChild(option);
+  }
+  if (tags.includes(previousValue)) selectEl.value = previousValue;
 }
 
 document.getElementById("new-card-type").addEventListener("change", updateNewCardFieldVisibility);
@@ -262,6 +276,8 @@ async function loadAdminCards(token) {
     }
     loadedAdminCards = data.cards;
     populateSeriesFilterOptions(loadedAdminCards);
+    populateTagOptions(document.getElementById("new-card-matchup-tag"), loadedAdminCards, "상성 없음");
+    populateTagOptions(document.getElementById("new-card-required-tag"), loadedAdminCards, "대상 제한 없음");
     renderAdminCards(getFilteredAdminCards(), token);
   } catch (err) {
     listEl.textContent = "카드 목록을 불러올 수 없습니다.";
@@ -367,6 +383,20 @@ function renderAdminCards(cards, token) {
     equipHpInput.value = card.equipHpBonus || 0;
     equipHpInput.placeholder = "장착 체력 보너스";
 
+    const matchupTagSelect = document.createElement("select");
+    populateTagOptions(matchupTagSelect, loadedAdminCards, "상성 없음");
+    matchupTagSelect.value = card.matchupVsTag || "";
+
+    const matchupBonusInput = document.createElement("input");
+    matchupBonusInput.type = "number";
+    matchupBonusInput.min = "0";
+    matchupBonusInput.value = card.matchupAtkBonus || 0;
+    matchupBonusInput.placeholder = "상성 공격력 보너스";
+
+    const requiredTagSelect = document.createElement("select");
+    populateTagOptions(requiredTagSelect, loadedAdminCards, "대상 제한 없음");
+    requiredTagSelect.value = card.requiredTargetTag || "";
+
     const existingEffect = (card.effects || [])[0];
     const triggerSelect = document.createElement("select");
     const actionSelect = createOptionSelect(
@@ -386,8 +416,11 @@ function renderAdminCards(cards, token) {
       const type = typeSelect.value;
       atkInput.classList.toggle("hidden", type !== "character");
       hpInput.classList.toggle("hidden", type !== "character");
+      matchupTagSelect.classList.toggle("hidden", type !== "character");
+      matchupBonusInput.classList.toggle("hidden", type !== "character");
       equipAtkInput.classList.toggle("hidden", type !== "equipment");
       equipHpInput.classList.toggle("hidden", type !== "equipment");
+      requiredTagSelect.classList.toggle("hidden", type === "character");
       populateTriggerOptions(triggerSelect, type);
     }
     triggerSelect.value = existingEffect?.trigger || "";
@@ -422,10 +455,15 @@ function renderAdminCards(cards, token) {
       if (type === "character") {
         fields.atk = Number(atkInput.value);
         fields.hp = Number(hpInput.value);
+        fields.matchupVsTag = matchupTagSelect.value || null;
+        fields.matchupAtkBonus = Number(matchupBonusInput.value) || 0;
       }
       if (type === "equipment") {
         fields.equipAtkBonus = Number(equipAtkInput.value) || 0;
         fields.equipHpBonus = Number(equipHpInput.value) || 0;
+      }
+      if (type === "spell" || type === "equipment") {
+        fields.requiredTargetTag = requiredTagSelect.value || null;
       }
       updateAdminCard(card.id, fields, token);
     });
@@ -443,8 +481,11 @@ function renderAdminCards(cards, token) {
       descriptionInput,
       atkInput,
       hpInput,
+      matchupTagSelect,
+      matchupBonusInput,
       equipAtkInput,
       equipHpInput,
+      requiredTagSelect,
       triggerSelect,
       actionSelect,
       targetSelect,
@@ -535,10 +576,15 @@ document.getElementById("form-new-card").addEventListener("submit", async (e) =>
   if (type === "character") {
     fields.atk = Number(document.getElementById("new-card-atk").value);
     fields.hp = Number(document.getElementById("new-card-hp").value);
+    fields.matchupVsTag = document.getElementById("new-card-matchup-tag").value || null;
+    fields.matchupAtkBonus = Number(document.getElementById("new-card-matchup-bonus").value) || 0;
   }
   if (type === "equipment") {
     fields.equipAtkBonus = Number(document.getElementById("new-card-equip-atk").value) || 0;
     fields.equipHpBonus = Number(document.getElementById("new-card-equip-hp").value) || 0;
+  }
+  if (type === "spell" || type === "equipment") {
+    fields.requiredTargetTag = document.getElementById("new-card-required-tag").value || null;
   }
 
   try {
@@ -632,11 +678,16 @@ function renderCard(card, role, isMyTurn) {
   if (card.type === "character") {
     bodyHtml = `<div class="atk-hp"><span>⚔${card.atk}</span><span>❤${card.hp}</span></div>`;
     if (card.effects?.length) bodyHtml += `<div class="effect-summary">${describeEffect(card.effects[0])}</div>`;
+    if (card.matchupVsTag) {
+      bodyHtml += `<div class="effect-summary">⚔ ${card.matchupVsTag} 상대 +${card.matchupAtkBonus || 0}</div>`;
+    }
   } else if (card.type === "spell") {
     bodyHtml = `<div class="effect-summary">${describeEffect(card.effects?.[0])}</div>`;
+    if (card.requiredTargetTag) bodyHtml += `<div class="effect-summary">🎯 ${card.requiredTargetTag} 전용</div>`;
   } else {
     bodyHtml = `<div class="atk-hp"><span>+${card.equipAtkBonus || 0}</span><span>+${card.equipHpBonus || 0}</span></div>`;
     if (card.effects?.length) bodyHtml += `<div class="effect-summary">${describeEffect(card.effects[0])}</div>`;
+    if (card.requiredTargetTag) bodyHtml += `<div class="effect-summary">🎯 ${card.requiredTargetTag} 전용</div>`;
   }
 
   el.innerHTML = `

@@ -70,13 +70,17 @@ function applyAction(effect, targets) {
 }
 
 /** 특정 trigger의 효과 목록에 TARGET_CHARACTER가 있는데 해석 불가능한 타겟이 있으면 true.
- * 상태 변경(마나 차감/손패 제거) 전에 미리 검증하는 용도. */
-function hasUnresolvableTarget(room, playerId, effects, trigger, context = {}) {
+ * 상태 변경(마나 차감/손패 제거) 전에 미리 검증하는 용도. requiredTargetTag가 있으면
+ * 대상 캐릭터의 synergyTags에 그 태그가 없는 경우도 해석 불가능으로 취급한다. */
+function hasUnresolvableTarget(room, playerId, effects, trigger, context = {}, requiredTargetTag) {
   return (effects || [])
     .filter((effect) => effect.trigger === trigger)
     .some((effect) => {
       if (effect.target !== "TARGET_CHARACTER") return false;
-      return !findCharacterOnEitherBoard(room, context.chosenTargetCardId);
+      const found = findCharacterOnEitherBoard(room, context.chosenTargetCardId);
+      if (!found) return true;
+      if (requiredTargetTag && !(found.card.synergyTags || []).includes(requiredTargetTag)) return true;
+      return false;
     });
 }
 

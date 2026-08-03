@@ -14,6 +14,9 @@ function rowToCard(row) {
     equipAtkBonus: row.equip_atk_bonus ?? null,
     equipHpBonus: row.equip_hp_bonus ?? null,
     description: row.description || "",
+    matchupVsTag: row.matchup_vs_tag ?? null,
+    matchupAtkBonus: row.matchup_atk_bonus ?? null,
+    requiredTargetTag: row.required_target_tag ?? null,
   };
 }
 
@@ -67,12 +70,15 @@ async function createCard({
   equipAtkBonus,
   equipHpBonus,
   description,
+  matchupVsTag,
+  matchupAtkBonus,
+  requiredTargetTag,
 }) {
   const id = await generateCardId(name);
   const isCharacter = type === "character";
   await getClient().execute({
-    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       name,
@@ -86,6 +92,9 @@ async function createCard({
       equipAtkBonus ?? null,
       equipHpBonus ?? null,
       description || "",
+      isCharacter ? matchupVsTag ?? null : null,
+      isCharacter ? matchupAtkBonus ?? null : null,
+      isCharacter ? null : requiredTargetTag ?? null,
     ],
   });
   return getCardById(id);
@@ -99,7 +108,8 @@ async function updateCard(id, fields) {
   const isCharacter = merged.type === "character";
   await getClient().execute({
     sql: `UPDATE cards SET name = ?, series = ?, type = ?, cost = ?, atk = ?, hp = ?, synergy_tags = ?,
-          effects = ?, equip_atk_bonus = ?, equip_hp_bonus = ?, description = ?
+          effects = ?, equip_atk_bonus = ?, equip_hp_bonus = ?, description = ?,
+          matchup_vs_tag = ?, matchup_atk_bonus = ?, required_target_tag = ?
           WHERE id = ?`,
     args: [
       merged.name,
@@ -113,6 +123,9 @@ async function updateCard(id, fields) {
       merged.equipAtkBonus ?? null,
       merged.equipHpBonus ?? null,
       merged.description || "",
+      isCharacter ? merged.matchupVsTag ?? null : null,
+      isCharacter ? merged.matchupAtkBonus ?? null : null,
+      isCharacter ? null : merged.requiredTargetTag ?? null,
       id,
     ],
   });

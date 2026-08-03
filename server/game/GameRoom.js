@@ -91,7 +91,7 @@ class GameRoom {
 
     const trigger = card.type === "spell" ? "IMMEDIATE" : "ON_PLAY";
     const context = { sourceCardId: card.id, chosenTargetCardId };
-    if (hasUnresolvableTarget(this, playerId, card.effects, trigger, context)) {
+    if (hasUnresolvableTarget(this, playerId, card.effects, trigger, context, card.requiredTargetTag)) {
       return { ok: false, reason: "target_required" };
     }
 
@@ -133,6 +133,9 @@ class GameRoom {
     if (!target) {
       return { ok: false, reason: "target_not_on_board" };
     }
+    if (card.requiredTargetTag && !(target.synergyTags || []).includes(card.requiredTargetTag)) {
+      return { ok: false, reason: "target_synergy_mismatch" };
+    }
 
     player.hand.splice(cardIndex, 1);
     player.mana -= card.cost;
@@ -173,7 +176,11 @@ class GameRoom {
         return { ok: false, reason: "target_not_on_board" };
       }
       const defender = opponent.board[defenderIndex];
-      defender.hp -= attacker.atk;
+      const matchupBonus =
+        attacker.matchupVsTag && (defender.synergyTags || []).includes(attacker.matchupVsTag)
+          ? attacker.matchupAtkBonus || 0
+          : 0;
+      defender.hp -= attacker.atk + matchupBonus;
       attacker.hp -= defender.atk;
 
       if (defender.hp <= 0) {

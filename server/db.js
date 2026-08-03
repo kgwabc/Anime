@@ -43,6 +43,15 @@ async function migrateCardsTable(db) {
   if (!existingCols.has("description")) {
     await db.execute("ALTER TABLE cards ADD COLUMN description TEXT NOT NULL DEFAULT ''");
   }
+  if (!existingCols.has("matchup_vs_tag")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN matchup_vs_tag TEXT");
+  }
+  if (!existingCols.has("matchup_atk_bonus")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN matchup_atk_bonus INTEGER");
+  }
+  if (!existingCols.has("required_target_tag")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN required_target_tag TEXT");
+  }
 }
 
 async function seedCardsIfEmpty(db) {
@@ -54,8 +63,8 @@ async function seedCardsIfEmpty(db) {
 
   for (const card of seedCards) {
     await db.execute({
-      sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         card.id,
         card.name,
@@ -69,6 +78,9 @@ async function seedCardsIfEmpty(db) {
         card.equipAtkBonus ?? null,
         card.equipHpBonus ?? null,
         card.description || "",
+        card.matchupVsTag ?? null,
+        card.matchupAtkBonus ?? null,
+        card.requiredTargetTag ?? null,
       ],
     });
   }
@@ -99,7 +111,10 @@ async function connectDB() {
       effects TEXT NOT NULL DEFAULT '[]',
       equip_atk_bonus INTEGER,
       equip_hp_bonus INTEGER,
-      description TEXT NOT NULL DEFAULT ''
+      description TEXT NOT NULL DEFAULT '',
+      matchup_vs_tag TEXT,
+      matchup_atk_bonus INTEGER,
+      required_target_tag TEXT
     )
   `);
   await migrateCardsTable(db);

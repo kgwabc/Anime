@@ -52,7 +52,22 @@ function validateEffects(effects, effectiveType) {
 }
 
 function validateCardFields(body, { partial, existingType } = {}) {
-  const { name, series, type, cost, atk, hp, synergyTags, effects, equipAtkBonus, equipHpBonus, description } = body;
+  const {
+    name,
+    series,
+    type,
+    cost,
+    atk,
+    hp,
+    synergyTags,
+    effects,
+    equipAtkBonus,
+    equipHpBonus,
+    description,
+    matchupVsTag,
+    matchupAtkBonus,
+    requiredTargetTag,
+  } = body;
   const effectiveType = type !== undefined ? type : existingType;
 
   if (!partial || name !== undefined) {
@@ -96,6 +111,21 @@ function validateCardFields(body, { partial, existingType } = {}) {
   }
   if (description !== undefined && typeof description !== "string") {
     return "description은 문자열이어야 합니다.";
+  }
+  if (matchupVsTag !== undefined && matchupVsTag !== null) {
+    if (typeof matchupVsTag !== "string" || matchupVsTag.trim().length === 0) {
+      return "matchupVsTag는 비어있지 않은 문자열이어야 합니다.";
+    }
+  }
+  if (matchupAtkBonus !== undefined && matchupAtkBonus !== null) {
+    if (!isNonNegativeInt(matchupAtkBonus)) {
+      return "matchupAtkBonus는 0 이상의 정수여야 합니다.";
+    }
+  }
+  if (requiredTargetTag !== undefined && requiredTargetTag !== null) {
+    if (typeof requiredTargetTag !== "string" || requiredTargetTag.trim().length === 0) {
+      return "requiredTargetTag는 비어있지 않은 문자열이어야 합니다.";
+    }
   }
 
   const effectsError = validateEffects(effects, effectiveType);
