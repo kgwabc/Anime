@@ -841,6 +841,9 @@ function renderDeckBuilder() {
       })
     );
   }
+
+  catalogEl.querySelectorAll(".name").forEach(fitCardName);
+  deckEl.querySelectorAll(".name").forEach(fitCardName);
 }
 
 // ---------- 게임 ----------
@@ -990,12 +993,13 @@ function cardDescHtml(card) {
   return descHtml;
 }
 
-function nameFontSize(name) {
-  const length = (name || "").length;
-  if (length <= 5) return 13;
-  if (length <= 8) return 11;
-  if (length <= 11) return 9.5;
-  return 8;
+function fitCardName(nameEl) {
+  let size = 13;
+  nameEl.style.fontSize = `${size}px`;
+  while (nameEl.scrollWidth > nameEl.clientWidth && size > 7) {
+    size -= 0.5;
+    nameEl.style.fontSize = `${size}px`;
+  }
 }
 
 function cardFaceHtml(card) {
@@ -1007,7 +1011,7 @@ function cardFaceHtml(card) {
       ${cardStatsHtml(card)}
     </div>
     <div class="card-hover-info">
-      <div class="name" style="font-size: ${nameFontSize(card.name)}px">${card.name}</div>
+      <div class="name">${card.name}</div>
       ${cardDescHtml(card)}
     </div>
   `;
@@ -1257,6 +1261,8 @@ function renderState(state) {
   applyPendingCardEffects(myBoardEl, "my-board");
   applyPendingCardEffects(oppBoardEl, "opp-board");
   applyPendingAttackEffects();
+
+  document.querySelectorAll("#screen-game .name").forEach(fitCardName);
 
   const opponentAreaEl = document.getElementById("opponent-area");
   opponentAreaEl.classList.toggle(
