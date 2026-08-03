@@ -223,7 +223,7 @@ button:hover {
 .action-buttons {
   flex: 0 0 auto;
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
   margin-top: 6px;
 }
 
