@@ -7,12 +7,7 @@
     "cost": 3,
     "atk": 3,
     "hp": 4,
-    "synergyTags": ["water_breathing", "demon_slayer"],
-    "description": "낼 때: 상대에게 2 피해",
-    "effects": {
-      "battlecry": { "type": "damage_enemy_hero", "amount": 2 },
-      "passive": null
-    }
+    "synergyTags": ["water_breathing", "demon_slayer"]
   },
   {
     "id": "char_nezuko",
@@ -22,12 +17,7 @@
     "cost": 4,
     "atk": 2,
     "hp": 6,
-    "synergyTags": ["demon", "kamado"],
-    "description": "낼 때: 내 체력 3 회복",
-    "effects": {
-      "battlecry": { "type": "heal_self", "amount": 3 },
-      "passive": null
-    }
+    "synergyTags": ["demon", "kamado"]
   },
   {
     "id": "char_zenitsu",
@@ -37,12 +27,7 @@
     "cost": 2,
     "atk": 1,
     "hp": 2,
-    "synergyTags": ["thunder_breathing", "demon_slayer"],
-    "description": "낼 때: 카드 1장 뽑기",
-    "effects": {
-      "battlecry": { "type": "draw_card", "amount": 1 },
-      "passive": null
-    }
+    "synergyTags": ["thunder_breathing", "demon_slayer"]
   },
   {
     "id": "char_inosuke",
@@ -52,12 +37,7 @@
     "cost": 5,
     "atk": 5,
     "hp": 5,
-    "synergyTags": ["beast_breathing", "demon_slayer"],
-    "description": "낼 때: 상대에게 1 피해, 내 체력 1 회복",
-    "effects": {
-      "battlecry": { "type": "damage_enemy_hero", "amount": 1, "healSelf": 1 },
-      "passive": null
-    }
+    "synergyTags": ["beast_breathing", "demon_slayer"]
   },
   {
     "id": "char_giyu",
@@ -67,12 +47,7 @@
     "cost": 6,
     "atk": 4,
     "hp": 7,
-    "synergyTags": ["water_breathing", "hashira"],
-    "description": "낼 때: 상대에게 3 피해",
-    "effects": {
-      "battlecry": { "type": "damage_enemy_hero", "amount": 3 },
-      "passive": null
-    }
+    "synergyTags": ["water_breathing", "hashira"]
   },
   {
     "id": "char_shinobu",
@@ -82,12 +57,7 @@
     "cost": 3,
     "atk": 1,
     "hp": 3,
-    "synergyTags": ["insect_breathing", "hashira"],
-    "description": "낼 때: 상대에게 4 피해",
-    "effects": {
-      "battlecry": { "type": "damage_enemy_hero", "amount": 4 },
-      "passive": null
-    }
+    "synergyTags": ["insect_breathing", "hashira"]
   },
   {
     "id": "char_rengoku",
@@ -97,12 +67,7 @@
     "cost": 7,
     "atk": 6,
     "hp": 6,
-    "synergyTags": ["flame_breathing", "hashira"],
-    "description": "낼 때: 상대에게 2 피해, 내 체력 2 회복",
-    "effects": {
-      "battlecry": { "type": "damage_enemy_hero", "amount": 2, "healSelf": 2 },
-      "passive": null
-    }
+    "synergyTags": ["flame_breathing", "hashira"]
   },
   {
     "id": "char_muzan",
@@ -112,37 +77,6 @@
     "cost": 8,
     "atk": 8,
     "hp": 8,
-    "synergyTags": ["demon", "boss"],
-    "description": "낼 때: 상대에게 3 피해",
-    "effects": {
-      "battlecry": { "type": "damage_enemy_hero", "amount": 3 },
-      "passive": null
-    }
-  },
-  {
-    "id": "spell_total_concentration",
-    "name": "전집중 호흡",
-    "series": "demon_slayer_corps",
-    "type": "spell",
-    "cost": 2,
-    "synergyTags": ["demon_slayer"],
-    "description": "카드 2장 뽑기",
-    "effects": {
-      "onCast": { "type": "draw_card", "amount": 2 },
-      "passive": null
-    }
-  },
-  {
-    "id": "equip_nichirinto",
-    "name": "니치린도",
-    "series": "demon_slayer_corps",
-    "type": "equipment",
-    "cost": 3,
-    "synergyTags": ["demon_slayer"],
-    "description": "가장 최근에 낸 캐릭터: 공격력+2, 체력+1",
-    "effects": {
-      "onEquip": { "type": "buff_last_character", "atk": 2, "hp": 1 },
-      "passive": null
-    }
+    "synergyTags": ["demon", "boss"]
   }
 ]

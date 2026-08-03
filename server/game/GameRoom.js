@@ -67,55 +67,9 @@ class GameRoom {
 
     player.hand.splice(cardIndex, 1);
     player.mana -= card.cost;
-
-    if (card.type === "character") {
-      player.board.push(card);
-      this.resolveEffect(card.effects?.battlecry, { playerId, card });
-    } else if (card.type === "spell") {
-      this.resolveEffect(card.effects?.onCast, { playerId, card });
-    } else if (card.type === "equipment") {
-      this.resolveEffect(card.effects?.onEquip, { playerId, card });
-    }
+    player.board.push(card);
 
     return { ok: true };
-  }
-
-  /** 카드 효과 실행. effect는 { type, ...params } 형태의 구조화된 객체. */
-  resolveEffect(effect, { playerId }) {
-    if (!effect) return;
-
-    const player = this.players[playerId];
-
-    switch (effect.type) {
-      case "damage_enemy_hero": {
-        const opponent = this.players[this.getOpponentId(playerId)];
-        opponent.hp = Math.max(0, opponent.hp - effect.amount);
-        if (effect.healSelf) {
-          player.hp = Math.min(STARTING_HP, player.hp + effect.healSelf);
-        }
-        break;
-      }
-      case "heal_self": {
-        player.hp = Math.min(STARTING_HP, player.hp + effect.amount);
-        break;
-      }
-      case "draw_card": {
-        for (let i = 0; i < effect.amount && player.deck.length > 0; i++) {
-          player.hand.push(player.deck.shift());
-        }
-        break;
-      }
-      case "buff_last_character": {
-        const lastCard = player.board[player.board.length - 1];
-        if (lastCard) {
-          lastCard.atk += effect.atk || 0;
-          lastCard.hp += effect.hp || 0;
-        }
-        break;
-      }
-      default:
-        console.warn(`[effect] Unknown effect type: ${effect.type}`);
-    }
   }
 
   endTurn(playerId) {
