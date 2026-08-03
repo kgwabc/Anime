@@ -39,6 +39,14 @@
 - Render에 배포하려면 `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `JWT_SECRET` 환경변수가 필수
   (README 참고).
 
+## 관리자 계정
+- 닉네임이 정확히 `kgwabc`인 계정이 관리자로 하드코딩되어 있음 (`server/auth/middleware.js`의
+  `ADMIN_USERNAME`, `client/main.js`의 동일 상수). 별도 role 컬럼/권한 테이블 없이 최소 구현.
+- `GET /auth/users`, `DELETE /auth/users/:username` — `requireAuth`+`requireAdmin` 미들웨어로
+  보호됨 (REST용 JWT 검증은 소켓 인증과 별개로 `Authorization: Bearer` 헤더 기반).
+- 관리자 본인(`kgwabc`) 계정은 삭제 요청 자체가 서버에서 거부됨.
+- 클라이언트: `kgwabc`로 로그인시 로비 화면에 유저 목록/삭제 버튼이 있는 관리자 패널이 표시됨.
+
 ## 알려진 제약사항
 - Render 무료 플랜은 15분 미사용시 슬립 → 재시작시 인메모리 매칭 큐/진행중 매치 상태 유실
   (감수하기로 한 제약, DB 미사용). `cards.json`은 코드에 포함되어 재시작해도 항상 동일하게 로드됨.

@@ -1,4 +1,5 @@
 const SERVER_URL = "https://animepsykongroo.onrender.com";
+const ADMIN_USERNAME = "kgwabc";
 
 let socket = null;
 
@@ -108,12 +109,83 @@ function connectSocket(token, username) {
   socket.on("connect", () => {
     document.getElementById("lobby-username").textContent = username;
     showScreen("lobby");
+
+    const adminPanel = document.getElementById("admin-panel");
+    if (username === ADMIN_USERNAME) {
+      adminPanel.classList.remove("hidden");
+      loadAdminUsers(token);
+    } else {
+      adminPanel.classList.add("hidden");
+    }
   });
 
   socket.on("connect_error", (err) => {
     console.warn("connect_error:", err.message);
     logout();
   });
+}
+
+// ---------- 관리자 패널 ----------
+
+async function loadAdminUsers(token) {
+  const listEl = document.getElementById("admin-user-list");
+  listEl.textContent = "불러오는 중...";
+
+  try {
+    const res = await fetch(`${SERVER_URL}/auth/users`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      listEl.textContent = data.message;
+      return;
+    }
+    renderAdminUsers(data.users, token);
+  } catch (err) {
+    listEl.textContent = "유저 목록을 불러올 수 없습니다.";
+  }
+}
+
+function renderAdminUsers(users, token) {
+  const listEl = document.getElementById("admin-user-list");
+  listEl.innerHTML = "";
+
+  for (const user of users) {
+    const row = document.createElement("div");
+    row.className = "admin-user-row";
+
+    const label = document.createElement("span");
+    label.textContent = user.username;
+    row.appendChild(label);
+
+    if (user.username !== ADMIN_USERNAME) {
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "삭제";
+      deleteBtn.addEventListener("click", () => deleteAdminUser(user.username, token));
+      row.appendChild(deleteBtn);
+    }
+
+    listEl.appendChild(row);
+  }
+}
+
+async function deleteAdminUser(username, token) {
+  if (!confirm(`"${username}" 계정을 삭제하시겠습니까?`)) return;
+
+  try {
+    const res = await fetch(`${SERVER_URL}/auth/users/${encodeURIComponent(username)}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      alert(data.message);
+      return;
+    }
+    loadAdminUsers(token);
+  } catch (err) {
+    alert("계정 삭제 중 오류가 발생했습니다.");
+  }
 }
 
 // 페이지 로드시 저장된 토큰이 있으면 자동 로그인

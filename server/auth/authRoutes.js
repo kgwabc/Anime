@@ -2,7 +2,8 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const { findUserByUsername, createUser } = require("../models/User");
+const { findUserByUsername, createUser, listUsers, deleteUserByUsername } = require("../models/User");
+const { requireAuth, requireAdmin, ADMIN_USERNAME } = require("./middleware");
 
 const router = express.Router();
 
@@ -68,6 +69,32 @@ router.post("/login", async (req, res) => {
   } catch (err) {
     console.error("[login] error:", err.message);
     return res.status(500).json({ ok: false, message: "로그인 중 오류가 발생했습니다." });
+  }
+});
+
+router.get("/users", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const users = await listUsers();
+    return res.json({ ok: true, users });
+  } catch (err) {
+    console.error("[list users] error:", err.message);
+    return res.status(500).json({ ok: false, message: "유저 목록 조회 중 오류가 발생했습니다." });
+  }
+});
+
+router.delete("/users/:username", requireAuth, requireAdmin, async (req, res) => {
+  const { username } = req.params;
+
+  if (username === ADMIN_USERNAME) {
+    return res.status(400).json({ ok: false, message: "관리자 계정은 삭제할 수 없습니다." });
+  }
+
+  try {
+    await deleteUserByUsername(username);
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("[delete user] error:", err.message);
+    return res.status(500).json({ ok: false, message: "계정 삭제 중 오류가 발생했습니다." });
   }
 });
 
