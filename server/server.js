@@ -22,7 +22,7 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
 app.get("/", (req, res) => {
-  res.json({ status: "ok", service: "crossover-tcg-server" });
+  res.json({ status: "ok", service: "enif-psycongroo-server" });
 });
 app.use("/auth", authRoutes);
 app.use("/cards", cardRoutes);
@@ -240,7 +240,7 @@ io.on("connection", (socket) => {
 connectDB()
   .then(() => {
     server.listen(PORT, () => {
-      console.log(`Crossover TCG server listening on port ${PORT}`);
+      console.log(`Enif Psycongroo server listening on port ${PORT}`);
     });
   })
   .catch((err) => {

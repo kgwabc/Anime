@@ -1,6 +1,6 @@
-# 크로스오버 카드게임 (Kingdom's Edge류 아님 — 별도 프로젝트)
+# 에니프사이콩그루 (Kingdom's Edge류 아님 — 별도 프로젝트)
 
-하스스톤 + 포켓몬카드 + 유희왕의 재미 요소를 섞은 크로스오버 1대1 턴제 카드게임.
+하스스톤 + 포켓몬카드 + 유희왕의 재미 요소를 섞은 에니프사이콩그루 1대1 턴제 카드게임.
 카드를 내고, 다음 턴부터 그 캐릭터로 상대를 공격하는 기본 전투 루프가 동작합니다.
 
 ## 🎮 게임 플레이
@@ -23,7 +23,7 @@ cp .env.example .env   # TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, JWT_SECRET 값을
                         # (Turso 계정 없이 테스트만 하려면 TURSO_DATABASE_URL=file:local.db 로도 가능)
 npm start
 # -> Turso connected
-# -> Crossover TCG server listening on port 3001
+# -> Enif Psycongroo server listening on port 3001
 ```
 그 다음 `client/index.html`을 브라우저에서 직접 열거나 정적 서버로 서빙합니다.
 같은 페이지를 탭 2개(또는 시크릿 창)로 열고 각각 회원가입/로그인 후 "매칭 시작"을 누르면

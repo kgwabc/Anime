@@ -1,7 +1,7 @@
 {
-  "name": "crossover-tcg-server",
+  "name": "enif-psycongroo-server",
   "version": "0.1.0",
-  "description": "Socket.IO 1v1 turn-based crossover card game server skeleton",
+  "description": "Socket.IO 1v1 turn-based Enif Psycongroo card game server skeleton",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
