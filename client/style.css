@@ -1000,6 +1000,50 @@ button:active {
   }
 }
 
+.skill-name-popup {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #fff6d8;
+  animation: skill-name-pop 0.7s ease-out forwards;
+  z-index: 101;
+  pointer-events: none;
+}
+
+.skill-name-popup--play {
+  text-shadow: 0 0 8px #6bff8a, 0 0 18px #6bff8a, 2px 2px 0 #000, -2px -2px 0 #000,
+    2px -2px 0 #000, -2px 2px 0 #000;
+}
+
+.skill-name-popup--death {
+  text-shadow: 0 0 8px #b25fff, 0 0 18px #b25fff, 2px 2px 0 #000, -2px -2px 0 #000,
+    2px -2px 0 #000, -2px 2px 0 #000;
+}
+
+@keyframes skill-name-pop {
+  0% {
+    transform: translate(-50%, -50%) scale(0.4);
+    opacity: 0;
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+  40% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -60%) scale(1.05);
+    opacity: 0;
+  }
+}
+
 #my-hand .card {
   cursor: grab;
 }

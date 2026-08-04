@@ -61,6 +61,9 @@ async function migrateCardsTable(db) {
   if (!existingCols.has("attack_name")) {
     await db.execute("ALTER TABLE cards ADD COLUMN attack_name TEXT");
   }
+  if (!existingCols.has("skill_name")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN skill_name TEXT");
+  }
 }
 
 async function seedCardsIfEmpty(db) {
@@ -126,7 +129,8 @@ async function connectDB() {
       required_target_tag TEXT,
       rarity TEXT NOT NULL DEFAULT 'common',
       image TEXT,
-      attack_name TEXT
+      attack_name TEXT,
+      skill_name TEXT
     )
   `);
   await migrateCardsTable(db);

@@ -451,6 +451,12 @@ function renderAdminCards(cards, token) {
     attackNameInput.value = card.attackName || "";
     attackNameInput.placeholder = "공격 이름 (선택)";
 
+    const skillNameInput = document.createElement("input");
+    skillNameInput.type = "text";
+    skillNameInput.maxLength = 30;
+    skillNameInput.value = card.skillName || "";
+    skillNameInput.placeholder = "기술 이름 (설치시/파괴시, 선택)";
+
     const requiredTagSelect = document.createElement("select");
     populateTagOptions(requiredTagSelect, loadedAdminCards, "대상 제한 없음");
     requiredTagSelect.value = card.requiredTargetTag || "";
@@ -477,6 +483,7 @@ function renderAdminCards(cards, token) {
       matchupTagSelect.classList.toggle("hidden", type !== "character");
       matchupBonusInput.classList.toggle("hidden", type !== "character");
       attackNameInput.classList.toggle("hidden", type !== "character");
+      skillNameInput.classList.toggle("hidden", type !== "character");
       equipAtkInput.classList.toggle("hidden", type !== "equipment");
       equipHpInput.classList.toggle("hidden", type !== "equipment");
       requiredTagSelect.classList.toggle("hidden", type === "character");
@@ -518,6 +525,7 @@ function renderAdminCards(cards, token) {
         fields.matchupVsTag = matchupTagSelect.value || null;
         fields.matchupAtkBonus = Number(matchupBonusInput.value) || 0;
         fields.attackName = attackNameInput.value || null;
+        fields.skillName = skillNameInput.value || null;
       }
       if (type === "equipment") {
         fields.equipAtkBonus = Number(equipAtkInput.value) || 0;
@@ -551,6 +559,7 @@ function renderAdminCards(cards, token) {
       matchupTagSelect,
       matchupBonusInput,
       attackNameInput,
+      skillNameInput,
       equipAtkInput,
       equipHpInput,
       requiredTagSelect,
@@ -648,6 +657,7 @@ document.getElementById("form-new-card").addEventListener("submit", async (e) =>
     fields.matchupVsTag = document.getElementById("new-card-matchup-tag").value || null;
     fields.matchupAtkBonus = Number(document.getElementById("new-card-matchup-bonus").value) || 0;
     fields.attackName = document.getElementById("new-card-attack-name").value || null;
+    fields.skillName = document.getElementById("new-card-skill-name").value || null;
   }
   if (type === "equipment") {
     fields.equipAtkBonus = Number(document.getElementById("new-card-equip-atk").value) || 0;
@@ -938,12 +948,22 @@ function registerSocketHandlers() {
       return;
     }
 
-    pendingInstallEffects.set(card.id, { playerId });
+    pendingInstallEffects.set(card.id, { playerId, skillName: card.skillName || null });
   });
 
-  socket.on("attack_occurred", ({ attackerId, attackerCardId, target, attackerCard }) => {
-    pendingAttackEffects.push({ attackerId, attackerCardId, target, attackerCard });
-  });
+  socket.on(
+    "attack_occurred",
+    ({ attackerId, attackerCardId, target, attackerCard, defenderDeathSkillName, attackerDeathSkillName }) => {
+      pendingAttackEffects.push({
+        attackerId,
+        attackerCardId,
+        target,
+        attackerCard,
+        defenderDeathSkillName,
+        attackerDeathSkillName,
+      });
+    }
+  );
 }
 
 function returnToLobby() {
@@ -974,6 +994,19 @@ function showAttackNamePopup(attackerEl, text) {
   const layer = document.getElementById("spell-effect-layer");
   const el = document.createElement("div");
   el.className = "attack-name-popup";
+  el.textContent = text;
+  el.style.left = `${rect.left + rect.width / 2}px`;
+  el.style.top = `${rect.top + rect.height / 2}px`;
+  layer.appendChild(el);
+  setTimeout(() => el.remove(), 700);
+}
+
+function showSkillNamePopup(cardEl, text, kind) {
+  if (!cardEl || !text) return;
+  const rect = cardEl.getBoundingClientRect();
+  const layer = document.getElementById("spell-effect-layer");
+  const el = document.createElement("div");
+  el.className = `skill-name-popup skill-name-popup--${kind}`;
   el.textContent = text;
   el.style.left = `${rect.left + rect.width / 2}px`;
   el.style.top = `${rect.top + rect.height / 2}px`;
@@ -1256,8 +1289,10 @@ function applyPendingCardEffects(boardEl, role) {
   for (const card of boardEl.querySelectorAll(".card")) {
     const cardId = card.dataset.cardId;
     if (pendingInstallEffects.has(cardId)) {
+      const { skillName } = pendingInstallEffects.get(cardId);
       pendingInstallEffects.delete(cardId);
       flashClass(card, "card-slam", 500);
+      if (skillName) showSkillNamePopup(card, skillName, "play");
     }
     if (pendingBuffEffects.has(cardId)) {
       pendingBuffEffects.delete(cardId);
@@ -1268,18 +1303,31 @@ function applyPendingCardEffects(boardEl, role) {
 
 function applyPendingAttackEffects() {
   while (pendingAttackEffects.length > 0) {
-    const { attackerId, attackerCardId, target, attackerCard } = pendingAttackEffects.shift();
+    const {
+      attackerId,
+      attackerCardId,
+      target,
+      attackerCard,
+      defenderDeathSkillName,
+      attackerDeathSkillName,
+    } = pendingAttackEffects.shift();
     const attackerBoardEl = attackerId === socket.id ? document.getElementById("my-board") : document.getElementById("opp-board");
     const attackerEl = attackerBoardEl.querySelector(`.card[data-card-id="${attackerCardId}"]`);
     flashClass(attackerEl, attackerId === socket.id ? "attack-lunge-up" : "attack-lunge-down", 350);
     if (attackerCard?.attackName) {
       showAttackNamePopup(attackerEl, attackerCard.attackName);
     }
+    if (attackerDeathSkillName) {
+      showSkillNamePopup(attackerEl, attackerDeathSkillName, "death");
+    }
 
     if (target?.type === "character") {
       const targetBoardEl = attackerId === socket.id ? document.getElementById("opp-board") : document.getElementById("my-board");
       const targetEl = targetBoardEl.querySelector(`.card[data-card-id="${target.cardId}"]`);
       flashClass(targetEl, "impact-flash", 500);
+      if (defenderDeathSkillName) {
+        showSkillNamePopup(targetEl, defenderDeathSkillName, "death");
+      }
     } else if (target?.type === "hero") {
       const heroAreaEl = attackerId === socket.id ? document.getElementById("opponent-area") : document.getElementById("my-area");
       flashClass(heroAreaEl, "impact-flash", 500);

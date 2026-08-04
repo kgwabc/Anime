@@ -20,6 +20,7 @@ function rowToCard(row) {
     rarity: row.rarity || "common",
     image: row.image ?? null,
     attackName: row.attack_name ?? null,
+    skillName: row.skill_name ?? null,
   };
 }
 
@@ -79,12 +80,13 @@ async function createCard({
   rarity,
   image,
   attackName,
+  skillName,
 }) {
   const id = await generateCardId(name);
   const isCharacter = type === "character";
   await getClient().execute({
-    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag, rarity, image, attack_name)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag, rarity, image, attack_name, skill_name)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       name,
@@ -104,6 +106,7 @@ async function createCard({
       rarity || "common",
       image ?? null,
       isCharacter ? attackName ?? null : null,
+      isCharacter ? skillName ?? null : null,
     ],
   });
   return getCardById(id);
@@ -118,7 +121,7 @@ async function updateCard(id, fields) {
   await getClient().execute({
     sql: `UPDATE cards SET name = ?, series = ?, type = ?, cost = ?, atk = ?, hp = ?, synergy_tags = ?,
           effects = ?, equip_atk_bonus = ?, equip_hp_bonus = ?, description = ?,
-          matchup_vs_tag = ?, matchup_atk_bonus = ?, required_target_tag = ?, rarity = ?, image = ?, attack_name = ?
+          matchup_vs_tag = ?, matchup_atk_bonus = ?, required_target_tag = ?, rarity = ?, image = ?, attack_name = ?, skill_name = ?
           WHERE id = ?`,
     args: [
       merged.name,
@@ -138,6 +141,7 @@ async function updateCard(id, fields) {
       merged.rarity || "common",
       merged.image ?? null,
       isCharacter ? merged.attackName ?? null : null,
+      isCharacter ? merged.skillName ?? null : null,
       id,
     ],
   });

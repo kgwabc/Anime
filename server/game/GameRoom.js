@@ -111,6 +111,7 @@ class GameRoom {
     player.hand.splice(cardIndex, 1);
     player.mana -= card.cost;
 
+    let onPlaySkillName = null;
     if (card.type === "spell") {
       applyEffectList(this, playerId, card.effects, "IMMEDIATE", context);
     } else {
@@ -118,9 +119,15 @@ class GameRoom {
       card.hasAttacked = false;
       player.board.push(card);
       applyEffectList(this, playerId, card.effects, "ON_PLAY", context);
+      if (card.effects?.[0]?.trigger === "ON_PLAY") {
+        onPlaySkillName = card.skillName || null;
+      }
     }
 
-    return { ok: true, card: { id: card.id, type: card.type, name: card.name, image: card.image } };
+    return {
+      ok: true,
+      card: { id: card.id, type: card.type, name: card.name, image: card.image, skillName: onPlaySkillName },
+    };
   }
 
   equipCard(playerId, equipmentCardId, targetCharacterId) {
@@ -178,6 +185,9 @@ class GameRoom {
       return { ok: false, reason: "cannot_attack" };
     }
 
+    let defenderDeathSkillName = null;
+    let attackerDeathSkillName = null;
+
     if (target?.type === "hero") {
       if (opponent.board.length > 0) {
         return { ok: false, reason: "must_attack_character_first" };
@@ -201,10 +211,16 @@ class GameRoom {
         applyEffectList(this, this.getOpponentId(playerId), defender.effects, "ON_DEATH", {
           sourceCardId: defender.id,
         });
+        if (defender.effects?.[0]?.trigger === "ON_DEATH") {
+          defenderDeathSkillName = defender.skillName || null;
+        }
       }
       if (attacker.hp <= 0) {
         player.board = player.board.filter((card) => card.id !== attacker.id);
         applyEffectList(this, playerId, attacker.effects, "ON_DEATH", { sourceCardId: attacker.id });
+        if (attacker.effects?.[0]?.trigger === "ON_DEATH") {
+          attackerDeathSkillName = attacker.skillName || null;
+        }
       }
     } else {
       return { ok: false, reason: "invalid_target" };
@@ -214,6 +230,8 @@ class GameRoom {
     return {
       ok: true,
       attackerCard: { id: attacker.id, name: attacker.name, attackName: attacker.attackName || null },
+      defenderDeathSkillName,
+      attackerDeathSkillName,
     };
   }
 

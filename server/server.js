@@ -179,6 +179,8 @@ io.on("connection", (socket) => {
       attackerCardId,
       target,
       attackerCard: result.attackerCard,
+      defenderDeathSkillName: result.defenderDeathSkillName,
+      attackerDeathSkillName: result.attackerDeathSkillName,
     });
     broadcastGameState(room);
     handleGameOver(room, roomId);

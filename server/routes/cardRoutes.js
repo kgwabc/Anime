@@ -71,6 +71,7 @@ function validateCardFields(body, { partial, existingType } = {}) {
     rarity,
     image,
     attackName,
+    skillName,
   } = body;
   const effectiveType = type !== undefined ? type : existingType;
 
@@ -148,6 +149,14 @@ function validateCardFields(body, { partial, existingType } = {}) {
     }
     if (attackName.length > 30) {
       return "attackName은 30자 이하여야 합니다.";
+    }
+  }
+  if (skillName !== undefined && skillName !== null) {
+    if (typeof skillName !== "string") {
+      return "skillName은 문자열이어야 합니다.";
+    }
+    if (skillName.length > 30) {
+      return "skillName은 30자 이하여야 합니다.";
     }
   }
 
