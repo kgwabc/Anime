@@ -1116,7 +1116,7 @@ function computeFanTransform(index, count, cardWidth, containerWidth) {
 }
 
 const BOARD_GAP_PX = 8;
-const BOARD_MIN_SCALE = 0.6;
+const BOARD_MIN_HEIGHT_PX = 60;
 
 function computeBoardCardHeight(containerEl, count) {
   const rect = containerEl.getBoundingClientRect();
@@ -1129,8 +1129,8 @@ function computeBoardCardHeight(containerEl, count) {
 
   // gap은 카드 크기와 무관하게 고정폭이므로 축소 비율 계산에서 분리해야 함
   const widthAvailableForCards = rect.width - (count - 1) * BOARD_GAP_PX;
-  const scale = Math.max(widthAvailableForCards / (count * naturalWidth), BOARD_MIN_SCALE);
-  return naturalHeight * scale;
+  const scale = widthAvailableForCards / (count * naturalWidth);
+  return Math.max(naturalHeight * scale, BOARD_MIN_HEIGHT_PX);
 }
 
 function makeHandSlot(cardEl, index, count, cardWidth, containerWidth) {

@@ -259,8 +259,9 @@ button:active {
 #screen-game {
   height: 100vh;
   height: 100dvh;
-  max-width: 1100px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
   padding: 10px 16px;
   display: flex;
   flex-direction: column;
@@ -286,24 +287,34 @@ button:active {
   background:
     radial-gradient(ellipse 300px 220px at 50% 8%, rgba(255, 210, 79, 0.16), transparent 70%),
     radial-gradient(ellipse 300px 220px at 50% 92%, rgba(79, 140, 255, 0.16), transparent 70%),
+    radial-gradient(ellipse 500px 100% at 0% 50%, rgba(0, 0, 0, 0.55), transparent 60%),
+    radial-gradient(ellipse 500px 100% at 100% 50%, rgba(0, 0, 0, 0.55), transparent 60%),
     radial-gradient(ellipse 1000px 600px at 50% 50%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.6) 82%),
+    repeating-linear-gradient(
+      100deg,
+      rgba(0, 0, 0, 0.12) 0px,
+      rgba(0, 0, 0, 0.12) 2px,
+      transparent 2px,
+      transparent 60px
+    ),
     linear-gradient(
       to bottom,
       #1b2140 0%,
       #232a45 22%,
       #262b3a 42%,
       #262b3a 58%,
-      #33261f 78%,
-      #2a1c16 100%
+      #3a2a1c 82%,
+      #241611 100%
     );
-  border: 2px solid #4a3a1a;
+  border: 3px solid #4a3a1a;
   outline: 1px solid var(--gold-dim);
-  outline-offset: -4px;
+  outline-offset: -6px;
   border-radius: 14px;
   padding: 8px 12px;
   box-shadow:
     inset 0 0 60px rgba(0, 0, 0, 0.7),
     inset 0 0 0 5px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 9px rgba(255, 210, 79, 0.06),
     inset 0 0 30px rgba(255, 210, 79, 0.08),
     0 0 24px rgba(0, 0, 0, 0.5);
   overflow: hidden;
@@ -404,6 +415,55 @@ button:active {
   100% {
     transform: translate(-8px, -260px);
     opacity: 0;
+  }
+}
+
+.mist {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.mist-cloud {
+  position: absolute;
+  bottom: -10%;
+  width: 65%;
+  height: 40%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(210, 220, 240, 0.1), transparent 70%);
+  filter: blur(6px);
+  animation: mist-drift 26s ease-in-out infinite;
+}
+
+.mist-cloud:nth-child(1) {
+  left: -20%;
+  animation-duration: 30s;
+  animation-delay: 0s;
+}
+
+.mist-cloud:nth-child(2) {
+  left: 30%;
+  bottom: -18%;
+  height: 34%;
+  animation-duration: 38s;
+  animation-delay: -8s;
+}
+
+.mist-cloud:nth-child(3) {
+  left: 60%;
+  animation-duration: 34s;
+  animation-delay: -18s;
+}
+
+@keyframes mist-drift {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(8%);
   }
 }
 
@@ -1127,7 +1187,8 @@ button:active {
     opacity: 0.3;
   }
 
-  .embers {
+  .embers,
+  .mist {
     display: none;
   }
 
