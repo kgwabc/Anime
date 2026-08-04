@@ -549,9 +549,11 @@ button:active {
 
 .card .name {
   font-weight: bold;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  line-height: 1.15;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 #turn-indicator {

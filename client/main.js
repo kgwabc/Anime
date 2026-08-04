@@ -994,9 +994,13 @@ function cardDescHtml(card) {
 }
 
 function fitCardName(nameEl) {
-  let size = 13;
+  const card = nameEl.closest(".card");
+  const cardHeight = card ? card.getBoundingClientRect().height : 0;
+  const maxHeight = cardHeight > 0 ? cardHeight * 0.6 : 40;
+  nameEl.style.maxHeight = `${maxHeight}px`;
+  let size = 12;
   nameEl.style.fontSize = `${size}px`;
-  while (nameEl.scrollWidth > nameEl.clientWidth && size > 7) {
+  while (nameEl.scrollHeight > nameEl.clientHeight && size > 7) {
     size -= 0.5;
     nameEl.style.fontSize = `${size}px`;
   }
