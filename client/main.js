@@ -1056,22 +1056,26 @@ function cardFaceHtml(card) {
   `;
 }
 
-function computeFanTransform(index, count) {
+const MAX_FAN_ANGLE_DEG = 10;
+
+function computeFanTransform(index, count, cardWidth, containerWidth) {
   const mid = (count - 1) / 2;
   const offset = index - mid;
-  const angleStep = Math.max(3, 16 - count * 1.6);
-  const spacing = Math.max(130 * 0.25, 130 - count * 9);
+  const idealSpacing = cardWidth * 0.82;
+  const maxSpread = Math.max(containerWidth - cardWidth, 0);
+  const spacing = count > 1 ? Math.min(idealSpacing, maxSpread / (count - 1)) : 0;
+  const angleStep = cardWidth > 0 ? (spacing / cardWidth) * MAX_FAN_ANGLE_DEG : 0;
   const rotateDeg = offset * angleStep;
   const translateX = offset * spacing;
-  const translateY = offset * offset * 7;
+  const translateY = Math.min(offset * offset * 7, 60);
   return { rotateDeg, translateX, translateY };
 }
 
-function makeHandSlot(cardEl, index, count) {
+function makeHandSlot(cardEl, index, count, cardWidth, containerWidth) {
   const slot = document.createElement("div");
   slot.className = "hand-slot";
   slot.style.zIndex = String(index);
-  const { rotateDeg, translateX, translateY } = computeFanTransform(index, count);
+  const { rotateDeg, translateX, translateY } = computeFanTransform(index, count, cardWidth, containerWidth);
   slot.style.transform = `translateX(${translateX}px) translateY(${translateY}px) rotate(${rotateDeg}deg)`;
   slot.appendChild(cardEl);
   return slot;
@@ -1299,19 +1303,25 @@ function renderState(state) {
   lastTurnPlayerId = state.currentPlayerId;
 
   const myHandEl = document.getElementById("my-hand");
+  const myHandRect = myHandEl.getBoundingClientRect();
+  const myCardWidth = myHandRect.height * (92 / 128);
   myHandEl.innerHTML = "";
   const myHandCount = state.me.hand.length;
   state.me.hand.forEach((card, i) => {
-    myHandEl.appendChild(makeHandSlot(renderCard(card, "hand"), i, myHandCount));
+    myHandEl.appendChild(
+      makeHandSlot(renderCard(card, "hand"), i, myHandCount, myCardWidth, myHandRect.width)
+    );
   });
 
   const oppHandEl = document.getElementById("opp-hand");
+  const oppHandRect = oppHandEl.getBoundingClientRect();
+  const oppCardWidth = oppHandRect.height * (92 / 128);
   oppHandEl.innerHTML = "";
   const oppHandCount = state.opponent.handCount;
   for (let i = 0; i < oppHandCount; i++) {
     const back = document.createElement("div");
     back.className = "card card-back";
-    oppHandEl.appendChild(makeHandSlot(back, i, oppHandCount));
+    oppHandEl.appendChild(makeHandSlot(back, i, oppHandCount, oppCardWidth, oppHandRect.width));
   }
 
   const myBoardEl = document.getElementById("my-board");
