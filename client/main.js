@@ -46,6 +46,7 @@ const TARGET_LABELS = {
 };
 
 const screens = {
+  loading: document.getElementById("screen-loading"),
   auth: document.getElementById("screen-auth"),
   lobby: document.getElementById("screen-lobby"),
   waiting: document.getElementById("screen-waiting"),
@@ -682,14 +683,38 @@ document.getElementById("form-new-card").addEventListener("submit", async (e) =>
   }
 });
 
-// 페이지 로드시 저장된 토큰이 있으면 자동 로그인
-const savedToken = localStorage.getItem("tcg_token");
-const savedUsername = localStorage.getItem("tcg_username");
-if (savedToken && savedUsername) {
-  connectSocket(savedToken, savedUsername);
-} else {
-  showScreen("auth");
+// ---------- 서버 깨우기(로딩 화면) ----------
+
+const WAKE_RETRY_DELAY_MS = 4000;
+
+function wakeServer() {
+  const statusEl = document.getElementById("loading-status");
+  const startButton = document.getElementById("btn-start-game");
+
+  fetch(SERVER_URL)
+    .then((res) => {
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      statusEl.textContent = "준비 완료!";
+      startButton.classList.remove("hidden");
+    })
+    .catch(() => {
+      statusEl.textContent = "서버 연결 재시도 중...";
+      setTimeout(wakeServer, WAKE_RETRY_DELAY_MS);
+    });
 }
+
+document.getElementById("btn-start-game").addEventListener("click", () => {
+  const savedToken = localStorage.getItem("tcg_token");
+  const savedUsername = localStorage.getItem("tcg_username");
+  if (savedToken && savedUsername) {
+    connectSocket(savedToken, savedUsername);
+  } else {
+    showScreen("auth");
+  }
+});
+
+showScreen("loading");
+wakeServer();
 
 // ---------- 덱 편집 ----------
 

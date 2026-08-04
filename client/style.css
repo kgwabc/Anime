@@ -50,8 +50,38 @@ body {
   backdrop-filter: blur(6px);
 }
 
+#screen-loading {
+  text-align: center;
+}
+
+#screen-loading #loading-status {
+  margin: 18px 0;
+  color: #cfd6e6;
+}
+
+#screen-loading button {
+  margin-top: 8px;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  margin: 24px auto 0;
+  border: 4px solid rgba(79, 140, 255, 0.25);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spinner-rotate 0.9s linear infinite;
+}
+
+@keyframes spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 #screen-auth h1,
-#screen-lobby h1 {
+#screen-lobby h1,
+#screen-loading h1 {
   text-align: center;
   letter-spacing: 1px;
   color: var(--gold);
