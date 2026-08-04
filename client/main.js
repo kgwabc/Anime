@@ -1002,6 +1002,20 @@ function fitCardName(nameEl) {
   }
 }
 
+function refitAllCardNames() {
+  document.querySelectorAll("#screen-game .name").forEach(fitCardName);
+}
+
+let resizeFitTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeFitTimer);
+  resizeFitTimer = setTimeout(refitAllCardNames, 150);
+});
+window.addEventListener("orientationchange", () => {
+  clearTimeout(resizeFitTimer);
+  resizeFitTimer = setTimeout(refitAllCardNames, 150);
+});
+
 function cardFaceHtml(card) {
   const artStyle = card.image ? ` style="background-image:url('${card.image}')"` : "";
   return `
@@ -1113,6 +1127,7 @@ function startCardDrag(e, card, el) {
   el.style.left = `${rect.left}px`;
   el.style.top = `${rect.top}px`;
   el.style.width = `${rect.width}px`;
+  el.style.height = `${rect.height}px`;
   el.style.zIndex = "200";
 
   const offsetX = e.clientX - rect.left;
@@ -1153,6 +1168,7 @@ function endCardDrag(el, onMove, onUp) {
   el.style.left = "";
   el.style.top = "";
   el.style.width = "";
+  el.style.height = "";
   el.style.zIndex = "";
   clearDropHints();
   dragState = null;
@@ -1262,7 +1278,7 @@ function renderState(state) {
   applyPendingCardEffects(oppBoardEl, "opp-board");
   applyPendingAttackEffects();
 
-  document.querySelectorAll("#screen-game .name").forEach(fitCardName);
+  refitAllCardNames();
 
   const opponentAreaEl = document.getElementById("opponent-area");
   opponentAreaEl.classList.toggle(
