@@ -487,6 +487,15 @@ button:active {
   flex-direction: column;
 }
 
+.hero-info-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .hero-badge {
   flex: 0 0 auto;
   position: relative;
@@ -494,7 +503,6 @@ button:active {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin: 2px 0;
 }
 
 .hero-portrait {
@@ -545,7 +553,6 @@ button:active {
   flex: 0 0 auto;
   justify-content: center;
   gap: 16px;
-  margin-bottom: 4px;
   font-size: 11px;
   color: #c9d2e3;
 }
@@ -555,7 +562,7 @@ button:active {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  flex: 1.5;
+  flex: 2.2;
   min-height: 0;
   padding: 8px 8px;
   background: #1b1f2a;
@@ -573,7 +580,7 @@ button:active {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  flex: 1.7;
+  flex: 2.6;
   min-height: 0;
   padding: 8px 8px;
   flex-wrap: nowrap;
@@ -586,8 +593,8 @@ button:active {
 .action-buttons {
   flex: 0 0 auto;
   display: flex;
-  justify-content: space-between;
-  margin-top: 6px;
+  justify-content: center;
+  gap: 8px;
 }
 
 .card {
