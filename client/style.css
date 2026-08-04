@@ -1190,14 +1190,14 @@ button:active {
 
 @media (max-height: 500px) {
   #screen-game {
-    padding: 2px 4px;
-    gap: 2px;
+    padding: 1px 2px;
+    gap: 1px;
   }
 
   #arena {
-    padding: 2px 4px;
-    border-width: 2px;
-    outline-offset: -3px;
+    padding: 1px 2px;
+    border-width: 1px;
+    outline-offset: -2px;
   }
 
   #arena::before {
@@ -1213,54 +1213,66 @@ button:active {
   }
 
   .player-area {
-    padding: 1px 4px;
+    padding: 0 2px;
+  }
+
+  .hero-info-bar {
+    gap: 6px;
   }
 
   .hero-badge {
     margin: 0;
-    gap: 4px;
+    gap: 3px;
   }
 
   .hero-portrait {
-    width: 20px;
-    height: 20px;
-    font-size: 11px;
+    width: 16px;
+    height: 16px;
+    font-size: 9px;
   }
 
   .hero-hp-badge,
   .hero-mana-badge {
-    padding: 0 4px;
-    font-size: 9px;
+    padding: 0 3px;
+    font-size: 8px;
   }
 
   .hero-name {
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .stats {
-    gap: 6px;
-    margin-bottom: 1px;
-    font-size: 9px;
+    gap: 4px;
+    margin-bottom: 0;
+    font-size: 8px;
   }
 
   .board,
   .hand {
-    padding: 4px 4px;
-    margin-bottom: 1px;
-    gap: 4px;
+    padding: 2px 2px;
+    margin-bottom: 0;
+    gap: 3px;
+  }
+
+  .board {
+    flex: 4;
+  }
+
+  .hand {
+    flex: 4.7;
   }
 
   #turn-indicator {
-    padding: 1px;
-    font-size: 11px;
+    padding: 0;
+    font-size: 9px;
   }
 
   .action-buttons {
-    margin-top: 2px;
+    margin-top: 0;
   }
 
   .action-buttons button {
-    padding: 5px 10px;
-    font-size: 12px;
+    padding: 4px 8px;
+    font-size: 11px;
   }
 }
