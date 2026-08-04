@@ -1056,9 +1056,10 @@ function cardFaceHtml(card) {
   `;
 }
 
-const MAX_FAN_ANGLE_DEG = 10;
-const FAN_SPACING_FACTOR = 2.8;
-const FAN_MIN_SPACING_RATIO = 0.18;
+const MAX_FAN_ANGLE_DEG = 14;
+const FAN_ANGLE_DECAY = 1.1;
+const FAN_SPACING_FACTOR = 1.1;
+const FAN_MIN_SPACING_RATIO = 0.12;
 
 function computeFanTransform(index, count, cardWidth, containerWidth) {
   const mid = (count - 1) / 2;
@@ -1069,7 +1070,7 @@ function computeFanTransform(index, count, cardWidth, containerWidth) {
     count > 1
       ? Math.max(Math.min(idealSpacing, maxSpread / (count - 1)), cardWidth * FAN_MIN_SPACING_RATIO)
       : 0;
-  const angleStep = cardWidth > 0 ? (spacing / cardWidth) * MAX_FAN_ANGLE_DEG : 0;
+  const angleStep = Math.max(3, MAX_FAN_ANGLE_DEG - (count - 1) * FAN_ANGLE_DECAY);
   const rotateDeg = offset * angleStep;
   const translateX = offset * spacing;
   const translateY = Math.min(offset * offset * 7, 60);
