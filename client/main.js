@@ -13,6 +13,7 @@ let deckCatalog = [];
 let currentDeckCardIds = [];
 let lastTurnPlayerId = null;
 let resultAutoReturnTimer = null;
+let pendingBoardRebuildTimer = null;
 const pendingInstallEffects = new Map(); // cardId -> { playerId }
 const pendingBuffEffects = new Map(); // targetCharacterId -> { playerId }
 const pendingAttackEffects = []; // { attackerId, attackerCardId, target }
@@ -950,6 +951,10 @@ function returnToLobby() {
     clearTimeout(resultAutoReturnTimer);
     resultAutoReturnTimer = null;
   }
+  if (pendingBoardRebuildTimer) {
+    clearTimeout(pendingBoardRebuildTimer);
+    pendingBoardRebuildTimer = null;
+  }
   selectedAttackerId = null;
   dragState = null;
   pendingRenderState = null;
@@ -1330,29 +1335,52 @@ function renderState(state) {
     oppHandEl.appendChild(makeHandSlot(back, i, oppHandCount, oppCardWidth, oppHandRect.width));
   }
 
-  const myBoardEl = document.getElementById("my-board");
-  myBoardEl.innerHTML = "";
-  for (const card of state.me.board) {
-    myBoardEl.appendChild(renderCard(card, "my-board", isMyTurn));
-  }
-
-  const oppBoardEl = document.getElementById("opp-board");
-  oppBoardEl.innerHTML = "";
-  for (const card of state.opponent.board) {
-    oppBoardEl.appendChild(renderCard(card, "opp-board"));
-  }
-
-  applyPendingCardEffects(myBoardEl, "my-board");
-  applyPendingCardEffects(oppBoardEl, "opp-board");
-  applyPendingAttackEffects();
-
   refitAllCardNames();
 
-  const opponentAreaEl = document.getElementById("opponent-area");
-  opponentAreaEl.classList.toggle(
-    "hero-target",
-    Boolean(selectedAttackerId) && state.opponent.board.length === 0
-  );
+  const myBoardEl = document.getElementById("my-board");
+  const oppBoardEl = document.getElementById("opp-board");
+
+  // 공격/피격 애니메이션은 보드를 새로 그리기 전, 아직 이전 렌더의 카드 엘리먼트가
+  // 남아있는 시점에 적용해야 공격/반격으로 죽는 카드에도 모션이 재생된다.
+  const hasAttackEffects = pendingAttackEffects.length > 0;
+  applyPendingAttackEffects();
+
+  const rebuildBoards = () => {
+    myBoardEl.innerHTML = "";
+    for (const card of state.me.board) {
+      myBoardEl.appendChild(renderCard(card, "my-board", isMyTurn));
+    }
+
+    oppBoardEl.innerHTML = "";
+    for (const card of state.opponent.board) {
+      oppBoardEl.appendChild(renderCard(card, "opp-board"));
+    }
+
+    applyPendingCardEffects(myBoardEl, "my-board");
+    applyPendingCardEffects(oppBoardEl, "opp-board");
+
+    refitAllCardNames();
+
+    const opponentAreaEl = document.getElementById("opponent-area");
+    opponentAreaEl.classList.toggle(
+      "hero-target",
+      Boolean(selectedAttackerId) && state.opponent.board.length === 0
+    );
+  };
+
+  if (pendingBoardRebuildTimer) {
+    clearTimeout(pendingBoardRebuildTimer);
+    pendingBoardRebuildTimer = null;
+  }
+
+  if (hasAttackEffects) {
+    pendingBoardRebuildTimer = setTimeout(() => {
+      pendingBoardRebuildTimer = null;
+      rebuildBoards();
+    }, 500);
+  } else {
+    rebuildBoards();
+  }
 }
 
 document.getElementById("opponent-area").addEventListener("click", (e) => {
