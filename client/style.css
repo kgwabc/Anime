@@ -526,7 +526,7 @@ button:active {
   height: 100%;
   display: flex;
   align-items: center;
-  transform-origin: 50% 260%;
+  transform-origin: 50% calc(100% + 40px);
   transition: transform 0.18s ease;
 }
 
