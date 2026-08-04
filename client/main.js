@@ -1115,6 +1115,24 @@ function computeFanTransform(index, count, cardWidth, containerWidth) {
   return { rotateDeg, translateX, translateY };
 }
 
+const BOARD_GAP_PX = 8;
+const BOARD_MIN_SCALE = 0.6;
+
+function computeBoardCardHeight(containerEl, count) {
+  const rect = containerEl.getBoundingClientRect();
+  const naturalHeight = rect.height;
+  if (count <= 0 || naturalHeight <= 0) return naturalHeight;
+
+  const naturalWidth = naturalHeight * (92 / 128);
+  const requiredWidth = count * naturalWidth + (count - 1) * BOARD_GAP_PX;
+  if (requiredWidth <= rect.width) return naturalHeight;
+
+  // gap은 카드 크기와 무관하게 고정폭이므로 축소 비율 계산에서 분리해야 함
+  const widthAvailableForCards = rect.width - (count - 1) * BOARD_GAP_PX;
+  const scale = Math.max(widthAvailableForCards / (count * naturalWidth), BOARD_MIN_SCALE);
+  return naturalHeight * scale;
+}
+
 function makeHandSlot(cardEl, index, count, cardWidth, containerWidth) {
   const slot = document.createElement("div");
   slot.className = "hand-slot";
@@ -1394,14 +1412,20 @@ function renderState(state) {
   applyPendingAttackEffects();
 
   const rebuildBoards = () => {
+    const myBoardCardHeight = computeBoardCardHeight(myBoardEl, state.me.board.length);
     myBoardEl.innerHTML = "";
     for (const card of state.me.board) {
-      myBoardEl.appendChild(renderCard(card, "my-board", isMyTurn));
+      const cardEl = renderCard(card, "my-board", isMyTurn);
+      cardEl.style.height = `${myBoardCardHeight}px`;
+      myBoardEl.appendChild(cardEl);
     }
 
+    const oppBoardCardHeight = computeBoardCardHeight(oppBoardEl, state.opponent.board.length);
     oppBoardEl.innerHTML = "";
     for (const card of state.opponent.board) {
-      oppBoardEl.appendChild(renderCard(card, "opp-board"));
+      const cardEl = renderCard(card, "opp-board");
+      cardEl.style.height = `${oppBoardCardHeight}px`;
+      oppBoardEl.appendChild(cardEl);
     }
 
     applyPendingCardEffects(myBoardEl, "my-board");
