@@ -553,6 +553,7 @@ button:active {
 .board {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   flex: 1.5;
   min-height: 0;
@@ -571,23 +572,15 @@ button:active {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   flex: 1.7;
   min-height: 0;
   padding: 8px 8px;
   flex-wrap: nowrap;
-  overflow-x: visible;
+  overflow-x: auto;
   overflow-y: hidden;
   user-select: none;
   -webkit-touch-callout: none;
-}
-
-.hand-slot {
-  flex: 0 0 auto;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  transform-origin: 50% calc(100% + 40px);
-  transition: transform 0.18s ease;
 }
 
 .action-buttons {
@@ -886,6 +879,24 @@ button:active {
 
 .card.card-slam {
   animation: card-slam 0.4s ease-out;
+}
+
+@keyframes card-spread-in {
+  0% {
+    transform: translateX(var(--spread-from-x, 0)) scale(0.5);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(0) scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0) scale(1);
+  }
+}
+
+.card.card-spread-in {
+  animation: card-spread-in 0.45s ease-out;
 }
 
 @keyframes buff-flash {

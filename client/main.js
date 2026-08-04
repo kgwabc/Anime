@@ -1094,27 +1094,6 @@ function cardFaceHtml(card) {
   `;
 }
 
-const MAX_FAN_ANGLE_DEG = 14;
-const FAN_ANGLE_DECAY = 1.1;
-const FAN_SPACING_FACTOR = 1.1;
-const FAN_MIN_SPACING_RATIO = 0.12;
-
-function computeFanTransform(index, count, cardWidth, containerWidth) {
-  const mid = (count - 1) / 2;
-  const offset = index - mid;
-  const idealSpacing = (cardWidth * FAN_SPACING_FACTOR) / count;
-  const maxSpread = Math.max(containerWidth - cardWidth, 0);
-  const spacing =
-    count > 1
-      ? Math.max(Math.min(idealSpacing, maxSpread / (count - 1)), cardWidth * FAN_MIN_SPACING_RATIO)
-      : 0;
-  const angleStep = Math.max(3, MAX_FAN_ANGLE_DEG - (count - 1) * FAN_ANGLE_DECAY);
-  const rotateDeg = offset * angleStep;
-  const translateX = offset * spacing;
-  const translateY = Math.min(offset * offset * 7, 60);
-  return { rotateDeg, translateX, translateY };
-}
-
 const BOARD_GAP_PX = 8;
 const BOARD_MIN_HEIGHT_PX = 60;
 
@@ -1131,16 +1110,6 @@ function computeBoardCardHeight(containerEl, count) {
   const widthAvailableForCards = rect.width - (count - 1) * BOARD_GAP_PX;
   const scale = widthAvailableForCards / (count * naturalWidth);
   return Math.max(naturalHeight * scale, BOARD_MIN_HEIGHT_PX);
-}
-
-function makeHandSlot(cardEl, index, count, cardWidth, containerWidth) {
-  const slot = document.createElement("div");
-  slot.className = "hand-slot";
-  slot.style.zIndex = String(index);
-  const { rotateDeg, translateX, translateY } = computeFanTransform(index, count, cardWidth, containerWidth);
-  slot.style.transform = `translateX(${translateX}px) translateY(${translateY}px) rotate(${rotateDeg}deg)`;
-  slot.appendChild(cardEl);
-  return slot;
 }
 
 function renderCard(card, role, isMyTurn) {
@@ -1233,7 +1202,7 @@ function startCardDrag(e, card, el) {
   if (dragState) return;
   e.preventDefault();
   const rect = el.getBoundingClientRect();
-  document.body.appendChild(el); // .hand-slot 부모의 transform이 fixed 좌표계를 가두는 것을 피함
+  document.body.appendChild(el); // fixed 좌표계가 항상 뷰포트 기준이 되도록 body 직속으로 재부착
   el.setPointerCapture(e.pointerId);
   el.classList.add("dragging");
   el.style.position = "fixed";
@@ -1286,9 +1255,8 @@ function endCardDrag(el, onMove, onUp) {
   clearDropHints();
   dragState = null;
 
-  // 드래그 시작시 el을 body로 재부착했으므로(.hand-slot의 transform이 fixed 좌표계를
-  // 가두는 것을 피하기 위함), 서버 응답 여부와 상관없이 항상 다시 그려서 손패/보드 안에
-  // el을 원래 자리로 복원한다.
+  // 드래그 시작시 el을 body로 재부착했으므로, 서버 응답 여부와 상관없이 항상 다시
+  // 그려서 손패/보드 안에 el을 원래 자리로 복원한다.
   const state = pendingRenderState || lastState;
   pendingRenderState = null;
   if (state) renderState(state);
@@ -1309,7 +1277,13 @@ function applyPendingCardEffects(boardEl, role) {
     if (pendingInstallEffects.has(cardId)) {
       const { skillName } = pendingInstallEffects.get(cardId);
       pendingInstallEffects.delete(cardId);
-      flashClass(card, "card-slam", 500);
+
+      const boardRect = boardEl.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+      const offsetX = boardRect.left + boardRect.width / 2 - (cardRect.left + cardRect.width / 2);
+      card.style.setProperty("--spread-from-x", `${offsetX}px`);
+      flashClass(card, "card-spread-in", 450);
+
       if (skillName) showSkillNamePopup(card, skillName, "play");
     }
     if (pendingBuffEffects.has(cardId)) {
@@ -1380,25 +1354,18 @@ function renderState(state) {
   lastTurnPlayerId = state.currentPlayerId;
 
   const myHandEl = document.getElementById("my-hand");
-  const myHandRect = myHandEl.getBoundingClientRect();
-  const myCardWidth = myHandRect.height * (92 / 128);
   myHandEl.innerHTML = "";
-  const myHandCount = state.me.hand.length;
-  state.me.hand.forEach((card, i) => {
-    myHandEl.appendChild(
-      makeHandSlot(renderCard(card, "hand"), i, myHandCount, myCardWidth, myHandRect.width)
-    );
-  });
+  for (const card of state.me.hand) {
+    myHandEl.appendChild(renderCard(card, "hand"));
+  }
 
   const oppHandEl = document.getElementById("opp-hand");
-  const oppHandRect = oppHandEl.getBoundingClientRect();
-  const oppCardWidth = oppHandRect.height * (92 / 128);
   oppHandEl.innerHTML = "";
   const oppHandCount = state.opponent.handCount;
   for (let i = 0; i < oppHandCount; i++) {
     const back = document.createElement("div");
     back.className = "card card-back";
-    oppHandEl.appendChild(makeHandSlot(back, i, oppHandCount, oppCardWidth, oppHandRect.width));
+    oppHandEl.appendChild(back);
   }
 
   refitAllCardNames();
