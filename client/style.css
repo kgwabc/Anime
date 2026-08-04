@@ -284,13 +284,17 @@ button:active {
   display: flex;
   flex-direction: column;
   background:
-    radial-gradient(ellipse 900px 500px at 50% 50%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.45) 78%),
+    radial-gradient(ellipse 300px 220px at 50% 8%, rgba(255, 210, 79, 0.16), transparent 70%),
+    radial-gradient(ellipse 300px 220px at 50% 92%, rgba(79, 140, 255, 0.16), transparent 70%),
+    radial-gradient(ellipse 1000px 600px at 50% 50%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.6) 82%),
     linear-gradient(
       to bottom,
-      #232a45 0%,
+      #1b2140 0%,
+      #232a45 22%,
       #262b3a 42%,
       #262b3a 58%,
-      #3a2a28 100%
+      #33261f 78%,
+      #2a1c16 100%
     );
   border: 2px solid #4a3a1a;
   outline: 1px solid var(--gold-dim);
@@ -298,8 +302,9 @@ button:active {
   border-radius: 14px;
   padding: 8px 12px;
   box-shadow:
-    inset 0 0 40px rgba(0, 0, 0, 0.55),
+    inset 0 0 60px rgba(0, 0, 0, 0.7),
     inset 0 0 0 5px rgba(0, 0, 0, 0.3),
+    inset 0 0 30px rgba(255, 210, 79, 0.08),
     0 0 24px rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
@@ -344,6 +349,72 @@ button:active {
   to {
     transform: rotate(360deg);
   }
+}
+
+.embers {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ember {
+  position: absolute;
+  bottom: -10px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe9ae 0%, #ffd24f 55%, rgba(255, 210, 79, 0) 100%);
+  box-shadow: 0 0 6px rgba(255, 210, 79, 0.8);
+  opacity: 0;
+  animation: ember-rise 9s ease-in infinite;
+}
+
+.ember:nth-child(1)  { left: 4%;  animation-delay: 0s;    animation-duration: 8s; }
+.ember:nth-child(2)  { left: 12%; animation-delay: 1.2s;  animation-duration: 10s; }
+.ember:nth-child(3)  { left: 20%; animation-delay: 2.6s;  animation-duration: 7.5s; }
+.ember:nth-child(4)  { left: 28%; animation-delay: 0.6s;  animation-duration: 9.5s; }
+.ember:nth-child(5)  { left: 37%; animation-delay: 3.4s;  animation-duration: 8.5s; }
+.ember:nth-child(6)  { left: 45%; animation-delay: 1.8s;  animation-duration: 11s; }
+.ember:nth-child(7)  { left: 53%; animation-delay: 4.1s;  animation-duration: 7s; }
+.ember:nth-child(8)  { left: 61%; animation-delay: 0.3s;  animation-duration: 9s; }
+.ember:nth-child(9)  { left: 69%; animation-delay: 2.2s;  animation-duration: 10.5s; }
+.ember:nth-child(10) { left: 77%; animation-delay: 3.8s;  animation-duration: 8s; }
+.ember:nth-child(11) { left: 85%; animation-delay: 1.5s;  animation-duration: 9.2s; }
+.ember:nth-child(12) { left: 92%; animation-delay: 4.6s;  animation-duration: 7.8s; }
+.ember:nth-child(13) { left: 50%; animation-delay: 2.9s;  animation-duration: 10s; }
+.ember:nth-child(14) { left: 15%; animation-delay: 5.2s;  animation-duration: 8.8s; }
+
+@keyframes ember-rise {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate(12px, -140px);
+    opacity: 0.6;
+  }
+  92% {
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-8px, -260px);
+    opacity: 0;
+  }
+}
+
+.hero-badge::before {
+  content: "";
+  position: absolute;
+  inset: -16px;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 210, 79, 0.22), transparent 70%);
+  pointer-events: none;
 }
 
 .player-area {
@@ -439,15 +510,24 @@ button:active {
 .hand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
   flex: 1;
   min-height: 0;
   padding: 14px 8px;
   flex-wrap: nowrap;
-  overflow-x: auto;
+  overflow-x: visible;
   overflow-y: hidden;
   user-select: none;
   -webkit-touch-callout: none;
+}
+
+.hand-slot {
+  flex: 0 0 auto;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  transform-origin: 50% 260%;
+  transition: transform 0.18s ease;
 }
 
 .action-buttons {
@@ -485,7 +565,7 @@ button:active {
     border-color: #ffd24f;
     transform: translateY(-10px) scale(1.05);
     box-shadow: 0 10px 18px rgba(0, 0, 0, 0.45), 0 0 10px rgba(255, 210, 79, 0.5);
-    z-index: 5;
+    z-index: 100;
   }
 }
 
@@ -929,6 +1009,7 @@ button:active {
   transform: scale(1.1);
   box-shadow: 0 16px 28px rgba(0, 0, 0, 0.55), 0 0 14px rgba(79, 140, 255, 0.6);
   pointer-events: none;
+  z-index: 200;
 }
 
 .card.drop-hint {
@@ -1000,6 +1081,10 @@ button:active {
     height: 180px;
     margin: -90px 0 0 -90px;
     opacity: 0.3;
+  }
+
+  .embers {
+    display: none;
   }
 
   .player-area {
