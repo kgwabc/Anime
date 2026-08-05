@@ -1771,6 +1771,33 @@ function flashClass(el, className, durationMs) {
   setTimeout(clear, durationMs);
 }
 
+function animateDrawIn(cardEl, fromEl) {
+  if (!cardEl || !fromEl) return;
+  const fromRect = fromEl.getBoundingClientRect();
+  const toRect = cardEl.getBoundingClientRect();
+  const layer = document.getElementById("spell-effect-layer");
+
+  cardEl.style.visibility = "hidden";
+
+  const clone = document.createElement("div");
+  clone.className = "card card-back card-draw-clone";
+  clone.style.position = "fixed";
+  clone.style.left = `${fromRect.left}px`;
+  clone.style.top = `${fromRect.top}px`;
+  clone.style.width = `${fromRect.width}px`;
+  clone.style.height = `${fromRect.height}px`;
+  clone.style.setProperty("--draw-dx", `${toRect.left - fromRect.left}px`);
+  clone.style.setProperty("--draw-dy", `${toRect.top - fromRect.top}px`);
+  clone.style.setProperty("--draw-scale-x", `${toRect.width / fromRect.width}`);
+  clone.style.setProperty("--draw-scale-y", `${toRect.height / fromRect.height}`);
+  layer.appendChild(clone);
+
+  setTimeout(() => {
+    clone.remove();
+    cardEl.style.visibility = "";
+  }, 420);
+}
+
 function applyPendingCardEffects(boardEl, role) {
   for (const card of boardEl.querySelectorAll(".card")) {
     const cardId = card.dataset.cardId;
@@ -1865,12 +1892,14 @@ function applyPendingAttackEffects(state) {
 }
 
 function renderState(state) {
+  const previousState = lastState;
   lastState = state;
   document.getElementById("my-name").textContent = state.me.username || "나";
   document.getElementById("my-hp").textContent = state.me.hp;
   document.getElementById("my-mana").textContent = state.me.mana;
   document.getElementById("my-max-mana").textContent = state.me.maxMana;
   document.getElementById("my-deck-count").textContent = state.me.deckCount;
+  document.getElementById("my-deck-pile").classList.toggle("empty", state.me.deckCount === 0);
 
   document.getElementById("opp-name").textContent = state.opponent.username || "상대";
   document.getElementById("opp-hp").textContent = state.opponent.hp;
@@ -1878,6 +1907,15 @@ function renderState(state) {
   document.getElementById("opp-max-mana").textContent = state.opponent.maxMana;
   document.getElementById("opp-hand-count").textContent = state.opponent.handCount;
   document.getElementById("opp-deck-count").textContent = state.opponent.deckCount;
+  document.getElementById("opp-deck-pile").classList.toggle("empty", state.opponent.deckCount === 0);
+
+  const previousMyHandIds = new Set((previousState?.me.hand || []).map((c) => c.id));
+  const myDrawnCardIds = previousState
+    ? state.me.hand.filter((c) => !previousMyHandIds.has(c.id)).map((c) => c.id)
+    : [];
+  const oppDrawnCount = previousState
+    ? Math.max(0, state.opponent.handCount - previousState.opponent.handCount)
+    : 0;
 
   const isMyTurn = state.currentPlayerId === socket.id;
   document.getElementById("turn-indicator").textContent = isMyTurn
@@ -1903,6 +1941,17 @@ function renderState(state) {
     const back = document.createElement("div");
     back.className = "card card-back";
     oppHandEl.appendChild(back);
+  }
+
+  const myDeckPileEl = document.getElementById("my-deck-pile");
+  for (const cardEl of myHandEl.children) {
+    if (myDrawnCardIds.includes(cardEl.dataset.cardId)) animateDrawIn(cardEl, myDeckPileEl);
+  }
+
+  const oppDeckPileEl = document.getElementById("opp-deck-pile");
+  const oppBackEls = [...oppHandEl.children];
+  for (let i = oppBackEls.length - oppDrawnCount; i < oppBackEls.length; i++) {
+    if (i >= 0) animateDrawIn(oppBackEls[i], oppDeckPileEl);
   }
 
   refitAllCardNames();
