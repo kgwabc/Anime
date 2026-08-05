@@ -313,8 +313,11 @@ class GameRoom {
     } else {
       nextPlayer.maxMana = Math.min(nextPlayer.turnsPlayed, MAX_MANA);
       nextPlayer.mana = nextPlayer.maxMana;
-      if (nextPlayer.deck.length > 0) {
-        nextPlayer.hand.push(nextPlayer.deck.shift());
+      const drawCount = nextPlayer.maxMana >= MAX_MANA ? 2 : 1;
+      for (let i = 0; i < drawCount; i += 1) {
+        if (nextPlayer.deck.length > 0) {
+          nextPlayer.hand.push(nextPlayer.deck.shift());
+        }
       }
       // TODO: 덱이 비었을 때 피로 데미지(fatigue) 등 페널티 로직
     }
