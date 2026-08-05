@@ -12,6 +12,7 @@ let currentAdminToken = null;
 let loadedAdminCards = [];
 let currentAuthToken = null;
 let deckCatalog = [];
+let allowedCardIds = new Set();
 let currentDeckCardIds = [];
 let lastTurnPlayerId = null;
 let resultAutoReturnTimer = null;
@@ -793,8 +794,8 @@ document.getElementById("btn-edit-deck").addEventListener("click", async () => {
       document.getElementById("deck-error").textContent = cardsData.message || deckData.message || collectionData.message;
       return;
     }
-    const allowedIds = new Set([...collectionData.ownedCardIds, ...collectionData.starterCardIds]);
-    deckCatalog = cardsData.cards.filter((card) => allowedIds.has(card.id));
+    allowedCardIds = new Set([...collectionData.ownedCardIds, ...collectionData.starterCardIds]);
+    deckCatalog = cardsData.cards;
     currentDeckCardIds = deckData.cardIds;
     renderDeckBuilder();
   } catch (err) {
@@ -892,7 +893,7 @@ function renderDeckBuilder() {
 
   const catalogEl = document.getElementById("deck-catalog-list");
   catalogEl.innerHTML = "";
-  for (const card of deckCatalog) {
+  for (const card of deckCatalog.filter((card) => allowedCardIds.has(card.id))) {
     const copies = countCopiesInDeck(card.id);
     const maxCopies = card.rarity === "legendary" ? MAX_COPIES_LEGENDARY : MAX_COPIES_COMMON;
     const legendaryBlocked = card.rarity === "legendary" && legendaryCountInDeck() >= MAX_LEGENDARY_TOTAL && copies === 0;
