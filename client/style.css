@@ -683,6 +683,27 @@ button:active {
   background: radial-gradient(circle at 35% 30%, #ffdb7a, #b8790d 65%, #7a4c05);
 }
 
+.equip-badges {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  z-index: 3;
+  display: flex;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.equip-badge {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid #ffd24f;
+  background-size: cover;
+  background-position: center;
+  background-color: #1b1f2a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
 .card-stats .atk-hp .hp {
   background: radial-gradient(circle at 35% 30%, #ff8f8f, #b32323 65%, #7a1414);
 }

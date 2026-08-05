@@ -164,7 +164,12 @@ io.on("connection", (socket) => {
       return;
     }
 
-    broadcastEffect(room, "card_played", { playerId: socket.id, card: result.card, targetCharacterId });
+    broadcastEffect(room, "card_played", {
+      playerId: socket.id,
+      card: result.card,
+      targetCharacterId,
+      effectResults: result.effectResults,
+    });
     broadcastGameState(room);
     handleGameOver(room, roomId);
   });

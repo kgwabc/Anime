@@ -1303,8 +1303,12 @@ function registerSocketHandlers() {
       return;
     }
 
+    if (card?.type === "equipment") {
+      showSpellEffect(card);
+    }
+
     if (targetCharacterId) {
-      pendingBuffEffects.set(targetCharacterId, { playerId });
+      pendingBuffEffects.set(targetCharacterId, { playerId, effectResults });
       return;
     }
 
@@ -1542,6 +1546,16 @@ window.addEventListener("orientationchange", () => {
   resizeFitTimer = setTimeout(refitAllCardNames, 150);
 });
 
+function equipBadgesHtml(card) {
+  if (!card.equippedItems?.length) return "";
+  return `<div class="equip-badges">${card.equippedItems
+    .map(
+      (item) =>
+        `<div class="equip-badge"${item.image ? ` style="background-image:url('${item.image}')"` : ""} title="${item.name}"></div>`
+    )
+    .join("")}</div>`;
+}
+
 function cardFaceHtml(card) {
   const artStyle = card.image ? ` style="background-image:url('${card.image}')"` : "";
   return `
@@ -1550,6 +1564,7 @@ function cardFaceHtml(card) {
       <span class="cost-badge">${card.cost}</span>
       ${cardStatsHtml(card)}
     </div>
+    ${equipBadgesHtml(card)}
     <div class="card-hover-info">
       <div class="name">${card.name}</div>
       ${cardDescHtml(card)}
@@ -1751,8 +1766,10 @@ function applyPendingCardEffects(boardEl, role) {
       showEffectResultPopups(effectResults);
     }
     if (pendingBuffEffects.has(cardId)) {
+      const { effectResults } = pendingBuffEffects.get(cardId);
       pendingBuffEffects.delete(cardId);
       flashClass(card, "buff-flash", 600);
+      showEffectResultPopups(effectResults);
     }
   }
 }

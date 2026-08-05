@@ -164,12 +164,19 @@ class GameRoom {
 
     target.atk += card.equipAtkBonus || 0;
     target.hp += card.equipHpBonus || 0;
-    applyEffectList(this, playerId, card.effects, "ON_EQUIP", {
+    const equipEffectResults = applyEffectList(this, playerId, card.effects, "ON_EQUIP", {
       sourceCardId: card.id,
       chosenTargetCardId: target.id,
     });
 
-    return { ok: true, card: { id: card.id, type: card.type, name: card.name, image: card.image } };
+    target.equippedItems = target.equippedItems || [];
+    target.equippedItems.push({ id: card.id, name: card.name, image: card.image });
+
+    return {
+      ok: true,
+      card: { id: card.id, type: card.type, name: card.name, image: card.image },
+      effectResults: equipEffectResults,
+    };
   }
 
   attack(playerId, attackerCardId, target) {
