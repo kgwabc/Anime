@@ -9,6 +9,7 @@ const { connectDB } = require("./db");
 const authRoutes = require("./auth/authRoutes");
 const cardRoutes = require("./routes/cardRoutes");
 const deckRoutes = require("./routes/deckRoutes");
+const shopRoutes = require("./routes/shopRoutes");
 const { socketAuthMiddleware } = require("./auth/socketAuth");
 const { listCards } = require("./models/Card");
 const { getDeckByUserId } = require("./models/Deck");
@@ -27,6 +28,7 @@ app.get("/", (req, res) => {
 app.use("/auth", authRoutes);
 app.use("/cards", cardRoutes);
 app.use("/decks", deckRoutes);
+app.use("/shop", shopRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {

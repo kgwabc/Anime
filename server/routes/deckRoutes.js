@@ -2,6 +2,8 @@ const express = require("express");
 
 const { getDeckByUserId, saveDeck } = require("../models/Deck");
 const { listCards } = require("../models/Card");
+const { listOwnedCardIds } = require("../models/Collection");
+const { listStarterCardIds } = require("../models/StarterCards");
 const { requireAuth } = require("../auth/middleware");
 const { validateDeck } = require("../game/deckValidation");
 
@@ -25,8 +27,13 @@ router.put("/mine", requireAuth, async (req, res) => {
   }
 
   try {
-    const cards = await listCards();
-    const cardsById = new Map(cards.map((card) => [card.id, card]));
+    const [cards, ownedCardIds, starterCardIds] = await Promise.all([
+      listCards(),
+      listOwnedCardIds(req.user.userId),
+      listStarterCardIds(),
+    ]);
+    const allowedIds = new Set([...ownedCardIds, ...starterCardIds]);
+    const cardsById = new Map(cards.filter((card) => allowedIds.has(card.id)).map((card) => [card.id, card]));
 
     const result = validateDeck(cardIds, cardsById);
     if (!result.ok) {

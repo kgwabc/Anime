@@ -2,7 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const { findUserByUsername, createUser, listUsers, deleteUserByUsername } = require("../models/User");
+const { findUserByUsername, createUser, listUsers, deleteUserByUsername, addCoins } = require("../models/User");
 const { requireAuth, requireAdmin, ADMIN_USERNAME } = require("./middleware");
 
 const router = express.Router();
@@ -40,7 +40,7 @@ router.post("/signup", async (req, res) => {
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
     const user = await createUser({ username, passwordHash });
 
-    return res.json({ ok: true, token: signToken(user), username: user.username });
+    return res.json({ ok: true, token: signToken(user), username: user.username, coins: user.coins });
   } catch (err) {
     console.error("[signup] error:", err.message);
     return res.status(500).json({ ok: false, message: "회원가입 중 오류가 발생했습니다." });
@@ -65,7 +65,7 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ ok: false, message: "닉네임 또는 비밀번호가 올바르지 않습니다." });
     }
 
-    return res.json({ ok: true, token: signToken(user), username: user.username });
+    return res.json({ ok: true, token: signToken(user), username: user.username, coins: user.coins });
   } catch (err) {
     console.error("[login] error:", err.message);
     return res.status(500).json({ ok: false, message: "로그인 중 오류가 발생했습니다." });
@@ -95,6 +95,28 @@ router.delete("/users/:username", requireAuth, requireAdmin, async (req, res) =>
   } catch (err) {
     console.error("[delete user] error:", err.message);
     return res.status(500).json({ ok: false, message: "계정 삭제 중 오류가 발생했습니다." });
+  }
+});
+
+router.put("/users/:username/coins", requireAuth, requireAdmin, async (req, res) => {
+  const { username } = req.params;
+  const { amount } = req.body || {};
+
+  if (!Number.isInteger(amount)) {
+    return res.status(400).json({ ok: false, message: "amount는 정수여야 합니다." });
+  }
+
+  try {
+    const user = await findUserByUsername(username);
+    if (!user) {
+      return res.status(404).json({ ok: false, message: "유저를 찾을 수 없습니다." });
+    }
+
+    const coins = await addCoins(user.id, amount);
+    return res.json({ ok: true, coins });
+  } catch (err) {
+    console.error("[adjust coins] error:", err.message);
+    return res.status(500).json({ ok: false, message: "코인 조정 중 오류가 발생했습니다." });
   }
 });
 

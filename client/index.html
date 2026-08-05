@@ -43,15 +43,22 @@
 
   <div id="screen-lobby" class="screen hidden">
     <h1>애니프사이콩그루</h1>
-    <p>환영합니다, <strong id="lobby-username"></strong>님</p>
+    <p>환영합니다, <strong id="lobby-username"></strong>님 · <span id="lobby-coins">🪙 0</span></p>
     <button id="btn-join-queue">매칭 시작</button>
     <button id="btn-edit-deck">덱 편집</button>
+    <button id="btn-open-shop">상점</button>
     <button id="btn-logout">로그아웃</button>
     <p id="lobby-status"></p>
 
     <div id="admin-panel" class="hidden">
       <h2>관리자 패널</h2>
       <div id="admin-user-list"></div>
+
+      <h3>스타터 카드 지정</h3>
+      <p class="admin-hint">체크한 카드는 가입 즉시 모든 유저가 바로 쓸 수 있습니다.</p>
+      <div id="admin-starter-card-list"></div>
+      <button id="btn-save-starter-cards">스타터 카드 저장</button>
+      <p id="admin-starter-error" class="error"></p>
 
       <h3>카드 관리</h3>
       <form id="form-new-card" class="admin-card-form">
@@ -151,6 +158,20 @@
         <div id="deck-current-list"></div>
       </div>
     </div>
+  </div>
+
+  <div id="screen-shop" class="screen hidden">
+    <h2>카드 상점</h2>
+    <p><span id="shop-coins">🪙 0</span></p>
+    <button id="btn-shop-back">로비로</button>
+    <p id="shop-error" class="error"></p>
+
+    <div id="shop-pack-list" class="shop-pack-list"></div>
+
+    <h3>내 카드</h3>
+    <div id="shop-collection-grid"></div>
+
+    <div id="pack-reveal-layer"></div>
   </div>
 
   <div id="screen-game" class="screen hidden">

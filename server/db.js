@@ -27,6 +27,14 @@ async function migrateUsersTable(db) {
   }
 }
 
+async function migrateUsersCoinsColumn(db) {
+  const info = await db.execute("PRAGMA table_info(users)");
+  const existingCols = new Set(info.rows.map((col) => col.name));
+  if (!existingCols.has("coins")) {
+    await db.execute("ALTER TABLE users ADD COLUMN coins INTEGER NOT NULL DEFAULT 5000");
+  }
+}
+
 async function migrateCardsTable(db) {
   const info = await db.execute("PRAGMA table_info(cards)");
   const existingCols = new Set(info.rows.map((col) => col.name));
@@ -107,9 +115,11 @@ async function connectDB() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
+      coins INTEGER NOT NULL DEFAULT 5000,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  await migrateUsersCoinsColumn(db);
   await db.execute(`
     CREATE TABLE IF NOT EXISTS cards (
       id TEXT PRIMARY KEY,
@@ -140,6 +150,19 @@ async function connectDB() {
       user_id INTEGER PRIMARY KEY,
       card_ids TEXT NOT NULL DEFAULT '[]',
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS owned_cards (
+      user_id INTEGER NOT NULL,
+      card_id TEXT NOT NULL,
+      acquired_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, card_id)
+    )
+  `);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS starter_cards (
+      card_id TEXT PRIMARY KEY
     )
   `);
   console.log("Turso connected");

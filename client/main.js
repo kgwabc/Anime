@@ -55,6 +55,7 @@ const screens = {
   lobby: document.getElementById("screen-lobby"),
   waiting: document.getElementById("screen-waiting"),
   deckBuilder: document.getElementById("screen-deck-builder"),
+  shop: document.getElementById("screen-shop"),
   game: document.getElementById("screen-game"),
   result: document.getElementById("screen-result"),
 };
@@ -158,6 +159,7 @@ function connectSocket(token, username) {
     document.getElementById("lobby-username").textContent = username;
     currentAuthToken = token;
     showScreen("lobby");
+    refreshLobbyCoins();
 
     const adminPanel = document.getElementById("admin-panel");
     if (username === ADMIN_USERNAME) {
@@ -165,6 +167,7 @@ function connectSocket(token, username) {
       currentAdminToken = token;
       loadAdminUsers(token);
       loadAdminCards(token);
+      loadAdminStarterCards(token);
     } else {
       adminPanel.classList.add("hidden");
     }
@@ -206,8 +209,20 @@ function renderAdminUsers(users, token) {
     row.className = "admin-user-row";
 
     const label = document.createElement("span");
-    label.textContent = user.username;
+    label.textContent = `${user.username} (🪙 ${user.coins})`;
     row.appendChild(label);
+
+    const coinInput = document.createElement("input");
+    coinInput.type = "number";
+    coinInput.placeholder = "±코인";
+    coinInput.className = "admin-coin-input";
+    row.appendChild(coinInput);
+
+    const coinBtn = document.createElement("button");
+    coinBtn.className = "admin-coin-btn";
+    coinBtn.textContent = "지급/차감";
+    coinBtn.addEventListener("click", () => adjustAdminUserCoins(user.username, coinInput.value, token));
+    row.appendChild(coinBtn);
 
     if (user.username !== ADMIN_USERNAME) {
       const deleteBtn = document.createElement("button");
@@ -217,6 +232,30 @@ function renderAdminUsers(users, token) {
     }
 
     listEl.appendChild(row);
+  }
+}
+
+async function adjustAdminUserCoins(username, amountStr, token) {
+  const amount = parseInt(amountStr, 10);
+  if (!Number.isInteger(amount)) {
+    alert("코인 수치를 정수로 입력해주세요.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${SERVER_URL}/auth/users/${encodeURIComponent(username)}/coins`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ amount }),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      alert(data.message);
+      return;
+    }
+    loadAdminUsers(token);
+  } catch (err) {
+    alert("코인 조정 중 오류가 발생했습니다.");
   }
 }
 
@@ -742,17 +781,20 @@ document.getElementById("btn-edit-deck").addEventListener("click", async () => {
   document.getElementById("deck-error").textContent = "";
 
   try {
-    const [cardsRes, deckRes] = await Promise.all([
+    const [cardsRes, deckRes, collectionRes] = await Promise.all([
       fetch(`${SERVER_URL}/cards`, { headers: { Authorization: `Bearer ${currentAuthToken}` } }),
       fetch(`${SERVER_URL}/decks/mine`, { headers: { Authorization: `Bearer ${currentAuthToken}` } }),
+      fetch(`${SERVER_URL}/shop/collection/mine`, { headers: { Authorization: `Bearer ${currentAuthToken}` } }),
     ]);
     const cardsData = await cardsRes.json();
     const deckData = await deckRes.json();
-    if (!cardsData.ok || !deckData.ok) {
-      document.getElementById("deck-error").textContent = cardsData.message || deckData.message;
+    const collectionData = await collectionRes.json();
+    if (!cardsData.ok || !deckData.ok || !collectionData.ok) {
+      document.getElementById("deck-error").textContent = cardsData.message || deckData.message || collectionData.message;
       return;
     }
-    deckCatalog = cardsData.cards;
+    const allowedIds = new Set([...collectionData.ownedCardIds, ...collectionData.starterCardIds]);
+    deckCatalog = cardsData.cards.filter((card) => allowedIds.has(card.id));
     currentDeckCardIds = deckData.cardIds;
     renderDeckBuilder();
   } catch (err) {
@@ -884,6 +926,243 @@ function renderDeckBuilder() {
   catalogEl.querySelectorAll(".name").forEach(fitCardName);
   deckEl.querySelectorAll(".name").forEach(fitCardName);
 }
+
+// ---------- 코인 ----------
+
+function setCoinDisplays(coins) {
+  for (const el of [document.getElementById("lobby-coins"), document.getElementById("shop-coins")]) {
+    if (el) el.textContent = `🪙 ${coins}`;
+  }
+}
+
+async function refreshLobbyCoins() {
+  try {
+    const res = await fetch(`${SERVER_URL}/shop/collection/mine`, {
+      headers: { Authorization: `Bearer ${currentAuthToken}` },
+    });
+    const data = await res.json();
+    if (data.ok) setCoinDisplays(data.coins);
+  } catch (err) {
+    // 로비 코인 표시는 실패해도 치명적이지 않으므로 조용히 무시
+  }
+}
+
+// ---------- 상점 ----------
+
+let shopPacks = [];
+
+document.getElementById("btn-open-shop").addEventListener("click", () => {
+  showScreen("shop");
+  loadShop();
+});
+
+document.getElementById("btn-shop-back").addEventListener("click", () => {
+  showScreen("lobby");
+});
+
+async function loadShop() {
+  const errorEl = document.getElementById("shop-error");
+  errorEl.textContent = "";
+
+  try {
+    const [packsRes, collectionRes] = await Promise.all([
+      fetch(`${SERVER_URL}/shop/packs`, { headers: { Authorization: `Bearer ${currentAuthToken}` } }),
+      fetch(`${SERVER_URL}/shop/collection/mine`, { headers: { Authorization: `Bearer ${currentAuthToken}` } }),
+    ]);
+    const packsData = await packsRes.json();
+    const collectionData = await collectionRes.json();
+    if (!packsData.ok || !collectionData.ok) {
+      errorEl.textContent = packsData.message || collectionData.message;
+      return;
+    }
+    shopPacks = packsData.packs;
+    setCoinDisplays(collectionData.coins);
+    renderShopPacks();
+    await renderShopCollection(collectionData);
+  } catch (err) {
+    errorEl.textContent = "상점 정보를 불러올 수 없습니다.";
+  }
+}
+
+function renderShopPacks() {
+  const listEl = document.getElementById("shop-pack-list");
+  listEl.innerHTML = "";
+
+  for (const pack of shopPacks) {
+    const tile = document.createElement("div");
+    tile.className = `pack-card pack-card--${pack.id}`;
+
+    const name = document.createElement("div");
+    name.className = "pack-card-name";
+    name.textContent = pack.name;
+    tile.appendChild(name);
+
+    const info = document.createElement("div");
+    info.className = "pack-card-info";
+    info.textContent = `🪙 ${pack.cost} · 전설 확률 ${Math.round(pack.legendaryChance * 100)}%`;
+    tile.appendChild(info);
+
+    const btn = document.createElement("button");
+    btn.textContent = "열기";
+    btn.addEventListener("click", () => openPack(pack.id));
+    tile.appendChild(btn);
+
+    listEl.appendChild(tile);
+  }
+}
+
+async function renderShopCollection(collectionData) {
+  const gridEl = document.getElementById("shop-collection-grid");
+  gridEl.innerHTML = "불러오는 중...";
+
+  try {
+    const res = await fetch(`${SERVER_URL}/cards`, { headers: { Authorization: `Bearer ${currentAuthToken}` } });
+    const data = await res.json();
+    if (!data.ok) {
+      gridEl.textContent = data.message;
+      return;
+    }
+    const allowedIds = new Set([...collectionData.ownedCardIds, ...collectionData.starterCardIds]);
+    const ownedCards = data.cards.filter((card) => allowedIds.has(card.id));
+
+    gridEl.innerHTML = "";
+    for (const card of ownedCards) {
+      gridEl.appendChild(
+        renderCardTile(card, {
+          badgeText: collectionData.starterCardIds.includes(card.id) ? "스타터" : "보유중",
+          buttonText: "✓ 보유",
+          buttonDisabled: true,
+          onButtonClick: () => {},
+        })
+      );
+    }
+    gridEl.querySelectorAll(".name").forEach(fitCardName);
+  } catch (err) {
+    gridEl.textContent = "카드 목록을 불러올 수 없습니다.";
+  }
+}
+
+async function openPack(packId) {
+  const errorEl = document.getElementById("shop-error");
+  errorEl.textContent = "";
+
+  try {
+    const res = await fetch(`${SERVER_URL}/shop/packs/${packId}/open`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${currentAuthToken}` },
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      errorEl.textContent = data.message;
+      return;
+    }
+    setCoinDisplays(data.coins);
+    showPackReveal(data.card, data.isDuplicate, data.refund);
+    const collectionRes = await fetch(`${SERVER_URL}/shop/collection/mine`, {
+      headers: { Authorization: `Bearer ${currentAuthToken}` },
+    });
+    const collectionData = await collectionRes.json();
+    if (collectionData.ok) await renderShopCollection(collectionData);
+  } catch (err) {
+    errorEl.textContent = "카드팩 오픈 중 오류가 발생했습니다.";
+  }
+}
+
+function showPackReveal(card, isDuplicate, refund) {
+  const layer = document.getElementById("pack-reveal-layer");
+  const wrapper = document.createElement("div");
+  wrapper.className = "pack-reveal-card";
+
+  const cardEl = document.createElement("div");
+  cardEl.className = "card card-slam";
+  if (card.rarity === "legendary") cardEl.classList.add("legendary");
+  if (!card.image) cardEl.classList.add("no-image");
+  cardEl.innerHTML = cardFaceHtml(card);
+  wrapper.appendChild(cardEl);
+
+  if (isDuplicate) {
+    const dupText = document.createElement("div");
+    dupText.className = "pack-reveal-duplicate";
+    dupText.textContent = `중복! 🪙 ${refund} 환급`;
+    wrapper.appendChild(dupText);
+  }
+
+  layer.appendChild(wrapper);
+  wrapper.querySelectorAll(".name").forEach(fitCardName);
+  setTimeout(() => wrapper.remove(), 1600);
+}
+
+// ---------- 관리자: 스타터 카드 ----------
+
+let allAdminCardsForStarter = [];
+
+async function loadAdminStarterCards(token) {
+  const listEl = document.getElementById("admin-starter-card-list");
+  listEl.textContent = "불러오는 중...";
+
+  try {
+    const [cardsRes, starterRes] = await Promise.all([
+      fetch(`${SERVER_URL}/cards`, { headers: { Authorization: `Bearer ${token}` } }),
+      fetch(`${SERVER_URL}/cards/starter`, { headers: { Authorization: `Bearer ${token}` } }),
+    ]);
+    const cardsData = await cardsRes.json();
+    const starterData = await starterRes.json();
+    if (!cardsData.ok || !starterData.ok) {
+      listEl.textContent = cardsData.message || starterData.message;
+      return;
+    }
+    allAdminCardsForStarter = cardsData.cards;
+    renderAdminStarterCards(new Set(starterData.cardIds));
+  } catch (err) {
+    listEl.textContent = "스타터 카드 목록을 불러올 수 없습니다.";
+  }
+}
+
+function renderAdminStarterCards(starterCardIds) {
+  const listEl = document.getElementById("admin-starter-card-list");
+  listEl.innerHTML = "";
+
+  for (const card of allAdminCardsForStarter) {
+    const label = document.createElement("label");
+    label.className = "admin-starter-card-row";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.dataset.cardId = card.id;
+    checkbox.checked = starterCardIds.has(card.id);
+    label.appendChild(checkbox);
+
+    const text = document.createElement("span");
+    text.textContent = `${card.name} (${card.rarity === "legendary" ? "전설" : "일반"})`;
+    label.appendChild(text);
+
+    listEl.appendChild(label);
+  }
+}
+
+document.getElementById("btn-save-starter-cards").addEventListener("click", async () => {
+  const errorEl = document.getElementById("admin-starter-error");
+  errorEl.textContent = "";
+
+  const cardIds = Array.from(
+    document.querySelectorAll("#admin-starter-card-list input[type=checkbox]:checked")
+  ).map((el) => el.dataset.cardId);
+
+  try {
+    const res = await fetch(`${SERVER_URL}/cards/starter`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${currentAdminToken}` },
+      body: JSON.stringify({ cardIds }),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      errorEl.textContent = data.message;
+      return;
+    }
+  } catch (err) {
+    errorEl.textContent = "스타터 카드 저장 중 오류가 발생했습니다.";
+  }
+});
 
 // ---------- 게임 ----------
 

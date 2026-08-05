@@ -1,6 +1,7 @@
 const express = require("express");
 
 const { listCards, getCardById, createCard, updateCard, deleteCard } = require("../models/Card");
+const { listStarterCardIds, setStarterCardIds } = require("../models/StarterCards");
 const { requireAuth, requireAdmin } = require("../auth/middleware");
 
 const router = express.Router();
@@ -173,6 +174,31 @@ router.get("/", requireAuth, async (req, res) => {
   } catch (err) {
     console.error("[list cards] error:", err.message);
     return res.status(500).json({ ok: false, message: "카드 목록 조회 중 오류가 발생했습니다." });
+  }
+});
+
+router.get("/starter", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const cardIds = await listStarterCardIds();
+    return res.json({ ok: true, cardIds });
+  } catch (err) {
+    console.error("[get starter cards] error:", err.message);
+    return res.status(500).json({ ok: false, message: "스타터 카드 조회 중 오류가 발생했습니다." });
+  }
+});
+
+router.put("/starter", requireAuth, requireAdmin, async (req, res) => {
+  const { cardIds } = req.body || {};
+  if (!Array.isArray(cardIds) || !cardIds.every((id) => typeof id === "string")) {
+    return res.status(400).json({ ok: false, message: "cardIds는 문자열 배열이어야 합니다." });
+  }
+
+  try {
+    await setStarterCardIds(cardIds);
+    return res.json({ ok: true, cardIds });
+  } catch (err) {
+    console.error("[set starter cards] error:", err.message);
+    return res.status(500).json({ ok: false, message: "스타터 카드 저장 중 오류가 발생했습니다." });
   }
 });
 

@@ -1334,3 +1334,136 @@ button:active {
     font-size: 11px;
   }
 }
+
+/* ---------- 스타터 카드 / 코인 (관리자) ---------- */
+
+.admin-hint {
+  font-size: 13px;
+  color: #c9d2e3;
+  margin: 4px 0 8px;
+}
+
+#admin-starter-card-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: #1b1f2a;
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+.admin-starter-card-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.admin-coin-input {
+  width: 70px;
+  padding: 4px 6px;
+  font-size: 13px;
+}
+
+.admin-coin-btn {
+  background: linear-gradient(160deg, #6fa8ff, var(--blue) 55%, var(--blue-deep)) !important;
+}
+
+/* ---------- 카드 상점 ---------- */
+
+#lobby-coins,
+#shop-coins {
+  color: #ffd24f;
+  font-weight: bold;
+}
+
+#shop-collection-grid {
+  max-height: 50vh;
+  overflow-y: auto;
+  background: #262b3a;
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-content: flex-start;
+}
+
+.shop-pack-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 16px 0 24px;
+}
+
+.pack-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 180px;
+  padding: 20px 14px;
+  border-radius: 12px;
+  background: #262b3a;
+  border: 2px solid #4f8cff;
+}
+
+.pack-card-name {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.pack-card-info {
+  font-size: 13px;
+  color: #c9d2e3;
+  text-align: center;
+}
+
+.pack-card--normal {
+  border-color: #9fb3d4;
+}
+
+.pack-card--gold {
+  border-color: #ffd24f;
+  box-shadow: 0 0 12px rgba(255, 210, 79, 0.5);
+}
+
+.pack-card--premium {
+  border-color: #b9f3ff;
+  background: linear-gradient(160deg, #26304a, #1b2436);
+  box-shadow: 0 0 18px rgba(185, 243, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.15);
+}
+
+#pack-reveal-layer {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 110;
+}
+
+.pack-reveal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.pack-reveal-card .card {
+  width: 220px;
+  height: 300px;
+}
+
+.pack-reveal-duplicate {
+  background: rgba(20, 24, 34, 0.9);
+  color: #ffd24f;
+  font-weight: bold;
+  padding: 6px 14px;
+  border-radius: 8px;
+}
