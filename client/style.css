@@ -1530,6 +1530,23 @@ button:active {
   margin: 16px 0 24px;
 }
 
+#stage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.stage-tile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+}
+
 .pack-card {
   display: flex;
   flex-direction: column;

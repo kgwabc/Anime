@@ -173,6 +173,13 @@ async function connectDB() {
       card_id TEXT PRIMARY KEY
     )
   `);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS stage_progress (
+      user_id INTEGER PRIMARY KEY,
+      highest_cleared INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
   console.log("Turso connected");
 }
 

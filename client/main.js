@@ -55,6 +55,7 @@ const screens = {
   auth: document.getElementById("screen-auth"),
   lobby: document.getElementById("screen-lobby"),
   waiting: document.getElementById("screen-waiting"),
+  stageSelect: document.getElementById("screen-stage-select"),
   deckBuilder: document.getElementById("screen-deck-builder"),
   shop: document.getElementById("screen-shop"),
   game: document.getElementById("screen-game"),
@@ -1024,6 +1025,61 @@ async function refreshLobbyCoins() {
   }
 }
 
+// ---------- 어드벤처 모드 ----------
+
+document.getElementById("btn-open-adventure").addEventListener("click", () => {
+  showScreen("stageSelect");
+  loadStages();
+});
+
+document.getElementById("btn-stage-select-back").addEventListener("click", () => {
+  showScreen("lobby");
+});
+
+async function loadStages() {
+  const errorEl = document.getElementById("stage-select-error");
+  errorEl.textContent = "";
+
+  try {
+    const res = await fetch(`${SERVER_URL}/stages`, {
+      headers: { Authorization: `Bearer ${currentAuthToken}` },
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      errorEl.textContent = data.message;
+      return;
+    }
+    renderStageList(data.stages);
+  } catch (err) {
+    errorEl.textContent = "스테이지 목록을 불러올 수 없습니다.";
+  }
+}
+
+function renderStageList(stages) {
+  const listEl = document.getElementById("stage-list");
+  listEl.innerHTML = "";
+
+  for (const stage of stages) {
+    const tile = document.createElement("div");
+    tile.className = "stage-tile";
+
+    const title = document.createElement("div");
+    title.textContent = `${stage.name} — ${stage.aiName}${stage.cleared ? " ✅" : ""}`;
+    tile.appendChild(title);
+
+    const challengeBtn = document.createElement("button");
+    challengeBtn.textContent = stage.locked ? "잠김" : "도전";
+    challengeBtn.disabled = stage.locked;
+    challengeBtn.addEventListener("click", () => {
+      socket.emit("start_stage_match", { stageId: stage.id });
+      showScreen("waiting");
+    });
+    tile.appendChild(challengeBtn);
+
+    listEl.appendChild(tile);
+  }
+}
+
 // ---------- 상점 ----------
 
 let shopPacks = [];
@@ -1304,15 +1360,25 @@ function registerSocketHandlers() {
     showScreen("lobby");
   });
 
+  socket.on("stage_error", (message) => {
+    document.getElementById("stage-select-error").textContent = message;
+    showScreen("stageSelect");
+  });
+
   socket.on("opponent_disconnected", () => {
     document.getElementById("result-text").textContent = "상대가 접속을 종료했습니다.";
     showScreen("result");
     resultAutoReturnTimer = setTimeout(returnToLobby, 15000);
   });
 
-  socket.on("game_over", ({ result }) => {
-    document.getElementById("result-text").textContent =
-      result === "win" ? "승리했습니다!" : "패배했습니다.";
+  socket.on("game_over", ({ result, stageId }) => {
+    let text;
+    if (stageId) {
+      text = result === "win" ? `${stageId}스테이지 클리어!` : "패배했습니다. 다시 도전해보세요.";
+    } else {
+      text = result === "win" ? "승리했습니다!" : "패배했습니다.";
+    }
+    document.getElementById("result-text").textContent = text;
     showScreen("result");
     resultAutoReturnTimer = setTimeout(returnToLobby, 15000);
   });

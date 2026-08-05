@@ -10,12 +10,16 @@ const authRoutes = require("./auth/authRoutes");
 const cardRoutes = require("./routes/cardRoutes");
 const deckRoutes = require("./routes/deckRoutes");
 const shopRoutes = require("./routes/shopRoutes");
+const stageRoutes = require("./routes/stageRoutes");
 const { socketAuthMiddleware } = require("./auth/socketAuth");
 const { listCards } = require("./models/Card");
 const { getDeckByUserId } = require("./models/Deck");
 const { validateDeck } = require("./game/deckValidation");
 const { Matchmaker } = require("./game/matchmaking");
 const { GameRoom } = require("./game/GameRoom");
+const { STAGES } = require("./data/stages");
+const { chooseCardToPlay, chooseAttack } = require("./game/aiPlayer");
+const { getHighestCleared, setHighestCleared } = require("./models/StageProgress");
 
 const PORT = process.env.PORT || 3001;
 
@@ -29,6 +33,7 @@ app.use("/auth", authRoutes);
 app.use("/cards", cardRoutes);
 app.use("/decks", deckRoutes);
 app.use("/shop", shopRoutes);
+app.use("/stages", stageRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -58,16 +63,69 @@ function broadcastEffect(room, event, payload) {
   }
 }
 
-function handleGameOver(room, roomId) {
+async function handleGameOver(room, roomId) {
   if (!room.isGameOver()) return;
 
   const loserId = room.playerOrder.find((id) => room.players[id].hp <= 0);
   const winnerId = room.getOpponentId(loserId);
-  io.to(winnerId).emit("game_over", { result: "win" });
-  io.to(loserId).emit("game_over", { result: "lose" });
+  io.to(winnerId).emit("game_over", { result: "win", stageId: room.stageId });
+  io.to(loserId).emit("game_over", { result: "lose", stageId: room.stageId });
+
+  if (room.isAiMatch && winnerId !== room.aiPlayerId) {
+    const winnerUserId = room.players[winnerId].userId;
+    await setHighestCleared(winnerUserId, room.stageId);
+  }
+
   rooms.delete(roomId);
   socketToRoom.delete(loserId);
   socketToRoom.delete(winnerId);
+}
+
+function stepAiTurn(room, roomId) {
+  if (room.isGameOver() || !room.isPlayersTurn(room.aiPlayerId)) return;
+  const aiId = room.aiPlayerId;
+
+  const card = chooseCardToPlay(room, aiId);
+  if (card) {
+    const result = room.playCard(aiId, card.id);
+    if (result.ok) {
+      broadcastEffect(room, "card_played", {
+        playerId: aiId,
+        card: result.card,
+        effectResults: result.effectResults,
+      });
+      broadcastGameState(room);
+    }
+    handleGameOver(room, roomId);
+    if (!room.isGameOver()) setTimeout(() => stepAiTurn(room, roomId), 700);
+    return;
+  }
+
+  const attack = chooseAttack(room, aiId);
+  if (attack) {
+    const result = room.attack(aiId, attack.attackerCardId, attack.target);
+    if (result.ok) {
+      broadcastEffect(room, "attack_occurred", {
+        attackerId: aiId,
+        attackerCardId: attack.attackerCardId,
+        target: attack.target,
+        attackerCard: result.attackerCard,
+        defenderDeathSkillName: result.defenderDeathSkillName,
+        attackerDeathSkillName: result.attackerDeathSkillName,
+        heroDamage: result.heroDamage,
+        defenderDamage: result.defenderDamage,
+        counterDamage: result.counterDamage,
+        effectResults: result.effectResults,
+      });
+      broadcastGameState(room);
+    }
+    handleGameOver(room, roomId);
+    if (!room.isGameOver()) setTimeout(() => stepAiTurn(room, roomId), 700);
+    return;
+  }
+
+  room.endTurn(aiId);
+  broadcastGameState(room);
 }
 
 io.on("connection", (socket) => {
@@ -131,6 +189,61 @@ io.on("connection", (socket) => {
       io.to(playerId).emit("match_found", room.toClientState(playerId));
     }
     console.log(`[match] ${roomId} started`);
+  });
+
+  socket.on("start_stage_match", async ({ stageId }) => {
+    if (socketToRoom.has(socket.id)) {
+      socket.emit("stage_error", "이미 진행중인 게임이 있습니다.");
+      return;
+    }
+
+    const stage = STAGES.find((s) => s.id === stageId);
+    if (!stage) {
+      socket.emit("stage_error", "존재하지 않는 스테이지입니다.");
+      return;
+    }
+
+    const highestCleared = await getHighestCleared(socket.data.userId);
+    if (stage.id > highestCleared + 1) {
+      socket.emit("stage_error", "아직 잠긴 스테이지입니다.");
+      return;
+    }
+
+    const currentCards = await listCards();
+    const cardsById = new Map(currentCards.map((card) => [card.id, card]));
+
+    const cardIds = await getDeckByUserId(socket.data.userId);
+    if (!cardIds) {
+      socket.emit("stage_error", "덱이 설정되어 있지 않습니다. 덱 편집에서 먼저 덱을 구성해주세요.");
+      return;
+    }
+    const validation = validateDeck(cardIds, cardsById);
+    if (!validation.ok) {
+      socket.emit("stage_error", validation.reason);
+      return;
+    }
+
+    const aiId = `ai_${socket.id}`;
+    const roomId = `stage_room_${socket.id}`;
+    const players = [
+      { id: socket.id, username: socket.data.username, userId: socket.data.userId },
+      { id: aiId, username: stage.aiName, userId: aiId },
+    ];
+    const deckByPlayerId = {
+      [socket.id]: cardIds.map((cardId) => ({ ...cardsById.get(cardId) })),
+      [aiId]: stage.deckCardIds.map((cardId) => cardsById.get(cardId)).filter(Boolean).map((card) => ({ ...card })),
+    };
+
+    const room = new GameRoom(roomId, players, deckByPlayerId);
+    room.isAiMatch = true;
+    room.aiPlayerId = aiId;
+    room.stageId = stage.id;
+
+    rooms.set(roomId, room);
+    socketToRoom.set(socket.id, roomId);
+
+    io.to(socket.id).emit("match_found", room.toClientState(socket.id));
+    console.log(`[stage] ${roomId} started (stage ${stage.id})`);
   });
 
   socket.on("play_card", ({ cardId, target }) => {
@@ -213,6 +326,9 @@ io.on("connection", (socket) => {
     }
 
     broadcastGameState(room);
+    if (room.isAiMatch && !room.isGameOver() && room.isPlayersTurn(room.aiPlayerId)) {
+      stepAiTurn(room, roomId);
+    }
   });
 
   socket.on("surrender", () => {

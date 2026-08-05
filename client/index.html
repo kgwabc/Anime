@@ -45,6 +45,7 @@
     <h1>애니프사이콩그루</h1>
     <p>환영합니다, <strong id="lobby-username"></strong>님 · <span id="lobby-coins">🪙 0</span></p>
     <button id="btn-join-queue">매칭 시작</button>
+    <button id="btn-open-adventure">어드벤처 모드</button>
     <button id="btn-edit-deck">덱 편집</button>
     <button id="btn-open-shop">상점</button>
     <button id="btn-logout">로그아웃</button>
@@ -149,6 +150,13 @@
 
   <div id="screen-waiting" class="screen hidden">
     <h2>상대를 찾는 중...</h2>
+  </div>
+
+  <div id="screen-stage-select" class="screen hidden">
+    <h2>어드벤처 모드</h2>
+    <button id="btn-stage-select-back">로비로</button>
+    <p id="stage-select-error" class="error"></p>
+    <div id="stage-list"></div>
   </div>
 
   <div id="screen-deck-builder" class="screen hidden">
