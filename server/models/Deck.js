@@ -17,4 +17,8 @@ async function saveDeck(userId, cardIds) {
   });
 }
 
-module.exports = { getDeckByUserId, saveDeck };
+async function resetAllDecks() {
+  await getClient().execute("DELETE FROM decks");
+}
+
+module.exports = { getDeckByUserId, saveDeck, resetAllDecks };

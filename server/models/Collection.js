@@ -15,4 +15,11 @@ async function addOwnedCard(userId, cardId) {
   });
 }
 
-module.exports = { listOwnedCardIds, addOwnedCard };
+async function removeOwnedCard(userId, cardId) {
+  await getClient().execute({
+    sql: "DELETE FROM owned_cards WHERE user_id = ? AND card_id = ?",
+    args: [userId, cardId],
+  });
+}
+
+module.exports = { listOwnedCardIds, addOwnedCard, removeOwnedCard };

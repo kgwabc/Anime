@@ -3,6 +3,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const { findUserByUsername, createUser, listUsers, deleteUserByUsername, addCoins } = require("../models/User");
+const { addOwnedCard, removeOwnedCard } = require("../models/Collection");
+const { getCardById } = require("../models/Card");
 const { requireAuth, requireAdmin, ADMIN_USERNAME } = require("./middleware");
 
 const router = express.Router();
@@ -117,6 +119,49 @@ router.put("/users/:username/coins", requireAuth, requireAdmin, async (req, res)
   } catch (err) {
     console.error("[adjust coins] error:", err.message);
     return res.status(500).json({ ok: false, message: "코인 조정 중 오류가 발생했습니다." });
+  }
+});
+
+router.post("/users/:username/cards", requireAuth, requireAdmin, async (req, res) => {
+  const { username } = req.params;
+  const { cardId } = req.body || {};
+
+  if (typeof cardId !== "string" || cardId.trim().length === 0) {
+    return res.status(400).json({ ok: false, message: "cardId가 필요합니다." });
+  }
+
+  try {
+    const user = await findUserByUsername(username);
+    if (!user) {
+      return res.status(404).json({ ok: false, message: "유저를 찾을 수 없습니다." });
+    }
+    const card = await getCardById(cardId);
+    if (!card) {
+      return res.status(404).json({ ok: false, message: "카드를 찾을 수 없습니다." });
+    }
+
+    await addOwnedCard(user.id, cardId);
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("[grant card] error:", err.message);
+    return res.status(500).json({ ok: false, message: "카드 지급 중 오류가 발생했습니다." });
+  }
+});
+
+router.delete("/users/:username/cards/:cardId", requireAuth, requireAdmin, async (req, res) => {
+  const { username, cardId } = req.params;
+
+  try {
+    const user = await findUserByUsername(username);
+    if (!user) {
+      return res.status(404).json({ ok: false, message: "유저를 찾을 수 없습니다." });
+    }
+
+    await removeOwnedCard(user.id, cardId);
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("[revoke card] error:", err.message);
+    return res.status(500).json({ ok: false, message: "카드 회수 중 오류가 발생했습니다." });
   }
 });
 

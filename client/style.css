@@ -221,10 +221,16 @@ body {
 
 .admin-user-row {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: center;
+  gap: 6px;
   padding: 6px 0;
   border-bottom: 1px solid #34405c;
+}
+
+.admin-user-row > span {
+  margin-right: auto;
 }
 
 .admin-user-row button {
@@ -1371,6 +1377,16 @@ button:active {
 
 .admin-coin-btn {
   background: linear-gradient(160deg, #6fa8ff, var(--blue) 55%, var(--blue-deep)) !important;
+}
+
+.admin-card-select {
+  max-width: 140px;
+  padding: 4px 6px;
+  font-size: 13px;
+  background: #262b3a;
+  color: #f0f0f0;
+  border: 1px solid #4f8cff;
+  border-radius: 4px;
 }
 
 /* ---------- 카드 상점 ---------- */

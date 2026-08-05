@@ -156,7 +156,7 @@ function connectSocket(token, username) {
   socket = io(SERVER_URL, { auth: { token } });
   registerSocketHandlers();
 
-  socket.on("connect", () => {
+  socket.on("connect", async () => {
     document.getElementById("lobby-username").textContent = username;
     currentAuthToken = token;
     showScreen("lobby");
@@ -166,8 +166,8 @@ function connectSocket(token, username) {
     if (username === ADMIN_USERNAME) {
       adminPanel.classList.remove("hidden");
       currentAdminToken = token;
+      await loadAdminCards(token);
       loadAdminUsers(token);
-      loadAdminCards(token);
       loadAdminStarterCards(token);
     } else {
       adminPanel.classList.add("hidden");
@@ -225,6 +225,27 @@ function renderAdminUsers(users, token) {
     coinBtn.addEventListener("click", () => adjustAdminUserCoins(user.username, coinInput.value, token));
     row.appendChild(coinBtn);
 
+    const cardSelect = document.createElement("select");
+    cardSelect.className = "admin-card-select";
+    for (const card of loadedAdminCards) {
+      const option = document.createElement("option");
+      option.value = card.id;
+      option.textContent = card.name;
+      cardSelect.appendChild(option);
+    }
+    row.appendChild(cardSelect);
+
+    const grantBtn = document.createElement("button");
+    grantBtn.className = "admin-coin-btn";
+    grantBtn.textContent = "카드 지급";
+    grantBtn.addEventListener("click", () => grantAdminUserCard(user.username, cardSelect.value, token));
+    row.appendChild(grantBtn);
+
+    const revokeBtn = document.createElement("button");
+    revokeBtn.textContent = "카드 회수";
+    revokeBtn.addEventListener("click", () => revokeAdminUserCard(user.username, cardSelect.value, token));
+    row.appendChild(revokeBtn);
+
     if (user.username !== ADMIN_USERNAME) {
       const deleteBtn = document.createElement("button");
       deleteBtn.textContent = "삭제";
@@ -257,6 +278,41 @@ async function adjustAdminUserCoins(username, amountStr, token) {
     loadAdminUsers(token);
   } catch (err) {
     alert("코인 조정 중 오류가 발생했습니다.");
+  }
+}
+
+async function grantAdminUserCard(username, cardId, token) {
+  if (!cardId) return;
+
+  try {
+    const res = await fetch(`${SERVER_URL}/auth/users/${encodeURIComponent(username)}/cards`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ cardId }),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      alert(data.message);
+    }
+  } catch (err) {
+    alert("카드 지급 중 오류가 발생했습니다.");
+  }
+}
+
+async function revokeAdminUserCard(username, cardId, token) {
+  if (!cardId) return;
+
+  try {
+    const res = await fetch(
+      `${SERVER_URL}/auth/users/${encodeURIComponent(username)}/cards/${encodeURIComponent(cardId)}`,
+      { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
+    );
+    const data = await res.json();
+    if (!data.ok) {
+      alert(data.message);
+    }
+  } catch (err) {
+    alert("카드 회수 중 오류가 발생했습니다.");
   }
 }
 
@@ -1162,6 +1218,27 @@ document.getElementById("btn-save-starter-cards").addEventListener("click", asyn
     }
   } catch (err) {
     errorEl.textContent = "스타터 카드 저장 중 오류가 발생했습니다.";
+  }
+});
+
+document.getElementById("btn-reset-all-decks").addEventListener("click", async () => {
+  const errorEl = document.getElementById("admin-deck-reset-error");
+  errorEl.textContent = "";
+
+  if (!confirm("모든 유저의 덱을 초기화하시겠습니까? 각자 다시 덱을 짜야 합니다.")) return;
+
+  try {
+    const res = await fetch(`${SERVER_URL}/decks/all`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${currentAdminToken}` },
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      errorEl.textContent = data.message;
+      return;
+    }
+  } catch (err) {
+    errorEl.textContent = "덱 초기화 중 오류가 발생했습니다.";
   }
 });
 

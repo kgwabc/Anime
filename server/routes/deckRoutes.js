@@ -1,10 +1,10 @@
 const express = require("express");
 
-const { getDeckByUserId, saveDeck } = require("../models/Deck");
+const { getDeckByUserId, saveDeck, resetAllDecks } = require("../models/Deck");
 const { listCards } = require("../models/Card");
 const { listOwnedCardIds } = require("../models/Collection");
 const { listStarterCardIds } = require("../models/StarterCards");
-const { requireAuth } = require("../auth/middleware");
+const { requireAuth, requireAdmin } = require("../auth/middleware");
 const { validateDeck } = require("../game/deckValidation");
 
 const router = express.Router();
@@ -45,6 +45,16 @@ router.put("/mine", requireAuth, async (req, res) => {
   } catch (err) {
     console.error("[save deck] error:", err.message);
     return res.status(500).json({ ok: false, message: "덱 저장 중 오류가 발생했습니다." });
+  }
+});
+
+router.delete("/all", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    await resetAllDecks();
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("[reset all decks] error:", err.message);
+    return res.status(500).json({ ok: false, message: "덱 초기화 중 오류가 발생했습니다." });
   }
 });
 
