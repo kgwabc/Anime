@@ -1,5 +1,7 @@
 const SERVER_URL = "https://animepsykongroo.onrender.com";
 const ADMIN_USERNAME = "kgwabc";
+const DEATH_SKILL_DELAY_MS = 1500;
+const DEATH_SKILL_REBUILD_BUFFER_MS = 400;
 
 let socket = null;
 let lastState = null;
@@ -1038,7 +1040,7 @@ function showDamagePopup(el, amount) {
   popup.style.left = `${rect.left + rect.width / 2}px`;
   popup.style.top = `${rect.top}px`;
   layer.appendChild(popup);
-  setTimeout(() => popup.remove(), 700);
+  setTimeout(() => popup.remove(), 1400);
 }
 
 function showSpellEffect(card) {
@@ -1321,6 +1323,8 @@ function applyPendingCardEffects(boardEl, role) {
 }
 
 function applyPendingAttackEffects() {
+  let deathSkillScheduled = false;
+
   while (pendingAttackEffects.length > 0) {
     const {
       attackerId,
@@ -1340,7 +1344,8 @@ function applyPendingAttackEffects() {
       showAttackNamePopup(attackerEl, attackerCard.attackName);
     }
     if (attackerDeathSkillName) {
-      showSkillNamePopup(attackerEl, attackerDeathSkillName, "death");
+      setTimeout(() => showSkillNamePopup(attackerEl, attackerDeathSkillName, "death"), DEATH_SKILL_DELAY_MS);
+      deathSkillScheduled = true;
     }
 
     if (target?.type === "character") {
@@ -1350,7 +1355,8 @@ function applyPendingAttackEffects() {
       showDamagePopup(targetEl, defenderDamage);
       showDamagePopup(attackerEl, counterDamage);
       if (defenderDeathSkillName) {
-        showSkillNamePopup(targetEl, defenderDeathSkillName, "death");
+        setTimeout(() => showSkillNamePopup(targetEl, defenderDeathSkillName, "death"), DEATH_SKILL_DELAY_MS);
+        deathSkillScheduled = true;
       }
     } else if (target?.type === "hero") {
       const heroAreaEl = attackerId === socket.id ? document.getElementById("opponent-area") : document.getElementById("my-area");
@@ -1359,6 +1365,8 @@ function applyPendingAttackEffects() {
       showDamagePopup(heroHpEl, heroDamage);
     }
   }
+
+  return deathSkillScheduled;
 }
 
 function renderState(state) {
@@ -1410,7 +1418,7 @@ function renderState(state) {
   // 공격/피격 애니메이션은 보드를 새로 그리기 전, 아직 이전 렌더의 카드 엘리먼트가
   // 남아있는 시점에 적용해야 공격/반격으로 죽는 카드에도 모션이 재생된다.
   const hasAttackEffects = pendingAttackEffects.length > 0;
-  applyPendingAttackEffects();
+  const hasDeathSkill = applyPendingAttackEffects();
 
   const rebuildBoards = () => {
     const myBoardCardHeight = computeBoardCardHeight(myBoardEl, state.me.board.length);
@@ -1447,10 +1455,11 @@ function renderState(state) {
   }
 
   if (hasAttackEffects) {
+    const rebuildDelay = hasDeathSkill ? DEATH_SKILL_DELAY_MS + DEATH_SKILL_REBUILD_BUFFER_MS : 500;
     pendingBoardRebuildTimer = setTimeout(() => {
       pendingBoardRebuildTimer = null;
       rebuildBoards();
-    }, 500);
+    }, rebuildDelay);
   } else {
     rebuildBoards();
   }

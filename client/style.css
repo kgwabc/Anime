@@ -1120,7 +1120,7 @@ button:active {
   color: #ff4d4d;
   text-shadow: 0 0 10px rgba(255, 40, 40, 0.9), 2px 2px 0 #000, -2px -2px 0 #000,
     2px -2px 0 #000, -2px 2px 0 #000;
-  animation: damage-float-up 0.7s ease-out forwards;
+  animation: damage-float-up 1.4s ease-out forwards;
   z-index: 102;
   pointer-events: none;
 }
