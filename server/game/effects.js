@@ -32,6 +32,12 @@ function resolveTargets(room, playerId, effect, context) {
       if (!found) return null;
       return [{ kind: "card", ref: found.card, owner: found.player }];
     }
+    case "KILLER": {
+      if (!context.killerCardId) return null;
+      const found = findCharacterOnEitherBoard(room, context.killerCardId);
+      if (!found) return null; // 상호 사망 등으로 이미 보드에서 사라졌으면 그냥 불발
+      return [{ kind: "card", ref: found.card, owner: found.player }];
+    }
     case "SELF": {
       if (effect.action === "DRAW" || effect.action === "HEAL") {
         return [{ kind: "player", ref: player }];

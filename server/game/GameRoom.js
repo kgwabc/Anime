@@ -216,6 +216,7 @@ class GameRoom {
         opponent.board.splice(defenderIndex, 1);
         applyEffectList(this, this.getOpponentId(playerId), defender.effects, "ON_DEATH", {
           sourceCardId: defender.id,
+          killerCardId: attacker.id,
         });
         if (defender.effects?.[0]?.trigger === "ON_DEATH") {
           defenderDeathSkillName = defender.skillName || null;
@@ -223,7 +224,10 @@ class GameRoom {
       }
       if (attacker.hp <= 0) {
         player.board = player.board.filter((card) => card.id !== attacker.id);
-        applyEffectList(this, playerId, attacker.effects, "ON_DEATH", { sourceCardId: attacker.id });
+        applyEffectList(this, playerId, attacker.effects, "ON_DEATH", {
+          sourceCardId: attacker.id,
+          killerCardId: defender.id,
+        });
         if (attacker.effects?.[0]?.trigger === "ON_DEATH") {
           attackerDeathSkillName = attacker.skillName || null;
         }

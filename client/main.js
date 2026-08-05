@@ -44,6 +44,7 @@ const TARGET_LABELS = {
   ALL_ALLIES: "내 캐릭터 전체",
   TARGET_CHARACTER: "지정 캐릭터",
   SELF: "자신",
+  KILLER: "나를 파괴한 대상",
 };
 
 const screens = {

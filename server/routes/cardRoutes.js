@@ -9,7 +9,7 @@ const CARD_TYPES = ["character", "spell", "equipment"];
 const RARITIES = ["common", "legendary"];
 const TRIGGERS = ["ON_PLAY", "ON_DEATH", "IMMEDIATE", "ON_EQUIP"];
 const ACTIONS = ["DAMAGE", "HEAL", "DRAW", "BUFF"];
-const TARGETS = ["ENEMY_HERO", "ALL_ENEMIES", "ALL_ALLIES", "TARGET_CHARACTER", "SELF"];
+const TARGETS = ["ENEMY_HERO", "ALL_ENEMIES", "ALL_ALLIES", "TARGET_CHARACTER", "SELF", "KILLER"];
 
 const ALLOWED_TRIGGERS_BY_TYPE = {
   character: ["ON_PLAY", "ON_DEATH"],
