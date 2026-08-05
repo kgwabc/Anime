@@ -187,11 +187,15 @@ class GameRoom {
 
     let defenderDeathSkillName = null;
     let attackerDeathSkillName = null;
+    let heroDamage = null;
+    let defenderDamage = null;
+    let counterDamage = null;
 
     if (target?.type === "hero") {
       if (opponent.board.length > 0) {
         return { ok: false, reason: "must_attack_character_first" };
       }
+      heroDamage = attacker.atk;
       opponent.hp = Math.max(0, opponent.hp - attacker.atk);
     } else if (target?.type === "character") {
       const defenderIndex = opponent.board.findIndex((card) => card.id === target.cardId);
@@ -203,8 +207,10 @@ class GameRoom {
         attacker.matchupVsTag && (defender.synergyTags || []).includes(attacker.matchupVsTag)
           ? attacker.matchupAtkBonus || 0
           : 0;
-      defender.hp -= attacker.atk + matchupBonus;
-      attacker.hp -= defender.atk;
+      defenderDamage = attacker.atk + matchupBonus;
+      counterDamage = defender.atk;
+      defender.hp -= defenderDamage;
+      attacker.hp -= counterDamage;
 
       if (defender.hp <= 0) {
         opponent.board.splice(defenderIndex, 1);
@@ -232,6 +238,9 @@ class GameRoom {
       attackerCard: { id: attacker.id, name: attacker.name, attackName: attacker.attackName || null },
       defenderDeathSkillName,
       attackerDeathSkillName,
+      heroDamage,
+      defenderDamage,
+      counterDamage,
     };
   }
 

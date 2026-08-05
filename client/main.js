@@ -953,7 +953,17 @@ function registerSocketHandlers() {
 
   socket.on(
     "attack_occurred",
-    ({ attackerId, attackerCardId, target, attackerCard, defenderDeathSkillName, attackerDeathSkillName }) => {
+    ({
+      attackerId,
+      attackerCardId,
+      target,
+      attackerCard,
+      defenderDeathSkillName,
+      attackerDeathSkillName,
+      heroDamage,
+      defenderDamage,
+      counterDamage,
+    }) => {
       pendingAttackEffects.push({
         attackerId,
         attackerCardId,
@@ -961,6 +971,9 @@ function registerSocketHandlers() {
         attackerCard,
         defenderDeathSkillName,
         attackerDeathSkillName,
+        heroDamage,
+        defenderDamage,
+        counterDamage,
       });
     }
   );
@@ -1012,6 +1025,19 @@ function showSkillNamePopup(cardEl, text, kind) {
   el.style.top = `${rect.top + rect.height / 2}px`;
   layer.appendChild(el);
   setTimeout(() => el.remove(), 700);
+}
+
+function showDamagePopup(el, amount) {
+  if (!el || !amount || amount <= 0) return;
+  const rect = el.getBoundingClientRect();
+  const layer = document.getElementById("spell-effect-layer");
+  const popup = document.createElement("div");
+  popup.className = "damage-popup";
+  popup.textContent = `-${amount}`;
+  popup.style.left = `${rect.left + rect.width / 2}px`;
+  popup.style.top = `${rect.top}px`;
+  layer.appendChild(popup);
+  setTimeout(() => popup.remove(), 700);
 }
 
 function showSpellEffect(card) {
@@ -1302,6 +1328,9 @@ function applyPendingAttackEffects() {
       attackerCard,
       defenderDeathSkillName,
       attackerDeathSkillName,
+      heroDamage,
+      defenderDamage,
+      counterDamage,
     } = pendingAttackEffects.shift();
     const attackerBoardEl = attackerId === socket.id ? document.getElementById("my-board") : document.getElementById("opp-board");
     const attackerEl = attackerBoardEl.querySelector(`.card[data-card-id="${attackerCardId}"]`);
@@ -1317,12 +1346,16 @@ function applyPendingAttackEffects() {
       const targetBoardEl = attackerId === socket.id ? document.getElementById("opp-board") : document.getElementById("my-board");
       const targetEl = targetBoardEl.querySelector(`.card[data-card-id="${target.cardId}"]`);
       flashClass(targetEl, "impact-flash", 500);
+      showDamagePopup(targetEl, defenderDamage);
+      showDamagePopup(attackerEl, counterDamage);
       if (defenderDeathSkillName) {
         showSkillNamePopup(targetEl, defenderDeathSkillName, "death");
       }
     } else if (target?.type === "hero") {
       const heroAreaEl = attackerId === socket.id ? document.getElementById("opponent-area") : document.getElementById("my-area");
       flashClass(heroAreaEl, "impact-flash", 500);
+      const heroHpEl = document.getElementById(attackerId === socket.id ? "opp-hp" : "my-hp");
+      showDamagePopup(heroHpEl, heroDamage);
     }
   }
 }
