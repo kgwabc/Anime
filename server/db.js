@@ -75,6 +75,9 @@ async function migrateCardsTable(db) {
   if (!existingCols.has("overrides_appearance")) {
     await db.execute("ALTER TABLE cards ADD COLUMN overrides_appearance INTEGER NOT NULL DEFAULT 0");
   }
+  if (!existingCols.has("attack_name_override")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN attack_name_override TEXT");
+  }
 }
 
 async function seedCardsIfEmpty(db) {
@@ -144,7 +147,8 @@ async function connectDB() {
       image TEXT,
       attack_name TEXT,
       skill_name TEXT,
-      overrides_appearance INTEGER NOT NULL DEFAULT 0
+      overrides_appearance INTEGER NOT NULL DEFAULT 0,
+      attack_name_override TEXT
     )
   `);
   await migrateCardsTable(db);

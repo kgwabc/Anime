@@ -540,6 +540,12 @@ function renderAdminCards(cards, token) {
     overridesAppearanceInput.checked = !!card.overridesAppearance;
     overridesAppearanceLabel.append(overridesAppearanceInput, "장착시 외형 교체");
 
+    const attackNameOverrideInput = document.createElement("input");
+    attackNameOverrideInput.type = "text";
+    attackNameOverrideInput.maxLength = 30;
+    attackNameOverrideInput.value = card.attackNameOverride || "";
+    attackNameOverrideInput.placeholder = "장착시 공격 이름 교체 (선택)";
+
     const matchupTagSelect = document.createElement("select");
     populateTagOptions(matchupTagSelect, loadedAdminCards, "상성 없음");
     matchupTagSelect.value = card.matchupVsTag || "";
@@ -592,6 +598,7 @@ function renderAdminCards(cards, token) {
       equipAtkInput.classList.toggle("hidden", type !== "equipment");
       equipHpInput.classList.toggle("hidden", type !== "equipment");
       overridesAppearanceLabel.classList.toggle("hidden", type !== "equipment");
+      attackNameOverrideInput.classList.toggle("hidden", type !== "equipment");
       requiredTagSelect.classList.toggle("hidden", type === "character");
       populateTriggerOptions(triggerSelect, type);
     }
@@ -637,6 +644,7 @@ function renderAdminCards(cards, token) {
         fields.equipAtkBonus = Number(equipAtkInput.value) || 0;
         fields.equipHpBonus = Number(equipHpInput.value) || 0;
         fields.overridesAppearance = overridesAppearanceInput.checked;
+        fields.attackNameOverride = attackNameOverrideInput.value || null;
       }
       if (type === "spell" || type === "equipment") {
         fields.requiredTargetTag = requiredTagSelect.value || null;
@@ -670,6 +678,7 @@ function renderAdminCards(cards, token) {
       equipAtkInput,
       equipHpInput,
       overridesAppearanceLabel,
+      attackNameOverrideInput,
       requiredTagSelect,
       triggerSelect,
       actionSelect,
@@ -771,6 +780,7 @@ document.getElementById("form-new-card").addEventListener("submit", async (e) =>
     fields.equipAtkBonus = Number(document.getElementById("new-card-equip-atk").value) || 0;
     fields.equipHpBonus = Number(document.getElementById("new-card-equip-hp").value) || 0;
     fields.overridesAppearance = document.getElementById("new-card-overrides-appearance").checked;
+    fields.attackNameOverride = document.getElementById("new-card-attack-name-override").value || null;
   }
   if (type === "spell" || type === "equipment") {
     fields.requiredTargetTag = document.getElementById("new-card-required-tag").value || null;

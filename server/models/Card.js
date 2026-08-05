@@ -22,6 +22,7 @@ function rowToCard(row) {
     attackName: row.attack_name ?? null,
     skillName: row.skill_name ?? null,
     overridesAppearance: !!row.overrides_appearance,
+    attackNameOverride: row.attack_name_override ?? null,
   };
 }
 
@@ -83,13 +84,14 @@ async function createCard({
   attackName,
   skillName,
   overridesAppearance,
+  attackNameOverride,
 }) {
   const id = await generateCardId(name);
   const isCharacter = type === "character";
   const isEquipment = type === "equipment";
   await getClient().execute({
-    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag, rarity, image, attack_name, skill_name, overrides_appearance)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag, rarity, image, attack_name, skill_name, overrides_appearance, attack_name_override)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       name,
@@ -111,6 +113,7 @@ async function createCard({
       isCharacter ? attackName ?? null : null,
       isCharacter ? skillName ?? null : null,
       isEquipment && overridesAppearance ? 1 : 0,
+      isEquipment ? attackNameOverride ?? null : null,
     ],
   });
   return getCardById(id);
@@ -127,7 +130,7 @@ async function updateCard(id, fields) {
     sql: `UPDATE cards SET name = ?, series = ?, type = ?, cost = ?, atk = ?, hp = ?, synergy_tags = ?,
           effects = ?, equip_atk_bonus = ?, equip_hp_bonus = ?, description = ?,
           matchup_vs_tag = ?, matchup_atk_bonus = ?, required_target_tag = ?, rarity = ?, image = ?, attack_name = ?, skill_name = ?,
-          overrides_appearance = ?
+          overrides_appearance = ?, attack_name_override = ?
           WHERE id = ?`,
     args: [
       merged.name,
@@ -149,6 +152,7 @@ async function updateCard(id, fields) {
       isCharacter ? merged.attackName ?? null : null,
       isCharacter ? merged.skillName ?? null : null,
       isEquipment && merged.overridesAppearance ? 1 : 0,
+      isEquipment ? merged.attackNameOverride ?? null : null,
       id,
     ],
   });

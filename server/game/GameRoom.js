@@ -190,6 +190,9 @@ class GameRoom {
     if (card.overridesAppearance && card.image) {
       target.image = card.image;
     }
+    if (card.attackNameOverride) {
+      target.attackName = card.attackNameOverride;
+    }
 
     const statBonusResult =
       card.equipAtkBonus || card.equipHpBonus
