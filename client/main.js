@@ -940,7 +940,7 @@ function registerSocketHandlers() {
     resultAutoReturnTimer = setTimeout(returnToLobby, 15000);
   });
 
-  socket.on("card_played", ({ playerId, card, targetCharacterId }) => {
+  socket.on("card_played", ({ playerId, card, targetCharacterId, effectResults }) => {
     if (card?.type === "spell") {
       showSpellEffect(card);
       return;
@@ -951,7 +951,7 @@ function registerSocketHandlers() {
       return;
     }
 
-    pendingInstallEffects.set(card.id, { playerId, skillName: card.skillName || null });
+    pendingInstallEffects.set(card.id, { playerId, skillName: card.skillName || null, effectResults });
   });
 
   socket.on(
@@ -966,6 +966,7 @@ function registerSocketHandlers() {
       heroDamage,
       defenderDamage,
       counterDamage,
+      effectResults,
     }) => {
       pendingAttackEffects.push({
         attackerId,
@@ -977,6 +978,7 @@ function registerSocketHandlers() {
         heroDamage,
         defenderDamage,
         counterDamage,
+        effectResults,
       });
     }
   );
@@ -1041,6 +1043,38 @@ function showDamagePopup(el, amount) {
   popup.style.top = `${rect.top}px`;
   layer.appendChild(popup);
   setTimeout(() => popup.remove(), 1400);
+}
+
+function showHealPopup(el, amount) {
+  if (!el || !amount || amount <= 0) return;
+  const rect = el.getBoundingClientRect();
+  const layer = document.getElementById("spell-effect-layer");
+  const popup = document.createElement("div");
+  popup.className = "heal-popup";
+  popup.textContent = `+${amount}`;
+  popup.style.left = `${rect.left + rect.width / 2}px`;
+  popup.style.top = `${rect.top}px`;
+  layer.appendChild(popup);
+  setTimeout(() => popup.remove(), 1400);
+}
+
+function findEffectResultEl(result) {
+  if (result.kind === "player") {
+    return document.getElementById(result.id === socket.id ? "my-hp" : "opp-hp");
+  }
+  return (
+    document.getElementById("my-board").querySelector(`.card[data-card-id="${result.id}"]`) ||
+    document.getElementById("opp-board").querySelector(`.card[data-card-id="${result.id}"]`)
+  );
+}
+
+function showEffectResultPopups(effectResults) {
+  for (const result of effectResults || []) {
+    const el = findEffectResultEl(result);
+    if (!el) continue;
+    if (result.action === "DAMAGE") showDamagePopup(el, result.amount);
+    else if (result.action === "HEAL") showHealPopup(el, result.amount);
+  }
 }
 
 function showSpellEffect(card) {
@@ -1304,7 +1338,7 @@ function applyPendingCardEffects(boardEl, role) {
   for (const card of boardEl.querySelectorAll(".card")) {
     const cardId = card.dataset.cardId;
     if (pendingInstallEffects.has(cardId)) {
-      const { skillName } = pendingInstallEffects.get(cardId);
+      const { skillName, effectResults } = pendingInstallEffects.get(cardId);
       pendingInstallEffects.delete(cardId);
 
       const boardRect = boardEl.getBoundingClientRect();
@@ -1314,6 +1348,7 @@ function applyPendingCardEffects(boardEl, role) {
       flashClass(card, "card-spread-in", 450);
 
       if (skillName) showSkillNamePopup(card, skillName, "play");
+      showEffectResultPopups(effectResults);
     }
     if (pendingBuffEffects.has(cardId)) {
       pendingBuffEffects.delete(cardId);
@@ -1336,7 +1371,9 @@ function applyPendingAttackEffects() {
       heroDamage,
       defenderDamage,
       counterDamage,
+      effectResults,
     } = pendingAttackEffects.shift();
+    let hasSkillThisAttack = false;
     const attackerBoardEl = attackerId === socket.id ? document.getElementById("my-board") : document.getElementById("opp-board");
     const attackerEl = attackerBoardEl.querySelector(`.card[data-card-id="${attackerCardId}"]`);
     flashClass(attackerEl, attackerId === socket.id ? "attack-lunge-up" : "attack-lunge-down", 350);
@@ -1345,7 +1382,7 @@ function applyPendingAttackEffects() {
     }
     if (attackerDeathSkillName) {
       setTimeout(() => showSkillNamePopup(attackerEl, attackerDeathSkillName, "death"), DEATH_SKILL_DELAY_MS);
-      deathSkillScheduled = true;
+      hasSkillThisAttack = true;
     }
 
     if (target?.type === "character") {
@@ -1356,7 +1393,7 @@ function applyPendingAttackEffects() {
       showDamagePopup(attackerEl, counterDamage);
       if (defenderDeathSkillName) {
         setTimeout(() => showSkillNamePopup(targetEl, defenderDeathSkillName, "death"), DEATH_SKILL_DELAY_MS);
-        deathSkillScheduled = true;
+        hasSkillThisAttack = true;
       }
     } else if (target?.type === "hero") {
       const heroAreaEl = attackerId === socket.id ? document.getElementById("opponent-area") : document.getElementById("my-area");
@@ -1364,6 +1401,13 @@ function applyPendingAttackEffects() {
       const heroHpEl = document.getElementById(attackerId === socket.id ? "opp-hp" : "my-hp");
       showDamagePopup(heroHpEl, heroDamage);
     }
+
+    if (hasSkillThisAttack) {
+      setTimeout(() => showEffectResultPopups(effectResults), DEATH_SKILL_DELAY_MS);
+    } else {
+      showEffectResultPopups(effectResults);
+    }
+    deathSkillScheduled = deathSkillScheduled || hasSkillThisAttack;
   }
 
   return deathSkillScheduled;

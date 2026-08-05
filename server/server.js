@@ -142,7 +142,11 @@ io.on("connection", (socket) => {
       return;
     }
 
-    broadcastEffect(room, "card_played", { playerId: socket.id, card: result.card });
+    broadcastEffect(room, "card_played", {
+      playerId: socket.id,
+      card: result.card,
+      effectResults: result.effectResults,
+    });
     broadcastGameState(room);
     handleGameOver(room, roomId);
   });
@@ -184,6 +188,7 @@ io.on("connection", (socket) => {
       heroDamage: result.heroDamage,
       defenderDamage: result.defenderDamage,
       counterDamage: result.counterDamage,
+      effectResults: result.effectResults,
     });
     broadcastGameState(room);
     handleGameOver(room, roomId);

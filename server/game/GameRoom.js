@@ -112,13 +112,14 @@ class GameRoom {
     player.mana -= card.cost;
 
     let onPlaySkillName = null;
+    let onPlayEffectResults = [];
     if (card.type === "spell") {
       applyEffectList(this, playerId, card.effects, "IMMEDIATE", context);
     } else {
       card.canAttack = false;
       card.hasAttacked = false;
       player.board.push(card);
-      applyEffectList(this, playerId, card.effects, "ON_PLAY", context);
+      onPlayEffectResults = applyEffectList(this, playerId, card.effects, "ON_PLAY", context);
       if (card.effects?.[0]?.trigger === "ON_PLAY") {
         onPlaySkillName = card.skillName || null;
       }
@@ -127,6 +128,7 @@ class GameRoom {
     return {
       ok: true,
       card: { id: card.id, type: card.type, name: card.name, image: card.image, skillName: onPlaySkillName },
+      effectResults: onPlayEffectResults,
     };
   }
 
@@ -190,6 +192,7 @@ class GameRoom {
     let heroDamage = null;
     let defenderDamage = null;
     let counterDamage = null;
+    const deathEffectResults = [];
 
     if (target?.type === "hero") {
       if (opponent.board.length > 0) {
@@ -214,20 +217,24 @@ class GameRoom {
 
       if (defender.hp <= 0) {
         opponent.board.splice(defenderIndex, 1);
-        applyEffectList(this, this.getOpponentId(playerId), defender.effects, "ON_DEATH", {
-          sourceCardId: defender.id,
-          killerCardId: attacker.id,
-        });
+        deathEffectResults.push(
+          ...applyEffectList(this, this.getOpponentId(playerId), defender.effects, "ON_DEATH", {
+            sourceCardId: defender.id,
+            killerCardId: attacker.id,
+          })
+        );
         if (defender.effects?.[0]?.trigger === "ON_DEATH") {
           defenderDeathSkillName = defender.skillName || null;
         }
       }
       if (attacker.hp <= 0) {
         player.board = player.board.filter((card) => card.id !== attacker.id);
-        applyEffectList(this, playerId, attacker.effects, "ON_DEATH", {
-          sourceCardId: attacker.id,
-          killerCardId: defender.id,
-        });
+        deathEffectResults.push(
+          ...applyEffectList(this, playerId, attacker.effects, "ON_DEATH", {
+            sourceCardId: attacker.id,
+            killerCardId: defender.id,
+          })
+        );
         if (attacker.effects?.[0]?.trigger === "ON_DEATH") {
           attackerDeathSkillName = attacker.skillName || null;
         }
@@ -245,6 +252,7 @@ class GameRoom {
       heroDamage,
       defenderDamage,
       counterDamage,
+      effectResults: deathEffectResults,
     };
   }
 

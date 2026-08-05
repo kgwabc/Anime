@@ -55,11 +55,15 @@ function resolveTargets(room, playerId, effect, context) {
 }
 
 function applyAction(effect, targets) {
+  const results = [];
+
   for (const t of targets) {
     if (effect.action === "DAMAGE") {
       t.ref.hp = t.kind === "player" ? Math.max(0, t.ref.hp - effect.value) : t.ref.hp - effect.value;
+      results.push({ kind: t.kind, id: t.ref.id, action: "DAMAGE", amount: effect.value });
     } else if (effect.action === "HEAL") {
       t.ref.hp += effect.value;
+      results.push({ kind: t.kind, id: t.ref.id, action: "HEAL", amount: effect.value });
     } else if (effect.action === "DRAW" && t.kind === "player") {
       for (let i = 0; i < effect.value; i += 1) {
         if (t.ref.deck.length > 0) t.ref.hand.push(t.ref.deck.shift());
@@ -75,6 +79,8 @@ function applyAction(effect, targets) {
       t.owner.board = t.owner.board.filter((card) => card.id !== t.ref.id);
     }
   }
+
+  return results;
 }
 
 /** 특정 trigger의 효과 목록에 TARGET_CHARACTER가 있는데 해석 불가능한 타겟이 있으면 true.
@@ -94,11 +100,13 @@ function hasUnresolvableTarget(room, playerId, effects, trigger, context = {}, r
 
 function applyEffectList(room, playerId, effects, trigger, context = {}) {
   const matching = (effects || []).filter((effect) => effect.trigger === trigger);
+  const allResults = [];
   for (const effect of matching) {
     const targets = resolveTargets(room, playerId, effect, context);
     if (!targets) continue;
-    applyAction(effect, targets);
+    allResults.push(...applyAction(effect, targets));
   }
+  return allResults;
 }
 
 module.exports = { applyEffectList, hasUnresolvableTarget };
