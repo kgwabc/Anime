@@ -26,7 +26,9 @@ function resolveTargets(room, playerId, effect, context) {
     case "ALL_ENEMIES":
       return opponent.board.map((card) => ({ kind: "card", ref: card, owner: opponent }));
     case "ALL_ALLIES":
-      return player.board.map((card) => ({ kind: "card", ref: card, owner: player }));
+      return player.board
+        .filter((card) => card.id !== context.sourceCardId)
+        .map((card) => ({ kind: "card", ref: card, owner: player }));
     case "TARGET_CHARACTER": {
       const found = findCharacterOnEitherBoard(room, context.chosenTargetCardId);
       if (!found) return null;
