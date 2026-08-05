@@ -1385,8 +1385,8 @@ button:active {
   #screen-game .card-stats .atk-hp span {
     min-width: 14px;
     height: 14px;
-    font-size: 8px;
-    padding: 1px 4px;
+    font-size: 7px;
+    padding: 0 1px;
   }
 
   .card-stats .atk-hp {
@@ -1394,7 +1394,7 @@ button:active {
   }
 
   .card-stats .atk-hp .buff-amount {
-    font-size: 8px;
+    font-size: 7px;
     padding: 0 1px;
   }
 
