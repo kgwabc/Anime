@@ -114,12 +114,19 @@ class GameRoom {
     let onPlaySkillName = null;
     let onPlayEffectResults = [];
     if (card.type === "spell") {
-      applyEffectList(this, playerId, card.effects, "IMMEDIATE", context);
+      applyEffectList(this, playerId, card.effects, "IMMEDIATE", context, card.requiredTargetTag);
     } else {
       card.canAttack = false;
       card.hasAttacked = false;
       player.board.push(card);
-      onPlayEffectResults = applyEffectList(this, playerId, card.effects, "ON_PLAY", context);
+      onPlayEffectResults = applyEffectList(
+        this,
+        playerId,
+        card.effects,
+        "ON_PLAY",
+        context,
+        card.requiredTargetTag
+      );
       if (card.effects?.[0]?.trigger === "ON_PLAY") {
         onPlaySkillName = card.skillName || null;
       }
@@ -169,13 +176,20 @@ class GameRoom {
     target.hp += card.equipHpBonus || 0;
     target.buffAtk = (target.buffAtk || 0) + (card.equipAtkBonus || 0);
     target.buffHp = (target.buffHp || 0) + (card.equipHpBonus || 0);
-    const equipEffectResults = applyEffectList(this, playerId, card.effects, "ON_EQUIP", {
-      sourceCardId: card.id,
-      chosenTargetCardId: target.id,
-    });
+    const equipEffectResults = applyEffectList(
+      this,
+      playerId,
+      card.effects,
+      "ON_EQUIP",
+      { sourceCardId: card.id, chosenTargetCardId: target.id },
+      card.requiredTargetTag
+    );
 
     target.equippedItems = target.equippedItems || [];
     target.equippedItems.push({ id: card.id, name: card.name, image: card.image });
+    if (card.overridesAppearance && card.image) {
+      target.image = card.image;
+    }
 
     const statBonusResult =
       card.equipAtkBonus || card.equipHpBonus
@@ -235,10 +249,14 @@ class GameRoom {
       if (defender.hp <= 0) {
         opponent.board.splice(defenderIndex, 1);
         deathEffectResults.push(
-          ...applyEffectList(this, this.getOpponentId(playerId), defender.effects, "ON_DEATH", {
-            sourceCardId: defender.id,
-            killerCardId: attacker.id,
-          })
+          ...applyEffectList(
+            this,
+            this.getOpponentId(playerId),
+            defender.effects,
+            "ON_DEATH",
+            { sourceCardId: defender.id, killerCardId: attacker.id },
+            defender.requiredTargetTag
+          )
         );
         if (defender.effects?.[0]?.trigger === "ON_DEATH") {
           defenderDeathSkillName = defender.skillName || null;
@@ -247,10 +265,14 @@ class GameRoom {
       if (attacker.hp <= 0) {
         player.board = player.board.filter((card) => card.id !== attacker.id);
         deathEffectResults.push(
-          ...applyEffectList(this, playerId, attacker.effects, "ON_DEATH", {
-            sourceCardId: attacker.id,
-            killerCardId: defender.id,
-          })
+          ...applyEffectList(
+            this,
+            playerId,
+            attacker.effects,
+            "ON_DEATH",
+            { sourceCardId: attacker.id, killerCardId: defender.id },
+            attacker.requiredTargetTag
+          )
         );
         if (attacker.effects?.[0]?.trigger === "ON_DEATH") {
           attackerDeathSkillName = attacker.skillName || null;

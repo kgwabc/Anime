@@ -73,6 +73,7 @@ function validateCardFields(body, { partial, existingType } = {}) {
     image,
     attackName,
     skillName,
+    overridesAppearance,
   } = body;
   const effectiveType = type !== undefined ? type : existingType;
 
@@ -108,6 +109,9 @@ function validateCardFields(body, { partial, existingType } = {}) {
     }
     if (equipHpBonus !== undefined && !isNonNegativeInt(equipHpBonus)) {
       return "equipHpBonus는 0 이상의 정수여야 합니다.";
+    }
+    if (overridesAppearance !== undefined && typeof overridesAppearance !== "boolean") {
+      return "overridesAppearance는 boolean이어야 합니다.";
     }
   }
   if (synergyTags !== undefined) {

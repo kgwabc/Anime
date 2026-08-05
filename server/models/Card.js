@@ -21,6 +21,7 @@ function rowToCard(row) {
     image: row.image ?? null,
     attackName: row.attack_name ?? null,
     skillName: row.skill_name ?? null,
+    overridesAppearance: !!row.overrides_appearance,
   };
 }
 
@@ -81,12 +82,14 @@ async function createCard({
   image,
   attackName,
   skillName,
+  overridesAppearance,
 }) {
   const id = await generateCardId(name);
   const isCharacter = type === "character";
+  const isEquipment = type === "equipment";
   await getClient().execute({
-    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag, rarity, image, attack_name, skill_name)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag, rarity, image, attack_name, skill_name, overrides_appearance)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       name,
@@ -107,6 +110,7 @@ async function createCard({
       image ?? null,
       isCharacter ? attackName ?? null : null,
       isCharacter ? skillName ?? null : null,
+      isEquipment && overridesAppearance ? 1 : 0,
     ],
   });
   return getCardById(id);
@@ -118,10 +122,12 @@ async function updateCard(id, fields) {
 
   const merged = { ...existing, ...fields };
   const isCharacter = merged.type === "character";
+  const isEquipment = merged.type === "equipment";
   await getClient().execute({
     sql: `UPDATE cards SET name = ?, series = ?, type = ?, cost = ?, atk = ?, hp = ?, synergy_tags = ?,
           effects = ?, equip_atk_bonus = ?, equip_hp_bonus = ?, description = ?,
-          matchup_vs_tag = ?, matchup_atk_bonus = ?, required_target_tag = ?, rarity = ?, image = ?, attack_name = ?, skill_name = ?
+          matchup_vs_tag = ?, matchup_atk_bonus = ?, required_target_tag = ?, rarity = ?, image = ?, attack_name = ?, skill_name = ?,
+          overrides_appearance = ?
           WHERE id = ?`,
     args: [
       merged.name,
@@ -142,6 +148,7 @@ async function updateCard(id, fields) {
       merged.image ?? null,
       isCharacter ? merged.attackName ?? null : null,
       isCharacter ? merged.skillName ?? null : null,
+      isEquipment && merged.overridesAppearance ? 1 : 0,
       id,
     ],
   });

@@ -15,7 +15,12 @@ function findCharacterOnEitherBoard(room, cardId) {
   return null;
 }
 
-function resolveTargets(room, playerId, effect, context) {
+function matchesRequiredTag(card, requiredTargetTag) {
+  if (!requiredTargetTag) return true;
+  return (card.synergyTags || []).includes(requiredTargetTag);
+}
+
+function resolveTargets(room, playerId, effect, context, requiredTargetTag) {
   const opponentId = room.getOpponentId(playerId);
   const player = room.players[playerId];
   const opponent = room.players[opponentId];
@@ -24,14 +29,18 @@ function resolveTargets(room, playerId, effect, context) {
     case "ENEMY_HERO":
       return [{ kind: "player", ref: opponent }];
     case "ALL_ENEMIES":
-      return opponent.board.map((card) => ({ kind: "card", ref: card, owner: opponent }));
+      return opponent.board
+        .filter((card) => matchesRequiredTag(card, requiredTargetTag))
+        .map((card) => ({ kind: "card", ref: card, owner: opponent }));
     case "ALL_ALLIES":
       return player.board
         .filter((card) => card.id !== context.sourceCardId)
+        .filter((card) => matchesRequiredTag(card, requiredTargetTag))
         .map((card) => ({ kind: "card", ref: card, owner: player }));
     case "TARGET_CHARACTER": {
       const found = findCharacterOnEitherBoard(room, context.chosenTargetCardId);
       if (!found) return null;
+      if (!matchesRequiredTag(found.card, requiredTargetTag)) return null;
       return [{ kind: "card", ref: found.card, owner: found.player }];
     }
     case "KILLER": {
@@ -105,11 +114,11 @@ function hasUnresolvableTarget(room, playerId, effects, trigger, context = {}, r
     });
 }
 
-function applyEffectList(room, playerId, effects, trigger, context = {}) {
+function applyEffectList(room, playerId, effects, trigger, context = {}, requiredTargetTag = null) {
   const matching = (effects || []).filter((effect) => effect.trigger === trigger);
   const allResults = [];
   for (const effect of matching) {
-    const targets = resolveTargets(room, playerId, effect, context);
+    const targets = resolveTargets(room, playerId, effect, context, requiredTargetTag);
     if (!targets) continue;
     allResults.push(...applyAction(effect, targets));
   }
