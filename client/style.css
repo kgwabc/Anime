@@ -1381,6 +1381,28 @@ button:active {
     font-size: 8px;
   }
 
+  #screen-game .cost-badge,
+  #screen-game .card-stats .atk-hp span {
+    min-width: 14px;
+    height: 14px;
+    font-size: 8px;
+    padding: 1px 4px;
+  }
+
+  .card-stats .atk-hp {
+    gap: 2px;
+  }
+
+  .card-stats .atk-hp .buff-amount {
+    font-size: 8px;
+    padding: 0 1px;
+  }
+
+  .equip-badge {
+    width: 13px;
+    height: 13px;
+  }
+
   .hero-name {
     font-size: 9px;
   }
