@@ -167,6 +167,8 @@ class GameRoom {
 
     target.atk += card.equipAtkBonus || 0;
     target.hp += card.equipHpBonus || 0;
+    target.buffAtk = (target.buffAtk || 0) + (card.equipAtkBonus || 0);
+    target.buffHp = (target.buffHp || 0) + (card.equipHpBonus || 0);
     const equipEffectResults = applyEffectList(this, playerId, card.effects, "ON_EQUIP", {
       sourceCardId: card.id,
       chosenTargetCardId: target.id,

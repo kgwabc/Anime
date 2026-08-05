@@ -1520,7 +1520,9 @@ function cardNeedsTargetCharacter(card) {
 
 function cardStatsHtml(card) {
   if (card.type === "character") {
-    return `<div class="atk-hp"><span class="atk">⚔${card.atk}</span><span class="hp">❤${card.hp}</span></div>`;
+    const atkBuff = card.buffAtk ? `<span class="buff-amount">+${card.buffAtk}</span>` : "";
+    const hpBuff = card.buffHp ? `<span class="buff-amount">+${card.buffHp}</span>` : "";
+    return `<div class="atk-hp"><span class="atk">⚔${card.atk}</span>${atkBuff}<span class="hp">❤${card.hp}</span>${hpBuff}</div>`;
   }
   if (card.type === "equipment") {
     return `<div class="atk-hp"><span class="atk">+${card.equipAtkBonus || 0}</span><span class="hp">+${card.equipHpBonus || 0}</span></div>`;

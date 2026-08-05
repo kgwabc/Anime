@@ -73,6 +73,10 @@ function applyAction(effect, targets) {
     } else if (effect.action === "BUFF") {
       t.ref.atk += effect.value;
       t.ref.hp += effect.value;
+      if (t.kind === "card") {
+        t.ref.buffAtk = (t.ref.buffAtk || 0) + effect.value;
+        t.ref.buffHp = (t.ref.buffHp || 0) + effect.value;
+      }
       results.push({ kind: t.kind, id: t.ref.id, action: "BUFF", atk: effect.value, hp: effect.value });
     }
   }
