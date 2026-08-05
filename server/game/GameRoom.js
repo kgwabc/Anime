@@ -155,6 +155,9 @@ class GameRoom {
     if (!target) {
       return { ok: false, reason: "target_not_on_board" };
     }
+    if (target.equippedItems?.length) {
+      return { ok: false, reason: "already_equipped" };
+    }
     if (card.requiredTargetTag && !(target.synergyTags || []).includes(card.requiredTargetTag)) {
       return { ok: false, reason: "target_synergy_mismatch" };
     }
@@ -172,10 +175,15 @@ class GameRoom {
     target.equippedItems = target.equippedItems || [];
     target.equippedItems.push({ id: card.id, name: card.name, image: card.image });
 
+    const statBonusResult =
+      card.equipAtkBonus || card.equipHpBonus
+        ? [{ kind: "card", id: target.id, action: "BUFF", atk: card.equipAtkBonus || 0, hp: card.equipHpBonus || 0 }]
+        : [];
+
     return {
       ok: true,
       card: { id: card.id, type: card.type, name: card.name, image: card.image },
-      effectResults: equipEffectResults,
+      effectResults: [...statBonusResult, ...equipEffectResults],
     };
   }
 

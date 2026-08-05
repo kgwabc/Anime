@@ -73,6 +73,7 @@ function applyAction(effect, targets) {
     } else if (effect.action === "BUFF") {
       t.ref.atk += effect.value;
       t.ref.hp += effect.value;
+      results.push({ kind: t.kind, id: t.ref.id, action: "BUFF", atk: effect.value, hp: effect.value });
     }
   }
 

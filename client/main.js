@@ -1419,6 +1419,23 @@ function showHealPopup(el, amount) {
   setTimeout(() => popup.remove(), 1400);
 }
 
+function showBuffPopup(el, atk, hp) {
+  if (!el) return;
+  const parts = [];
+  if (atk) parts.push(`⚔+${atk}`);
+  if (hp) parts.push(`❤+${hp}`);
+  if (!parts.length) return;
+  const rect = el.getBoundingClientRect();
+  const layer = document.getElementById("spell-effect-layer");
+  const popup = document.createElement("div");
+  popup.className = "buff-popup";
+  popup.textContent = parts.join(" ");
+  popup.style.left = `${rect.left + rect.width / 2}px`;
+  popup.style.top = `${rect.top}px`;
+  layer.appendChild(popup);
+  setTimeout(() => popup.remove(), 1400);
+}
+
 function findEffectResultEl(result) {
   if (result.kind === "player") {
     return document.getElementById(result.id === socket.id ? "my-hp" : "opp-hp");
@@ -1435,6 +1452,7 @@ function showEffectResultPopups(effectResults) {
     if (!el) continue;
     if (result.action === "DAMAGE") showDamagePopup(el, result.amount);
     else if (result.action === "HEAL") showHealPopup(el, result.amount);
+    else if (result.action === "BUFF") showBuffPopup(el, result.atk, result.hp);
   }
 }
 
@@ -1650,7 +1668,9 @@ function dropIsValid(card, dropTarget) {
     return dropTarget.boardSide === "my";
   }
   if (card.type === "equipment") {
-    return dropTarget.boardSide === "my" && Boolean(dropTarget.cardEl);
+    if (dropTarget.boardSide !== "my" || !dropTarget.cardEl) return false;
+    const targetCard = lastState?.me.board.find((c) => c.id === dropTarget.cardEl.dataset.cardId);
+    return !targetCard?.equippedItems?.length;
   }
   if (card.type === "spell") {
     if (cardNeedsTargetCharacter(card)) return Boolean(dropTarget.cardEl);

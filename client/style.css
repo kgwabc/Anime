@@ -1195,6 +1195,21 @@ button:active {
   pointer-events: none;
 }
 
+.buff-popup {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #ffd24f;
+  text-shadow: 0 0 10px rgba(255, 210, 79, 0.9), 2px 2px 0 #000, -2px -2px 0 #000,
+    2px -2px 0 #000, -2px 2px 0 #000;
+  animation: damage-float-up 1.4s ease-out forwards;
+  z-index: 102;
+  pointer-events: none;
+}
+
 #my-hand .card {
   cursor: grab;
 }
