@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { createClient } = require("@libsql/client");
+const { STAGES } = require("./data/stages");
 
 let client;
 
@@ -113,6 +114,21 @@ async function seedCardsIfEmpty(db) {
   console.log(`Seeded ${seedCards.length} cards from cards.json`);
 }
 
+async function seedStageDecksIfEmpty(db) {
+  for (const stage of STAGES) {
+    const { rows } = await db.execute({
+      sql: "SELECT 1 FROM stage_decks WHERE stage_id = ? LIMIT 1",
+      args: [stage.id],
+    });
+    if (rows.length > 0) continue;
+
+    await db.execute({
+      sql: `INSERT INTO stage_decks (stage_id, deck_card_ids, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)`,
+      args: [stage.id, JSON.stringify(stage.deckCardIds)],
+    });
+  }
+}
+
 async function connectDB() {
   const db = getClient();
   await migrateUsersTable(db);
@@ -180,6 +196,14 @@ async function connectDB() {
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS stage_decks (
+      stage_id INTEGER PRIMARY KEY,
+      deck_card_ids TEXT NOT NULL DEFAULT '[]',
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await seedStageDecksIfEmpty(db);
   console.log("Turso connected");
 }
 

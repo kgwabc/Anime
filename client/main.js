@@ -170,6 +170,7 @@ function connectSocket(token, username) {
       await loadAdminCards(token);
       loadAdminUsers(token);
       loadAdminStarterCards(token);
+      loadAdminStageDecks(token);
     } else {
       adminPanel.classList.add("hidden");
     }
@@ -1294,6 +1295,118 @@ document.getElementById("btn-save-starter-cards").addEventListener("click", asyn
     }
   } catch (err) {
     errorEl.textContent = "스타터 카드 저장 중 오류가 발생했습니다.";
+  }
+});
+
+// ---------- 관리자: 스테이지 덱 편집 ----------
+
+async function loadAdminStageDecks(token) {
+  const errorEl = document.getElementById("admin-stage-deck-error");
+  errorEl.textContent = "";
+  const selectEl = document.getElementById("admin-stage-select");
+
+  try {
+    const res = await fetch(`${SERVER_URL}/stages`, { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    if (!data.ok) {
+      errorEl.textContent = data.message;
+      return;
+    }
+
+    const previousValue = selectEl.value;
+    selectEl.innerHTML = "";
+    for (const stage of data.stages) {
+      const option = document.createElement("option");
+      option.value = stage.id;
+      option.textContent = `${stage.name} (${stage.aiName})`;
+      selectEl.appendChild(option);
+    }
+    if (data.stages.some((stage) => String(stage.id) === previousValue)) {
+      selectEl.value = previousValue;
+    }
+
+    await loadAdminStageDeck(selectEl.value, token);
+  } catch (err) {
+    errorEl.textContent = "스테이지 목록을 불러올 수 없습니다.";
+  }
+}
+
+document.getElementById("admin-stage-select").addEventListener("change", (e) => {
+  if (currentAdminToken) loadAdminStageDeck(e.target.value, currentAdminToken);
+});
+
+async function loadAdminStageDeck(stageId, token) {
+  const errorEl = document.getElementById("admin-stage-deck-error");
+  errorEl.textContent = "";
+  if (!stageId) return;
+
+  try {
+    const res = await fetch(`${SERVER_URL}/stages/${encodeURIComponent(stageId)}/deck`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      errorEl.textContent = data.message;
+      return;
+    }
+    renderAdminStageDeck(data.cardIds);
+  } catch (err) {
+    errorEl.textContent = "스테이지 덱을 불러올 수 없습니다.";
+  }
+}
+
+function renderAdminStageDeck(cardIds) {
+  const listEl = document.getElementById("admin-stage-deck-list");
+  listEl.innerHTML = "";
+
+  const counts = new Map();
+  for (const cardId of cardIds) {
+    counts.set(cardId, (counts.get(cardId) || 0) + 1);
+  }
+
+  for (const card of loadedAdminCards) {
+    const row = document.createElement("label");
+    row.className = "admin-stage-deck-row";
+
+    const text = document.createElement("span");
+    text.textContent = `${card.name} (${card.cost}코스트)`;
+    row.appendChild(text);
+
+    const countInput = document.createElement("input");
+    countInput.type = "number";
+    countInput.min = "0";
+    countInput.value = counts.get(card.id) || 0;
+    countInput.dataset.cardId = card.id;
+    row.appendChild(countInput);
+
+    listEl.appendChild(row);
+  }
+}
+
+document.getElementById("btn-save-stage-deck").addEventListener("click", async () => {
+  const errorEl = document.getElementById("admin-stage-deck-error");
+  errorEl.textContent = "";
+
+  const stageId = document.getElementById("admin-stage-select").value;
+  if (!stageId) return;
+
+  const cardIds = Array.from(document.querySelectorAll("#admin-stage-deck-list input[type=number]")).flatMap(
+    (el) => Array(Number(el.value) || 0).fill(el.dataset.cardId)
+  );
+
+  try {
+    const res = await fetch(`${SERVER_URL}/stages/${encodeURIComponent(stageId)}/deck`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${currentAdminToken}` },
+      body: JSON.stringify({ cardIds }),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      errorEl.textContent = data.message;
+      return;
+    }
+  } catch (err) {
+    errorEl.textContent = "스테이지 덱 저장 중 오류가 발생했습니다.";
   }
 });
 

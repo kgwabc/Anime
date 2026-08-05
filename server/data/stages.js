@@ -1,6 +1,8 @@
 // 어드벤처(스테이지) 모드 AI 상대 정의. 스테이지가 올라갈수록 비싼 카드 비중이 늘어남.
 // deckCardIds는 server/data/cards.json에 있는 캐릭터 카드 id를 참조 (관리자가 해당 카드를
 // 삭제하면 덱 조립 시 그 id만 자동으로 걸러짐 — server.js의 start_stage_match 참고).
+// deckCardIds는 stage_decks 테이블의 초기 시드 값으로만 쓰임 — 실제 대전에서 쓰이는 덱은
+// 관리자 패널에서 편집 가능한 stage_decks 테이블(server/models/StageDecks.js)에서 읽는다.
 const STAGES = [
   {
     id: 1,

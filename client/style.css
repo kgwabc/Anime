@@ -1483,6 +1483,21 @@ button:active {
   cursor: pointer;
 }
 
+.admin-stage-deck-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  padding: 2px 0;
+}
+
+.admin-stage-deck-row input[type="number"] {
+  width: 60px;
+  padding: 4px 6px;
+  font-size: 13px;
+}
+
 .admin-coin-input {
   width: 70px;
   padding: 4px 6px;

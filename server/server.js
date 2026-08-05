@@ -20,6 +20,7 @@ const { GameRoom } = require("./game/GameRoom");
 const { STAGES } = require("./data/stages");
 const { chooseCardToPlay, chooseAttack } = require("./game/aiPlayer");
 const { getHighestCleared, setHighestCleared } = require("./models/StageProgress");
+const { getStageDeckCardIds } = require("./models/StageDecks");
 
 const PORT = process.env.PORT || 3001;
 
@@ -229,9 +230,10 @@ io.on("connection", (socket) => {
       { id: socket.id, username: socket.data.username, userId: socket.data.userId },
       { id: aiId, username: stage.aiName, userId: aiId },
     ];
+    const aiDeckCardIds = (await getStageDeckCardIds(stage.id)) ?? stage.deckCardIds;
     const deckByPlayerId = {
       [socket.id]: cardIds.map((cardId) => ({ ...cardsById.get(cardId) })),
-      [aiId]: stage.deckCardIds.map((cardId) => cardsById.get(cardId)).filter(Boolean).map((card) => ({ ...card })),
+      [aiId]: aiDeckCardIds.map((cardId) => cardsById.get(cardId)).filter(Boolean).map((card) => ({ ...card })),
     };
 
     const room = new GameRoom(roomId, players, deckByPlayerId);
