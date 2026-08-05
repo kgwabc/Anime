@@ -1077,6 +1077,49 @@ function showEffectResultPopups(effectResults) {
   }
 }
 
+const SHARD_CLIP_PATHS = [
+  "polygon(0% 0%, 58% 0%, 42% 48%, 0% 62%)",
+  "polygon(58% 0%, 100% 0%, 100% 42%, 42% 48%)",
+  "polygon(0% 62%, 42% 48%, 48% 100%, 0% 100%)",
+  "polygon(42% 48%, 100% 42%, 100% 58%, 55% 100%, 48% 100%)",
+  "polygon(100% 42%, 100% 100%, 55% 100%, 100% 58%)",
+];
+const SHARD_FLIGHT_VECTORS = [
+  { x: -80, y: -50, r: -50 },
+  { x: 70, y: -70, r: 45 },
+  { x: -70, y: 90, r: -40 },
+  { x: 30, y: 110, r: 25 },
+  { x: 90, y: 60, r: 55 },
+];
+
+function spawnCardShatter(cardEl) {
+  if (!cardEl) return;
+  const rect = cardEl.getBoundingClientRect();
+  const layer = document.getElementById("spell-effect-layer");
+  cardEl.style.visibility = "hidden";
+
+  SHARD_CLIP_PATHS.forEach((clipPath, i) => {
+    const shard = cardEl.cloneNode(true);
+    shard.removeAttribute("id");
+    shard.className = "card card-shard";
+    shard.style.visibility = "visible";
+    shard.style.position = "fixed";
+    shard.style.left = `${rect.left}px`;
+    shard.style.top = `${rect.top}px`;
+    shard.style.width = `${rect.width}px`;
+    shard.style.height = `${rect.height}px`;
+    shard.style.margin = "0";
+    shard.style.clipPath = clipPath;
+    const vector = SHARD_FLIGHT_VECTORS[i % SHARD_FLIGHT_VECTORS.length];
+    shard.style.setProperty("--shard-x", `${vector.x}px`);
+    shard.style.setProperty("--shard-y", `${vector.y}px`);
+    shard.style.setProperty("--shard-r", `${vector.r}deg`);
+    layer.appendChild(shard);
+    requestAnimationFrame(() => shard.classList.add("card-shard-fly"));
+    setTimeout(() => shard.remove(), 650);
+  });
+}
+
 function showSpellEffect(card) {
   const layer = document.getElementById("spell-effect-layer");
   const el = document.createElement("div");
@@ -1357,7 +1400,7 @@ function applyPendingCardEffects(boardEl, role) {
   }
 }
 
-function applyPendingAttackEffects() {
+function applyPendingAttackEffects(state) {
   let deathSkillScheduled = false;
 
   while (pendingAttackEffects.length > 0) {
@@ -1385,6 +1428,12 @@ function applyPendingAttackEffects() {
       hasSkillThisAttack = true;
     }
 
+    const attackerOwnerBoard = attackerId === socket.id ? state.me.board : state.opponent.board;
+    const attackerDied = !attackerOwnerBoard.some((c) => c.id === attackerCardId);
+    if (attackerDied) {
+      setTimeout(() => spawnCardShatter(attackerEl), 120);
+    }
+
     if (target?.type === "character") {
       const targetBoardEl = attackerId === socket.id ? document.getElementById("opp-board") : document.getElementById("my-board");
       const targetEl = targetBoardEl.querySelector(`.card[data-card-id="${target.cardId}"]`);
@@ -1394,6 +1443,12 @@ function applyPendingAttackEffects() {
       if (defenderDeathSkillName) {
         setTimeout(() => showSkillNamePopup(targetEl, defenderDeathSkillName, "death"), DEATH_SKILL_DELAY_MS);
         hasSkillThisAttack = true;
+      }
+
+      const targetOwnerBoard = attackerId === socket.id ? state.opponent.board : state.me.board;
+      const defenderDied = !targetOwnerBoard.some((c) => c.id === target.cardId);
+      if (defenderDied) {
+        setTimeout(() => spawnCardShatter(targetEl), 120);
       }
     } else if (target?.type === "hero") {
       const heroAreaEl = attackerId === socket.id ? document.getElementById("opponent-area") : document.getElementById("my-area");
@@ -1462,7 +1517,7 @@ function renderState(state) {
   // 공격/피격 애니메이션은 보드를 새로 그리기 전, 아직 이전 렌더의 카드 엘리먼트가
   // 남아있는 시점에 적용해야 공격/반격으로 죽는 카드에도 모션이 재생된다.
   const hasAttackEffects = pendingAttackEffects.length > 0;
-  const hasDeathSkill = applyPendingAttackEffects();
+  const hasDeathSkill = applyPendingAttackEffects(state);
 
   const rebuildBoards = () => {
     const myBoardCardHeight = computeBoardCardHeight(myBoardEl, state.me.board.length);

@@ -956,6 +956,19 @@ button:active {
   animation: attack-lunge-down 0.3s ease-in-out;
 }
 
+.card-shard {
+  pointer-events: none;
+  z-index: 120;
+  transition: transform 0.55s cubic-bezier(0.33, 0.8, 0.4, 1), opacity 0.55s ease-in 0.05s;
+  transform: translate(0, 0) rotate(0deg) scale(1);
+  opacity: 1;
+}
+
+.card-shard.card-shard-fly {
+  transform: translate(var(--shard-x), var(--shard-y)) rotate(var(--shard-r)) scale(0.8);
+  opacity: 0;
+}
+
 #spell-effect-layer {
   position: fixed;
   inset: 0;
