@@ -555,8 +555,6 @@ button:active {
   flex: 2.2;
   min-height: 0;
   padding: 8px 8px;
-  background: #1b1f2a;
-  border-radius: 6px;
   margin-bottom: 6px;
   flex-wrap: nowrap;
   overflow-x: auto;
