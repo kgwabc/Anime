@@ -571,6 +571,17 @@ function renderAdminCards(cards, token) {
     skillNameInput.value = card.skillName || "";
     skillNameInput.placeholder = "기술 이름 (설치시/파괴시, 선택)";
 
+    const elementEffectOptions = [
+      ["", "이펙트 없음"],
+      ["fire", "🔥 불"],
+      ["water", "💧 물"],
+      ["lightning", "⚡ 번개"],
+      ["heal", "✨ 힐"],
+      ["sword", "🗡️ 검"],
+    ];
+    const attackEffectSelect = createOptionSelect(elementEffectOptions, card.attackEffect || "");
+    const skillEffectSelect = createOptionSelect(elementEffectOptions, card.skillEffect || "");
+
     const requiredTagSelect = document.createElement("select");
     populateTagOptions(requiredTagSelect, loadedAdminCards, "대상 제한 없음");
     requiredTagSelect.value = card.requiredTargetTag || "";
@@ -598,6 +609,8 @@ function renderAdminCards(cards, token) {
       matchupBonusInput.classList.toggle("hidden", type !== "character");
       attackNameInput.classList.toggle("hidden", type !== "character");
       skillNameInput.classList.toggle("hidden", type !== "character");
+      attackEffectSelect.classList.toggle("hidden", type !== "character");
+      skillEffectSelect.classList.toggle("hidden", type !== "character");
       equipAtkInput.classList.toggle("hidden", type !== "equipment");
       equipHpInput.classList.toggle("hidden", type !== "equipment");
       overridesAppearanceLabel.classList.toggle("hidden", type !== "equipment");
@@ -642,6 +655,8 @@ function renderAdminCards(cards, token) {
         fields.matchupAtkBonus = Number(matchupBonusInput.value) || 0;
         fields.attackName = attackNameInput.value || null;
         fields.skillName = skillNameInput.value || null;
+        fields.attackEffect = attackEffectSelect.value || null;
+        fields.skillEffect = skillEffectSelect.value || null;
       }
       if (type === "equipment") {
         fields.equipAtkBonus = Number(equipAtkInput.value) || 0;
@@ -678,6 +693,8 @@ function renderAdminCards(cards, token) {
       matchupBonusInput,
       attackNameInput,
       skillNameInput,
+      attackEffectSelect,
+      skillEffectSelect,
       equipAtkInput,
       equipHpInput,
       overridesAppearanceLabel,
