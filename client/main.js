@@ -1716,6 +1716,12 @@ function spawnCardShatter(cardEl, { reform = false } = {}) {
       setTimeout(() => shard.remove(), SHARD_TRANSITION_MS);
     }
   });
+
+  if (reform) {
+    setTimeout(() => {
+      cardEl.style.visibility = "";
+    }, SHARD_REFORM_HOLD_MS + SHARD_TRANSITION_MS);
+  }
 }
 
 function showSpellEffect(card) {
