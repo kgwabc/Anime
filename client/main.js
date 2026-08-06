@@ -1592,6 +1592,13 @@ function showSkillNamePopup(cardEl, text, kind) {
   setTimeout(() => el.remove(), 700);
 }
 
+function reduceHpDisplay(cardEl, amount) {
+  const hpEl = cardEl?.querySelector(".hp");
+  if (!hpEl || !amount) return;
+  const currentHp = parseInt(hpEl.textContent.replace(/[^0-9-]/g, ""), 10) || 0;
+  hpEl.textContent = `❤${Math.max(0, currentHp - amount)}`;
+}
+
 function showDamagePopup(el, amount) {
   if (!el || !amount || amount <= 0) return;
   const rect = el.getBoundingClientRect();
@@ -2091,6 +2098,9 @@ function applyPendingAttackEffects(state) {
       flashClass(targetEl, "impact-flash", 500);
       showDamagePopup(targetEl, defenderDamage);
       showDamagePopup(attackerEl, counterDamage);
+      // 파괴 시 효과보다 먼저, 전투 자체의 데미지 교환은 항상 즉시 반영
+      reduceHpDisplay(targetEl, defenderDamage);
+      reduceHpDisplay(attackerEl, counterDamage);
       if (defenderDeathSkillName) {
         setTimeout(() => showSkillNamePopup(targetEl, defenderDeathSkillName, "death"), DEATH_SKILL_DELAY_MS);
       }
