@@ -1747,10 +1747,10 @@ function buildFireFx(container) {
       emoji: "🔥",
       className: "element-fire-flame",
       left,
-      delay: i * 70,
+      delay: i * 90,
     });
   });
-  return 850;
+  return 1300;
 }
 
 function buildWaterFx(container) {
@@ -1763,10 +1763,10 @@ function buildWaterFx(container) {
       emoji: "💧",
       className: "element-water-drop",
       left,
-      delay: 120 + i * 90,
+      delay: 160 + i * 120,
     });
   });
-  return 700;
+  return 1050;
 }
 
 function buildLightningFx(container) {
@@ -1779,10 +1779,10 @@ function buildLightningFx(container) {
       emoji: "⚡",
       className: "element-lightning-spark",
       left,
-      delay: 60 + i * 50,
+      delay: 80 + i * 70,
     });
   });
-  return 400;
+  return 550;
 }
 
 function buildHealFx(container) {
@@ -1795,10 +1795,10 @@ function buildHealFx(container) {
       emoji: "✨",
       className: "element-heal-sparkle",
       left,
-      delay: i * 130,
+      delay: i * 180,
     });
   });
-  return 1000;
+  return 1500;
 }
 
 function buildSwordFx(container) {
@@ -1807,7 +1807,7 @@ function buildSwordFx(container) {
   container.appendChild(slash);
 
   spawnEmojiParticle(container, { emoji: "🗡️", className: "element-sword-icon" });
-  return 350;
+  return 500;
 }
 
 const ELEMENT_FX_BUILDERS = {
@@ -1818,20 +1818,30 @@ const ELEMENT_FX_BUILDERS = {
   sword: buildSwordFx,
 };
 
+const ELEMENT_FLASH_DURATION = {
+  fire: 1000,
+  water: 750,
+  lightning: 300,
+  heal: 1300,
+  sword: 300,
+};
+
 function showElementEffect(cardEl, effectType) {
   const builder = ELEMENT_FX_BUILDERS[effectType];
   if (!cardEl || !builder) return;
 
-  flashClass(cardEl, `element-flash-${effectType}`, 700);
+  flashClass(cardEl, `element-flash-${effectType}`, ELEMENT_FLASH_DURATION[effectType] || 1000);
 
   const rect = cardEl.getBoundingClientRect();
   const layer = document.getElementById("spell-effect-layer");
   const container = document.createElement("div");
   container.className = `element-fx element-fx--${effectType}`;
-  container.style.left = `${rect.left}px`;
-  container.style.top = `${rect.top}px`;
-  container.style.width = `${rect.width}px`;
-  container.style.height = `${rect.height}px`;
+  const expandedWidth = rect.width * 1.6;
+  const expandedHeight = rect.height * 1.6;
+  container.style.left = `${rect.left - (expandedWidth - rect.width) / 2}px`;
+  container.style.top = `${rect.top - (expandedHeight - rect.height) / 2}px`;
+  container.style.width = `${expandedWidth}px`;
+  container.style.height = `${expandedHeight}px`;
   layer.appendChild(container);
 
   const lifetime = builder(container);
