@@ -2070,7 +2070,8 @@ function applyPendingAttackEffects(state) {
     const attackerOwnerBoard = attackerId === socket.id ? state.me.board : state.opponent.board;
     const attackerDied = !attackerOwnerBoard.some((c) => c.id === attackerCardId);
     if (attackerDied) {
-      setTimeout(() => spawnCardShatter(attackerEl), 120);
+      const shatterDelay = attackerDeathSkillName ? DEATH_SKILL_DELAY_MS : 120;
+      setTimeout(() => spawnCardShatter(attackerEl), shatterDelay);
     }
 
     if (target?.type === "character") {
@@ -2087,7 +2088,8 @@ function applyPendingAttackEffects(state) {
       const targetOwnerBoard = attackerId === socket.id ? state.opponent.board : state.me.board;
       const defenderDied = !targetOwnerBoard.some((c) => c.id === target.cardId);
       if (defenderDied) {
-        setTimeout(() => spawnCardShatter(targetEl), 120);
+        const shatterDelay = defenderDeathSkillName ? DEATH_SKILL_DELAY_MS : 120;
+        setTimeout(() => spawnCardShatter(targetEl), shatterDelay);
       }
     } else if (target?.type === "hero") {
       const heroAreaEl = attackerId === socket.id ? document.getElementById("opponent-area") : document.getElementById("my-area");
