@@ -267,19 +267,22 @@ class GameRoom {
 
       if (defender.hp <= 0) {
         defender.hp = 0; // 오버킬 데미지를 버려서 ON_DEATH 회복이 데미지 양과 무관하게 항상 동일하게 부활 판정되도록 함
-        deathEffectResults.push(
-          ...applyEffectList(
-            this,
-            this.getOpponentId(playerId),
-            defender.effects,
-            "ON_DEATH",
-            { sourceCardId: defender.id, killerCardId: attacker.id },
-            defender.requiredTargetTag
-          )
-        );
-        if (defender.effects?.[0]?.trigger === "ON_DEATH") {
-          defenderDeathSkillName = defender.skillName || null;
-          defenderDeathSkillEffect = defender.skillEffect || null;
+        if (!defender.deathEffectUsed) {
+          defender.deathEffectUsed = true; // ON_DEATH 스킬은 카드 인스턴스당 한 번만 발동(무한 부활 방지)
+          deathEffectResults.push(
+            ...applyEffectList(
+              this,
+              this.getOpponentId(playerId),
+              defender.effects,
+              "ON_DEATH",
+              { sourceCardId: defender.id, killerCardId: attacker.id },
+              defender.requiredTargetTag
+            )
+          );
+          if (defender.effects?.[0]?.trigger === "ON_DEATH") {
+            defenderDeathSkillName = defender.skillName || null;
+            defenderDeathSkillEffect = defender.skillEffect || null;
+          }
         }
         if (defender.hp <= 0) {
           const stillIndex = opponent.board.findIndex((card) => card.id === defender.id);
@@ -290,19 +293,22 @@ class GameRoom {
       }
       if (attacker.hp <= 0) {
         attacker.hp = 0;
-        deathEffectResults.push(
-          ...applyEffectList(
-            this,
-            playerId,
-            attacker.effects,
-            "ON_DEATH",
-            { sourceCardId: attacker.id, killerCardId: defender.id },
-            attacker.requiredTargetTag
-          )
-        );
-        if (attacker.effects?.[0]?.trigger === "ON_DEATH") {
-          attackerDeathSkillName = attacker.skillName || null;
-          attackerDeathSkillEffect = attacker.skillEffect || null;
+        if (!attacker.deathEffectUsed) {
+          attacker.deathEffectUsed = true; // ON_DEATH 스킬은 카드 인스턴스당 한 번만 발동(무한 부활 방지)
+          deathEffectResults.push(
+            ...applyEffectList(
+              this,
+              playerId,
+              attacker.effects,
+              "ON_DEATH",
+              { sourceCardId: attacker.id, killerCardId: defender.id },
+              attacker.requiredTargetTag
+            )
+          );
+          if (attacker.effects?.[0]?.trigger === "ON_DEATH") {
+            attackerDeathSkillName = attacker.skillName || null;
+            attackerDeathSkillEffect = attacker.skillEffect || null;
+          }
         }
         if (attacker.hp <= 0) {
           player.board = player.board.filter((card) => card.id !== attacker.id);
