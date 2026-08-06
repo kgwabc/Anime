@@ -1726,46 +1726,116 @@ function showSkillNamePopup(cardEl, text, kind) {
   setTimeout(() => el.remove(), 700);
 }
 
-const ELEMENT_EFFECTS = {
-  fire: { emoji: "🔥", color: "#ff6b35" },
-  water: { emoji: "💧", color: "#3aa0ff" },
-  lightning: { emoji: "⚡", color: "#ffe066" },
-  heal: { emoji: "✨", color: "#5ee6a0" },
-  sword: { emoji: "🗡️", color: "#c9d2e3" },
+function spawnEmojiParticle(container, { emoji, className, left, delay = 0 }) {
+  const particle = document.createElement("div");
+  particle.className = className;
+  particle.textContent = emoji;
+  if (left !== undefined) particle.style.left = left;
+  particle.style.animationDelay = `${delay}ms`;
+  container.appendChild(particle);
+  return particle;
+}
+
+function buildFireFx(container) {
+  const glow = document.createElement("div");
+  glow.className = "element-fire-glow";
+  container.appendChild(glow);
+
+  const positions = ["12%", "30%", "48%", "66%", "84%", "40%"];
+  positions.forEach((left, i) => {
+    spawnEmojiParticle(container, {
+      emoji: "🔥",
+      className: "element-fire-flame",
+      left,
+      delay: i * 70,
+    });
+  });
+  return 850;
+}
+
+function buildWaterFx(container) {
+  const wave = document.createElement("div");
+  wave.className = "element-water-wave";
+  container.appendChild(wave);
+
+  ["20%", "50%", "78%"].forEach((left, i) => {
+    spawnEmojiParticle(container, {
+      emoji: "💧",
+      className: "element-water-drop",
+      left,
+      delay: 120 + i * 90,
+    });
+  });
+  return 700;
+}
+
+function buildLightningFx(container) {
+  const bolt = document.createElement("div");
+  bolt.className = "element-lightning-bolt";
+  container.appendChild(bolt);
+
+  ["25%", "70%"].forEach((left, i) => {
+    spawnEmojiParticle(container, {
+      emoji: "⚡",
+      className: "element-lightning-spark",
+      left,
+      delay: 60 + i * 50,
+    });
+  });
+  return 400;
+}
+
+function buildHealFx(container) {
+  const pillar = document.createElement("div");
+  pillar.className = "element-heal-pillar";
+  container.appendChild(pillar);
+
+  ["18%", "38%", "58%", "78%"].forEach((left, i) => {
+    spawnEmojiParticle(container, {
+      emoji: "✨",
+      className: "element-heal-sparkle",
+      left,
+      delay: i * 130,
+    });
+  });
+  return 1000;
+}
+
+function buildSwordFx(container) {
+  const slash = document.createElement("div");
+  slash.className = "element-sword-slash";
+  container.appendChild(slash);
+
+  spawnEmojiParticle(container, { emoji: "🗡️", className: "element-sword-icon" });
+  return 350;
+}
+
+const ELEMENT_FX_BUILDERS = {
+  fire: buildFireFx,
+  water: buildWaterFx,
+  lightning: buildLightningFx,
+  heal: buildHealFx,
+  sword: buildSwordFx,
 };
-const ELEMENT_PARTICLE_VECTORS = [
-  { x: 0, y: -70 },
-  { x: 60, y: -35 },
-  { x: 60, y: 35 },
-  { x: 0, y: 70 },
-  { x: -60, y: 35 },
-  { x: -60, y: -35 },
-];
 
 function showElementEffect(cardEl, effectType) {
-  const config = ELEMENT_EFFECTS[effectType];
-  if (!cardEl || !config) return;
+  const builder = ELEMENT_FX_BUILDERS[effectType];
+  if (!cardEl || !builder) return;
 
-  cardEl.style.setProperty("--effect-color", config.color);
-  flashClass(cardEl, "element-flash", 600);
+  flashClass(cardEl, `element-flash-${effectType}`, 700);
 
   const rect = cardEl.getBoundingClientRect();
   const layer = document.getElementById("spell-effect-layer");
-  const cx = rect.left + rect.width / 2;
-  const cy = rect.top + rect.height / 2;
+  const container = document.createElement("div");
+  container.className = `element-fx element-fx--${effectType}`;
+  container.style.left = `${rect.left}px`;
+  container.style.top = `${rect.top}px`;
+  container.style.width = `${rect.width}px`;
+  container.style.height = `${rect.height}px`;
+  layer.appendChild(container);
 
-  ELEMENT_PARTICLE_VECTORS.forEach((vector) => {
-    const particle = document.createElement("div");
-    particle.className = "element-particle";
-    particle.textContent = config.emoji;
-    particle.style.left = `${cx}px`;
-    particle.style.top = `${cy}px`;
-    particle.style.setProperty("--particle-x", `${vector.x}px`);
-    particle.style.setProperty("--particle-y", `${vector.y}px`);
-    layer.appendChild(particle);
-    requestAnimationFrame(() => particle.classList.add("element-particle-burst"));
-    setTimeout(() => particle.remove(), 650);
-  });
+  const lifetime = builder(container);
+  setTimeout(() => container.remove(), lifetime);
 }
 
 function reduceHpDisplay(cardEl, amount) {
