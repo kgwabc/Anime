@@ -250,7 +250,7 @@ class GameRoom {
       attacker.hp -= counterDamage;
 
       if (defender.hp <= 0) {
-        opponent.board.splice(defenderIndex, 1);
+        defender.hp = 0; // 오버킬 데미지를 버려서 ON_DEATH 회복이 데미지 양과 무관하게 항상 동일하게 부활 판정되도록 함
         deathEffectResults.push(
           ...applyEffectList(
             this,
@@ -264,9 +264,13 @@ class GameRoom {
         if (defender.effects?.[0]?.trigger === "ON_DEATH") {
           defenderDeathSkillName = defender.skillName || null;
         }
+        if (defender.hp <= 0) {
+          const stillIndex = opponent.board.findIndex((card) => card.id === defender.id);
+          if (stillIndex !== -1) opponent.board.splice(stillIndex, 1);
+        }
       }
       if (attacker.hp <= 0) {
-        player.board = player.board.filter((card) => card.id !== attacker.id);
+        attacker.hp = 0;
         deathEffectResults.push(
           ...applyEffectList(
             this,
@@ -279,6 +283,9 @@ class GameRoom {
         );
         if (attacker.effects?.[0]?.trigger === "ON_DEATH") {
           attackerDeathSkillName = attacker.skillName || null;
+        }
+        if (attacker.hp <= 0) {
+          player.board = player.board.filter((card) => card.id !== attacker.id);
         }
       }
     } else {
