@@ -1,0 +1,15 @@
+{
+  "name": "애니프사이콩그루",
+  "short_name": "애니프사이콩그루",
+  "description": "하스스톤 + 포켓몬카드 + 유희왕 요소를 섞은 1대1 턴제 카드게임",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#1b1f2a",
+  "theme_color": "#1b1f2a",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "assets/icon.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "assets/icon.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
