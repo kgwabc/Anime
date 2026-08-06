@@ -1523,6 +1523,8 @@ function registerSocketHandlers() {
       attackerCard,
       defenderDeathSkillName,
       attackerDeathSkillName,
+      defenderRevived,
+      attackerRevived,
       heroDamage,
       defenderDamage,
       counterDamage,
@@ -1535,6 +1537,8 @@ function registerSocketHandlers() {
         attackerCard,
         defenderDeathSkillName,
         attackerDeathSkillName,
+        defenderRevived,
+        attackerRevived,
         heroDamage,
         defenderDamage,
         counterDamage,
@@ -1677,7 +1681,10 @@ const SHARD_FLIGHT_VECTORS = [
   { x: 90, y: 60, r: 55 },
 ];
 
-function spawnCardShatter(cardEl) {
+const SHARD_REFORM_HOLD_MS = DEATH_SKILL_DELAY_MS - 120;
+const SHARD_TRANSITION_MS = 650;
+
+function spawnCardShatter(cardEl, { reform = false } = {}) {
   if (!cardEl) return;
   const rect = cardEl.getBoundingClientRect();
   const layer = document.getElementById("spell-effect-layer");
@@ -1701,7 +1708,13 @@ function spawnCardShatter(cardEl) {
     shard.style.setProperty("--shard-r", `${vector.r}deg`);
     layer.appendChild(shard);
     requestAnimationFrame(() => shard.classList.add("card-shard-fly"));
-    setTimeout(() => shard.remove(), 650);
+
+    if (reform) {
+      setTimeout(() => shard.classList.remove("card-shard-fly"), SHARD_REFORM_HOLD_MS);
+      setTimeout(() => shard.remove(), SHARD_REFORM_HOLD_MS + SHARD_TRANSITION_MS);
+    } else {
+      setTimeout(() => shard.remove(), SHARD_TRANSITION_MS);
+    }
   });
 }
 
@@ -2057,6 +2070,8 @@ function applyPendingAttackEffects(state) {
       attackerCard,
       defenderDeathSkillName,
       attackerDeathSkillName,
+      defenderRevived,
+      attackerRevived,
       heroDamage,
       defenderDamage,
       counterDamage,
@@ -2090,6 +2105,10 @@ function applyPendingAttackEffects(state) {
       }
       const shatterDelay = hasSkillThisAttack ? DEATH_SKILL_DELAY_MS : 120;
       setTimeout(() => spawnCardShatter(attackerEl), shatterDelay);
+    } else if (attackerRevived) {
+      const hpEl = attackerEl?.querySelector(".hp");
+      if (hpEl) hpEl.textContent = "❤0";
+      setTimeout(() => spawnCardShatter(attackerEl, { reform: true }), 120);
     }
 
     if (target?.type === "character") {
@@ -2119,6 +2138,10 @@ function applyPendingAttackEffects(state) {
         }
         const shatterDelay = hasSkillThisAttack ? DEATH_SKILL_DELAY_MS : 120;
         setTimeout(() => spawnCardShatter(targetEl), shatterDelay);
+      } else if (defenderRevived) {
+        const hpEl = targetEl?.querySelector(".hp");
+        if (hpEl) hpEl.textContent = "❤0";
+        setTimeout(() => spawnCardShatter(targetEl, { reform: true }), 120);
       }
     } else if (target?.type === "hero") {
       const heroAreaEl = attackerId === socket.id ? document.getElementById("opponent-area") : document.getElementById("my-area");

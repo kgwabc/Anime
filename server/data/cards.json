@@ -78,5 +78,19 @@
     "atk": 8,
     "hp": 8,
     "synergyTags": ["demon", "boss"]
+  },
+  {
+    "id": "char_gintoki",
+    "name": "사카타 긴토키",
+    "series": "gintama",
+    "type": "character",
+    "cost": 5,
+    "atk": 4,
+    "hp": 5,
+    "synergyTags": ["yorozuya", "samurai"],
+    "skillName": "부활",
+    "effects": [
+      { "trigger": "ON_DEATH", "action": "HEAL", "value": 3, "target": "SELF" }
+    ]
   }
 ]

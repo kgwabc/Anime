@@ -226,6 +226,8 @@ class GameRoom {
 
     let defenderDeathSkillName = null;
     let attackerDeathSkillName = null;
+    let defenderRevived = false;
+    let attackerRevived = false;
     let heroDamage = null;
     let defenderDamage = null;
     let counterDamage = null;
@@ -270,6 +272,8 @@ class GameRoom {
         if (defender.hp <= 0) {
           const stillIndex = opponent.board.findIndex((card) => card.id === defender.id);
           if (stillIndex !== -1) opponent.board.splice(stillIndex, 1);
+        } else {
+          defenderRevived = true;
         }
       }
       if (attacker.hp <= 0) {
@@ -289,6 +293,8 @@ class GameRoom {
         }
         if (attacker.hp <= 0) {
           player.board = player.board.filter((card) => card.id !== attacker.id);
+        } else {
+          attackerRevived = true;
         }
       }
     } else {
@@ -301,6 +307,8 @@ class GameRoom {
       attackerCard: { id: attacker.id, name: attacker.name, attackName: attacker.attackName || null },
       defenderDeathSkillName,
       attackerDeathSkillName,
+      defenderRevived,
+      attackerRevived,
       heroDamage,
       defenderDamage,
       counterDamage,
