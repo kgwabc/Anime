@@ -2073,7 +2073,14 @@ function applyPendingAttackEffects(state) {
     const attackerDied = !attackerOwnerBoard.some((c) => c.id === attackerCardId);
     if (attackerDied) {
       const hpEl = attackerEl?.querySelector(".hp");
-      if (hpEl) hpEl.textContent = "❤0";
+      const setZero = () => { if (hpEl) hpEl.textContent = "❤0"; };
+      if (attackerDeathSkillName) {
+        setZero();
+      } else if (hasSkillThisAttack) {
+        setTimeout(setZero, DEATH_SKILL_DELAY_MS);
+      } else {
+        setZero();
+      }
       const shatterDelay = hasSkillThisAttack ? DEATH_SKILL_DELAY_MS : 120;
       setTimeout(() => spawnCardShatter(attackerEl), shatterDelay);
     }
@@ -2092,7 +2099,14 @@ function applyPendingAttackEffects(state) {
       const defenderDied = !targetOwnerBoard.some((c) => c.id === target.cardId);
       if (defenderDied) {
         const hpEl = targetEl?.querySelector(".hp");
-        if (hpEl) hpEl.textContent = "❤0";
+        const setZero = () => { if (hpEl) hpEl.textContent = "❤0"; };
+        if (defenderDeathSkillName) {
+          setZero();
+        } else if (hasSkillThisAttack) {
+          setTimeout(setZero, DEATH_SKILL_DELAY_MS);
+        } else {
+          setZero();
+        }
         const shatterDelay = hasSkillThisAttack ? DEATH_SKILL_DELAY_MS : 120;
         setTimeout(() => spawnCardShatter(targetEl), shatterDelay);
       }
