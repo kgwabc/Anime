@@ -13,9 +13,12 @@ function shuffle(array) {
   return result;
 }
 
-function buildDeck(deckCards) {
-  // 플레이어가 덱 빌더에서 직접 구성한 30장(중복 포함)을 셔플해서 사용
-  return shuffle(deckCards).map((card) => ({ ...card }));
+function buildDeck(deckCards, playerId) {
+  // 플레이어가 덱 빌더에서 직접 구성한 30장(중복 포함)을 셔플해서 사용.
+  // 같은 카드를 여러 장 넣을 수 있으므로, 원래 카드 종류 id를 그대로 두면 사본끼리
+  // 구분이 안 되어 공격/효과 타겟팅이 엉뚱한 사본에 적용되는 버그가 생김 — 그래서
+  // 여기서 사본마다(플레이어+순번 조합으로) 고유한 인스턴스 id를 새로 부여한다.
+  return shuffle(deckCards).map((card, index) => ({ ...card, id: `${playerId}_${card.id}_${index}` }));
 }
 
 class GameRoom {
@@ -31,7 +34,7 @@ class GameRoom {
 
     this.players = {};
     players.forEach(({ id: playerId, username, userId }, index) => {
-      const deck = buildDeck(deckByPlayerId[playerId]);
+      const deck = buildDeck(deckByPlayerId[playerId], playerId);
       const hand = deck.splice(0, STARTING_HAND_SIZE);
       this.players[playerId] = {
         id: playerId,
