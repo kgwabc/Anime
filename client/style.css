@@ -1052,6 +1052,10 @@ button:active {
   opacity: 0;
 }
 
+.card-shard.card-shard-fly.card-shard-reform {
+  opacity: 1;
+}
+
 #spell-effect-layer {
   position: fixed;
   inset: 0;

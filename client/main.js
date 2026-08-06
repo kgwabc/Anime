@@ -1707,7 +1707,10 @@ function spawnCardShatter(cardEl, { reform = false } = {}) {
     shard.style.setProperty("--shard-y", `${vector.y}px`);
     shard.style.setProperty("--shard-r", `${vector.r}deg`);
     layer.appendChild(shard);
-    requestAnimationFrame(() => shard.classList.add("card-shard-fly"));
+    requestAnimationFrame(() => {
+      shard.classList.add("card-shard-fly");
+      if (reform) shard.classList.add("card-shard-reform");
+    });
 
     if (reform) {
       setTimeout(() => shard.classList.remove("card-shard-fly"), SHARD_REFORM_HOLD_MS);
