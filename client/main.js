@@ -1726,126 +1726,375 @@ function showSkillNamePopup(cardEl, text, kind) {
   setTimeout(() => el.remove(), 700);
 }
 
-function spawnEmojiParticle(container, { emoji, className, left, delay = 0 }) {
-  const particle = document.createElement("div");
-  particle.className = className;
-  particle.textContent = emoji;
-  if (left !== undefined) particle.style.left = left;
-  particle.style.animationDelay = `${delay}ms`;
-  container.appendChild(particle);
-  return particle;
-}
-
-function buildFireFx(container) {
-  const glow = document.createElement("div");
-  glow.className = "element-fire-glow";
-  container.appendChild(glow);
-
-  const positions = ["12%", "30%", "48%", "66%", "84%", "40%"];
-  positions.forEach((left, i) => {
-    spawnEmojiParticle(container, {
-      emoji: "🔥",
-      className: "element-fire-flame",
-      left,
-      delay: i * 90,
-    });
-  });
-  return 1300;
-}
-
-function buildWaterFx(container) {
-  const wave = document.createElement("div");
-  wave.className = "element-water-wave";
-  container.appendChild(wave);
-
-  ["20%", "50%", "78%"].forEach((left, i) => {
-    spawnEmojiParticle(container, {
-      emoji: "💧",
-      className: "element-water-drop",
-      left,
-      delay: 160 + i * 120,
-    });
-  });
-  return 1050;
-}
-
-function buildLightningFx(container) {
-  const bolt = document.createElement("div");
-  bolt.className = "element-lightning-bolt";
-  container.appendChild(bolt);
-
-  ["25%", "70%"].forEach((left, i) => {
-    spawnEmojiParticle(container, {
-      emoji: "⚡",
-      className: "element-lightning-spark",
-      left,
-      delay: 80 + i * 70,
-    });
-  });
-  return 550;
-}
-
-function buildHealFx(container) {
-  const pillar = document.createElement("div");
-  pillar.className = "element-heal-pillar";
-  container.appendChild(pillar);
-
-  ["18%", "38%", "58%", "78%"].forEach((left, i) => {
-    spawnEmojiParticle(container, {
-      emoji: "✨",
-      className: "element-heal-sparkle",
-      left,
-      delay: i * 180,
-    });
-  });
-  return 1500;
-}
-
-function buildSwordFx(container) {
-  const slash = document.createElement("div");
-  slash.className = "element-sword-slash";
-  container.appendChild(slash);
-
-  spawnEmojiParticle(container, { emoji: "🗡️", className: "element-sword-icon" });
-  return 500;
-}
-
-const ELEMENT_FX_BUILDERS = {
-  fire: buildFireFx,
-  water: buildWaterFx,
-  lightning: buildLightningFx,
-  heal: buildHealFx,
-  sword: buildSwordFx,
+const ELEMENT_FX_DURATION = {
+  fire: 1800,
+  water: 1500,
+  lightning: 750,
+  heal: 2000,
+  sword: 700,
 };
+const ELEMENT_PARTICLE_CAP = 30;
 
-const ELEMENT_FLASH_DURATION = {
-  fire: 1000,
-  water: 750,
-  lightning: 300,
-  heal: 1300,
-  sword: 300,
+function randRange(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+function drawGlowParticle(ctx, p, composite) {
+  const lifeFrac = Math.max(0, p.life / p.maxLife);
+  const fadeIn = Math.min(1, p.age / (p.fadeIn ?? 0.12));
+  const alpha = Math.max(0, Math.min(1, fadeIn * Math.pow(lifeFrac, 0.6))) * (p.alphaMul ?? 1);
+  if (alpha <= 0.01) return;
+  const r = Math.max(0.5, p.size * (0.55 + 0.45 * lifeFrac));
+  ctx.globalCompositeOperation = composite || "source-over";
+  const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+  gradient.addColorStop(0, `rgba(${p.color},${alpha})`);
+  gradient.addColorStop(1, `rgba(${p.color},0)`);
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalCompositeOperation = "source-over";
+}
+
+function stepParticles(particles, dt) {
+  particles.forEach((p) => {
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.vy += (p.gravity || 0) * dt;
+    p.vx *= p.drag ?? 1;
+    p.life -= dt;
+    p.age += dt;
+  });
+  return particles.filter((p) => p.life > 0);
+}
+
+function makeFireUpdater(width, height) {
+  let particles = [];
+  let smokeTimer = 0;
+  return (t, dt, ctx) => {
+    if (particles.length < ELEMENT_PARTICLE_CAP && Math.random() < 0.55) {
+      particles.push({
+        x: randRange(width * 0.25, width * 0.75),
+        y: height * 0.85,
+        vx: randRange(-14, 14),
+        vy: randRange(-70, -110),
+        gravity: -30,
+        drag: 0.98,
+        size: randRange(10, 18),
+        life: randRange(0.5, 0.8),
+        maxLife: 0.8,
+        age: 0,
+        fadeIn: 0.05,
+        color: Math.random() < 0.5 ? "255,150,40" : "255,90,20",
+      });
+    }
+    smokeTimer += dt;
+    if (smokeTimer > 0.12 && particles.length < ELEMENT_PARTICLE_CAP) {
+      smokeTimer = 0;
+      particles.push({
+        x: randRange(width * 0.35, width * 0.65),
+        y: height * 0.75,
+        vx: randRange(-6, 6),
+        vy: randRange(-30, -45),
+        gravity: -10,
+        drag: 0.99,
+        size: randRange(16, 26),
+        life: randRange(0.7, 1.0),
+        maxLife: 1.0,
+        age: 0,
+        fadeIn: 0.2,
+        alphaMul: 0.35,
+        color: "90,80,75",
+      });
+    }
+    particles = stepParticles(particles, dt);
+    particles.forEach((p) => drawGlowParticle(ctx, p, p.color.startsWith("90") ? "source-over" : "lighter"));
+  };
+}
+
+function makeWaterUpdater(width, height, durationMs) {
+  let particles = [];
+  let spawnTimer = 0;
+  const spawnCutoffMs = durationMs * 0.75;
+
+  return (t, dt, ctx) => {
+    spawnTimer += dt;
+    if (t < spawnCutoffMs && spawnTimer > 0.09 && particles.length < ELEMENT_PARTICLE_CAP) {
+      spawnTimer = 0;
+      particles.push({
+        x: randRange(width * 0.2, width * 0.8),
+        y: -height * 0.15,
+        vx: randRange(-4, 4),
+        vy: randRange(160, 220),
+        gravity: 260,
+        drag: 1,
+        size: randRange(6, 10),
+        life: randRange(0.5, 0.75),
+        maxLife: 0.75,
+        age: 0,
+        fadeIn: 0.05,
+        color: "80,170,255",
+        splashed: false,
+        isSplash: false,
+      });
+    }
+    particles.forEach((p) => {
+      if (!p.isSplash && !p.splashed && p.y > height * 0.7) {
+        p.splashed = true;
+        for (let i = 0; i < 3 && particles.length < ELEMENT_PARTICLE_CAP; i += 1) {
+          particles.push({
+            x: p.x,
+            y: height * 0.7,
+            vx: randRange(-60, 60),
+            vy: randRange(-70, -20),
+            gravity: 220,
+            drag: 0.97,
+            size: randRange(3, 6),
+            life: 0.35,
+            maxLife: 0.35,
+            age: 0,
+            fadeIn: 0.02,
+            color: "140,200,255",
+            isSplash: true,
+          });
+        }
+      }
+    });
+    particles = stepParticles(particles, dt);
+    particles.forEach((p) => drawGlowParticle(ctx, p, "source-over"));
+  };
+}
+
+function makeLightningUpdater(width, height, durationMs) {
+  let sparks = [];
+  function buildBolt(startX) {
+    const points = [{ x: startX, y: 0 }];
+    let x = startX;
+    const steps = 7;
+    for (let i = 1; i <= steps; i += 1) {
+      x += randRange(-width * 0.12, width * 0.12);
+      points.push({ x, y: (height * i) / steps });
+    }
+    return points;
+  }
+
+  // 실제 번개처럼 한 번에 끝내지 않고, 지정된 시간(durationMs)에 걸쳐 여러 번 내려찍는다.
+  const strikes = [
+    { atMs: durationMs * 0.05, bolt: buildBolt(width * randRange(0.4, 0.6)), branch: buildBolt(width * randRange(0.3, 0.7)) },
+    { atMs: durationMs * 0.45, bolt: buildBolt(width * randRange(0.35, 0.65)), branch: Math.random() < 0.6 ? buildBolt(width * randRange(0.3, 0.7)) : null },
+  ];
+  const spawnedFor = new Set();
+
+  return (t, dt, ctx) => {
+    strikes.forEach((strike, i) => {
+      if (!spawnedFor.has(i) && t >= strike.atMs && sparks.length < ELEMENT_PARTICLE_CAP) {
+        spawnedFor.add(i);
+        strike.bolt.forEach((pt, j) => {
+          if (j % 2 === 0 && sparks.length < ELEMENT_PARTICLE_CAP) {
+            sparks.push({
+              x: pt.x,
+              y: pt.y,
+              vx: randRange(-20, 20),
+              vy: randRange(-20, 20),
+              gravity: 0,
+              drag: 0.9,
+              size: randRange(4, 8),
+              life: randRange(0.15, 0.3),
+              maxLife: 0.3,
+              age: 0,
+              fadeIn: 0.01,
+              color: "255,240,170",
+            });
+          }
+        });
+      }
+    });
+    sparks = stepParticles(sparks, dt);
+
+    strikes.forEach((strike) => {
+      const dtMs = t - strike.atMs;
+      if (dtMs < 0) return;
+      const boltAlpha = dtMs < 90 ? dtMs / 90 : Math.max(0, 1 - (dtMs - 90) / 280);
+      if (boltAlpha <= 0.01) return;
+      [strike.bolt, strike.branch].forEach((bolt, i) => {
+        if (!bolt) return;
+        ctx.save();
+        ctx.globalAlpha = boltAlpha * (i === 0 ? 1 : 0.55);
+        ctx.strokeStyle = "#fff8cc";
+        ctx.shadowColor = "#ffe066";
+        ctx.shadowBlur = 18;
+        ctx.lineWidth = i === 0 ? 3.5 : 2;
+        ctx.beginPath();
+        ctx.moveTo(bolt[0].x, bolt[0].y);
+        for (let j = 1; j < bolt.length; j += 1) ctx.lineTo(bolt[j].x, bolt[j].y);
+        ctx.stroke();
+        ctx.restore();
+      });
+      if (dtMs < 70) {
+        ctx.save();
+        ctx.globalAlpha = 0.18 * (1 - dtMs / 70);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+      }
+    });
+
+    sparks.forEach((p) => drawGlowParticle(ctx, p, "lighter"));
+  };
+}
+
+function makeHealUpdater(width, height) {
+  let particles = [];
+  let spawnTimer = 0;
+  return (t, dt, ctx) => {
+    spawnTimer += dt;
+    if (spawnTimer > 0.16 && particles.length < ELEMENT_PARTICLE_CAP) {
+      spawnTimer = 0;
+      particles.push({
+        x: randRange(width * 0.2, width * 0.8),
+        y: height * randRange(0.7, 0.95),
+        vx: randRange(-8, 8),
+        vy: randRange(-40, -60),
+        gravity: -6,
+        drag: 0.99,
+        size: randRange(6, 11),
+        life: randRange(1.1, 1.5),
+        maxLife: 1.5,
+        age: 0,
+        fadeIn: 0.25,
+        color: Math.random() < 0.6 ? "120,235,170" : "230,255,235",
+      });
+    }
+    particles = stepParticles(particles, dt);
+    particles.forEach((p) => drawGlowParticle(ctx, p, "lighter"));
+  };
+}
+
+function makeSwordUpdater(width, height, durationMs) {
+  let sparks = [];
+  const trail = [];
+  const slashDur = 200;
+
+  // 한 번의 짧은 베기 대신, 십자로 교차하는 두 번의 연속 베기로 늘어난
+  // 지속시간을 채운다(실제 검격처럼 두 번 스치는 느낌).
+  const slashes = [
+    { atMs: 0, startX: width * 1.1, startY: height * 0.12, endX: width * -0.1, endY: height * 0.82, ctrlX: width * 0.5, ctrlY: height * 0.1 },
+    { atMs: durationMs * 0.45, startX: width * -0.1, startY: height * 0.12, endX: width * 1.1, endY: height * 0.82, ctrlX: width * 0.5, ctrlY: height * 0.85 },
+  ];
+  const spawnedFor = new Set();
+
+  return (t, dt, ctx) => {
+    slashes.forEach((slash, i) => {
+      const localT = t - slash.atMs;
+      if (localT < 0 || localT > slashDur) return;
+      const progress = localT / slashDur;
+      const x = (1 - progress) * (1 - progress) * slash.startX + 2 * (1 - progress) * progress * slash.ctrlX + progress * progress * slash.endX;
+      const y = (1 - progress) * (1 - progress) * slash.startY + 2 * (1 - progress) * progress * slash.ctrlY + progress * progress * slash.endY;
+      trail.push({ x, y, age: 0 });
+      if (sparks.length < ELEMENT_PARTICLE_CAP && (!spawnedFor.has(i) || Math.random() < 0.55)) {
+        spawnedFor.add(i);
+        sparks.push({
+          x,
+          y,
+          vx: randRange(-40, 40),
+          vy: randRange(-40, 40),
+          gravity: 60,
+          drag: 0.92,
+          size: randRange(3, 6),
+          life: 0.3,
+          maxLife: 0.3,
+          age: 0,
+          fadeIn: 0.01,
+          color: "255,255,255",
+        });
+      }
+    });
+
+    trail.forEach((pt) => { pt.age += dt; });
+    for (let i = trail.length - 1; i >= 0; i -= 1) {
+      if (trail[i].age > 0.25) trail.splice(i, 1);
+    }
+    for (let i = 0; i < trail.length - 1; i += 1) {
+      const a = trail[i];
+      const b = trail[i + 1];
+      const alpha = Math.max(0, 1 - a.age / 0.25);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = "#f5f8ff";
+      ctx.shadowColor = "#c9d2e3";
+      ctx.shadowBlur = 8;
+      ctx.lineWidth = 6 * alpha + 1;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    sparks = stepParticles(sparks, dt);
+    sparks.forEach((p) => drawGlowParticle(ctx, p, "lighter"));
+  };
+}
+
+const ELEMENT_FX_UPDATERS = {
+  fire: makeFireUpdater,
+  water: makeWaterUpdater,
+  lightning: makeLightningUpdater,
+  heal: makeHealUpdater,
+  sword: makeSwordUpdater,
 };
 
 function showElementEffect(cardEl, effectType) {
-  const builder = ELEMENT_FX_BUILDERS[effectType];
-  if (!cardEl || !builder) return;
+  const makeUpdater = ELEMENT_FX_UPDATERS[effectType];
+  if (!cardEl || !makeUpdater) return;
 
-  flashClass(cardEl, `element-flash-${effectType}`, ELEMENT_FLASH_DURATION[effectType] || 1000);
+  const durationMs = ELEMENT_FX_DURATION[effectType] || 1200;
+  flashClass(cardEl, `element-flash-${effectType}`, durationMs);
 
   const rect = cardEl.getBoundingClientRect();
   const layer = document.getElementById("spell-effect-layer");
-  const container = document.createElement("div");
-  container.className = `element-fx element-fx--${effectType}`;
-  const expandedWidth = rect.width * 1.6;
-  const expandedHeight = rect.height * 1.6;
-  container.style.left = `${rect.left - (expandedWidth - rect.width) / 2}px`;
-  container.style.top = `${rect.top - (expandedHeight - rect.height) / 2}px`;
-  container.style.width = `${expandedWidth}px`;
-  container.style.height = `${expandedHeight}px`;
-  layer.appendChild(container);
+  const scale = 1.8;
+  const width = rect.width * scale;
+  const height = rect.height * scale;
+  const dpr = window.devicePixelRatio || 1;
 
-  const lifetime = builder(container);
-  setTimeout(() => container.remove(), lifetime);
+  const canvas = document.createElement("canvas");
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.position = "fixed";
+  canvas.style.left = `${rect.left - (width - rect.width) / 2}px`;
+  canvas.style.top = `${rect.top - (height - rect.height) / 2}px`;
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+  canvas.style.pointerEvents = "none";
+  canvas.style.zIndex = "118";
+  layer.appendChild(canvas);
+
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  const update = makeUpdater(width, height, durationMs);
+
+  let start = null;
+  let last = null;
+  let rafId;
+  function frame(now) {
+    if (start === null) { start = now; last = now; }
+    const t = now - start;
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    ctx.clearRect(0, 0, width, height);
+    update(t, dt, ctx);
+    if (t < durationMs) {
+      rafId = requestAnimationFrame(frame);
+    } else {
+      canvas.remove();
+    }
+  }
+  rafId = requestAnimationFrame(frame);
+  setTimeout(() => {
+    cancelAnimationFrame(rafId);
+    canvas.remove();
+  }, durationMs + 200);
 }
 
 function reduceHpDisplay(cardEl, amount) {
