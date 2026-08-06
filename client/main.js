@@ -2055,7 +2055,10 @@ function applyPendingAttackEffects(state) {
       counterDamage,
       effectResults,
     } = pendingAttackEffects.shift();
-    let hasSkillThisAttack = false;
+    // 어느 한쪽 카드에만 ON_DEATH 스킬이 있어도 그 효과가 반대쪽(예: KILLER 대상 피해)에
+    // 영향을 줄 수 있으므로, shatter 지연은 "자기 자신의 스킬 유무"가 아니라 이번 공격에서
+    // 스킬이 하나라도 발동했는지로 통일해야 스킬 팝업보다 상대가 먼저 부서지지 않는다.
+    const hasSkillThisAttack = Boolean(attackerDeathSkillName) || Boolean(defenderDeathSkillName);
     const attackerBoardEl = attackerId === socket.id ? document.getElementById("my-board") : document.getElementById("opp-board");
     const attackerEl = attackerBoardEl.querySelector(`.card[data-card-id="${attackerCardId}"]`);
     flashClass(attackerEl, attackerId === socket.id ? "attack-lunge-up" : "attack-lunge-down", 350);
@@ -2064,13 +2067,12 @@ function applyPendingAttackEffects(state) {
     }
     if (attackerDeathSkillName) {
       setTimeout(() => showSkillNamePopup(attackerEl, attackerDeathSkillName, "death"), DEATH_SKILL_DELAY_MS);
-      hasSkillThisAttack = true;
     }
 
     const attackerOwnerBoard = attackerId === socket.id ? state.me.board : state.opponent.board;
     const attackerDied = !attackerOwnerBoard.some((c) => c.id === attackerCardId);
     if (attackerDied) {
-      const shatterDelay = attackerDeathSkillName ? DEATH_SKILL_DELAY_MS : 120;
+      const shatterDelay = hasSkillThisAttack ? DEATH_SKILL_DELAY_MS : 120;
       setTimeout(() => spawnCardShatter(attackerEl), shatterDelay);
     }
 
@@ -2082,13 +2084,12 @@ function applyPendingAttackEffects(state) {
       showDamagePopup(attackerEl, counterDamage);
       if (defenderDeathSkillName) {
         setTimeout(() => showSkillNamePopup(targetEl, defenderDeathSkillName, "death"), DEATH_SKILL_DELAY_MS);
-        hasSkillThisAttack = true;
       }
 
       const targetOwnerBoard = attackerId === socket.id ? state.opponent.board : state.me.board;
       const defenderDied = !targetOwnerBoard.some((c) => c.id === target.cardId);
       if (defenderDied) {
-        const shatterDelay = defenderDeathSkillName ? DEATH_SKILL_DELAY_MS : 120;
+        const shatterDelay = hasSkillThisAttack ? DEATH_SKILL_DELAY_MS : 120;
         setTimeout(() => spawnCardShatter(targetEl), shatterDelay);
       }
     } else if (target?.type === "hero") {
