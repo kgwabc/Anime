@@ -11,6 +11,7 @@ const RARITIES = ["common", "legendary"];
 const TRIGGERS = ["ON_PLAY", "ON_DEATH", "IMMEDIATE", "ON_EQUIP"];
 const ACTIONS = ["DAMAGE", "HEAL", "DRAW", "BUFF"];
 const TARGETS = ["ENEMY_HERO", "ALL_ENEMIES", "ALL_ALLIES", "TARGET_CHARACTER", "SELF", "KILLER"];
+const ELEMENT_EFFECTS = ["fire", "water", "lightning", "heal", "sword"];
 
 const ALLOWED_TRIGGERS_BY_TYPE = {
   character: ["ON_PLAY", "ON_DEATH"],
@@ -75,6 +76,8 @@ function validateCardFields(body, { partial, existingType } = {}) {
     skillName,
     overridesAppearance,
     attackNameOverride,
+    attackEffect,
+    skillEffect,
   } = body;
   const effectiveType = type !== undefined ? type : existingType;
 
@@ -172,6 +175,12 @@ function validateCardFields(body, { partial, existingType } = {}) {
     if (skillName.length > 30) {
       return "skillName은 30자 이하여야 합니다.";
     }
+  }
+  if (attackEffect !== undefined && attackEffect !== null && !ELEMENT_EFFECTS.includes(attackEffect)) {
+    return `attackEffect는 ${ELEMENT_EFFECTS.join("/")} 중 하나이거나 없어야 합니다.`;
+  }
+  if (skillEffect !== undefined && skillEffect !== null && !ELEMENT_EFFECTS.includes(skillEffect)) {
+    return `skillEffect는 ${ELEMENT_EFFECTS.join("/")} 중 하나이거나 없어야 합니다.`;
   }
 
   const effectsError = validateEffects(effects, effectiveType);

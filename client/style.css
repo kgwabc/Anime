@@ -1056,6 +1056,35 @@ button:active {
   opacity: 1;
 }
 
+@keyframes element-flash {
+  0%, 100% {
+    box-shadow: none;
+  }
+  50% {
+    box-shadow: 0 0 20px 8px var(--effect-color, #fff);
+    border-color: var(--effect-color, #fff);
+  }
+}
+
+.card.element-flash {
+  animation: element-flash 0.6s ease-out;
+}
+
+.element-particle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 115;
+  font-size: 22px;
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  transition: transform 0.6s cubic-bezier(0.33, 0.8, 0.4, 1), opacity 0.6s ease-in;
+}
+
+.element-particle.element-particle-burst {
+  transform: translate(calc(-50% + var(--particle-x)), calc(-50% + var(--particle-y))) scale(0.6);
+  opacity: 0;
+}
+
 #spell-effect-layer {
   position: fixed;
   inset: 0;

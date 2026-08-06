@@ -778,6 +778,8 @@ document.getElementById("form-new-card").addEventListener("submit", async (e) =>
     fields.matchupAtkBonus = Number(document.getElementById("new-card-matchup-bonus").value) || 0;
     fields.attackName = document.getElementById("new-card-attack-name").value || null;
     fields.skillName = document.getElementById("new-card-skill-name").value || null;
+    fields.attackEffect = document.getElementById("new-card-attack-effect").value || null;
+    fields.skillEffect = document.getElementById("new-card-skill-effect").value || null;
   }
   if (type === "equipment") {
     fields.equipAtkBonus = Number(document.getElementById("new-card-equip-atk").value) || 0;
@@ -1613,7 +1615,12 @@ function registerSocketHandlers() {
       return;
     }
 
-    pendingInstallEffects.set(card.id, { playerId, skillName: card.skillName || null, effectResults });
+    pendingInstallEffects.set(card.id, {
+      playerId,
+      skillName: card.skillName || null,
+      skillEffect: card.skillEffect || null,
+      effectResults,
+    });
   });
 
   socket.on(
@@ -1625,6 +1632,8 @@ function registerSocketHandlers() {
       attackerCard,
       defenderDeathSkillName,
       attackerDeathSkillName,
+      defenderDeathSkillEffect,
+      attackerDeathSkillEffect,
       defenderRevived,
       attackerRevived,
       heroDamage,
@@ -1639,6 +1648,8 @@ function registerSocketHandlers() {
         attackerCard,
         defenderDeathSkillName,
         attackerDeathSkillName,
+        defenderDeathSkillEffect,
+        attackerDeathSkillEffect,
         defenderRevived,
         attackerRevived,
         heroDamage,
@@ -1696,6 +1707,48 @@ function showSkillNamePopup(cardEl, text, kind) {
   el.style.top = `${rect.top + rect.height / 2}px`;
   layer.appendChild(el);
   setTimeout(() => el.remove(), 700);
+}
+
+const ELEMENT_EFFECTS = {
+  fire: { emoji: "🔥", color: "#ff6b35" },
+  water: { emoji: "💧", color: "#3aa0ff" },
+  lightning: { emoji: "⚡", color: "#ffe066" },
+  heal: { emoji: "✨", color: "#5ee6a0" },
+  sword: { emoji: "🗡️", color: "#c9d2e3" },
+};
+const ELEMENT_PARTICLE_VECTORS = [
+  { x: 0, y: -70 },
+  { x: 60, y: -35 },
+  { x: 60, y: 35 },
+  { x: 0, y: 70 },
+  { x: -60, y: 35 },
+  { x: -60, y: -35 },
+];
+
+function showElementEffect(cardEl, effectType) {
+  const config = ELEMENT_EFFECTS[effectType];
+  if (!cardEl || !config) return;
+
+  cardEl.style.setProperty("--effect-color", config.color);
+  flashClass(cardEl, "element-flash", 600);
+
+  const rect = cardEl.getBoundingClientRect();
+  const layer = document.getElementById("spell-effect-layer");
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+
+  ELEMENT_PARTICLE_VECTORS.forEach((vector) => {
+    const particle = document.createElement("div");
+    particle.className = "element-particle";
+    particle.textContent = config.emoji;
+    particle.style.left = `${cx}px`;
+    particle.style.top = `${cy}px`;
+    particle.style.setProperty("--particle-x", `${vector.x}px`);
+    particle.style.setProperty("--particle-y", `${vector.y}px`);
+    layer.appendChild(particle);
+    requestAnimationFrame(() => particle.classList.add("element-particle-burst"));
+    setTimeout(() => particle.remove(), 650);
+  });
 }
 
 function reduceHpDisplay(cardEl, amount) {
@@ -2149,7 +2202,7 @@ function applyPendingCardEffects(boardEl, role) {
   for (const card of boardEl.querySelectorAll(".card")) {
     const cardId = card.dataset.cardId;
     if (pendingInstallEffects.has(cardId)) {
-      const { skillName, effectResults } = pendingInstallEffects.get(cardId);
+      const { skillName, skillEffect, effectResults } = pendingInstallEffects.get(cardId);
       pendingInstallEffects.delete(cardId);
 
       const boardRect = boardEl.getBoundingClientRect();
@@ -2159,6 +2212,7 @@ function applyPendingCardEffects(boardEl, role) {
       flashClass(card, "card-spread-in", 450);
 
       if (skillName) showSkillNamePopup(card, skillName, "play");
+      if (skillEffect) showElementEffect(card, skillEffect);
       showEffectResultPopups(effectResults);
     }
     if (pendingBuffEffects.has(cardId)) {
@@ -2181,6 +2235,8 @@ function applyPendingAttackEffects(state) {
       attackerCard,
       defenderDeathSkillName,
       attackerDeathSkillName,
+      defenderDeathSkillEffect,
+      attackerDeathSkillEffect,
       defenderRevived,
       attackerRevived,
       heroDamage,
@@ -2198,8 +2254,14 @@ function applyPendingAttackEffects(state) {
     if (attackerCard?.attackName) {
       showAttackNamePopup(attackerEl, attackerCard.attackName);
     }
+    if (attackerCard?.attackEffect) {
+      showElementEffect(attackerEl, attackerCard.attackEffect);
+    }
     if (attackerDeathSkillName) {
       setTimeout(() => showSkillNamePopup(attackerEl, attackerDeathSkillName, "death"), DEATH_SKILL_DELAY_MS);
+      if (attackerDeathSkillEffect) {
+        setTimeout(() => showElementEffect(attackerEl, attackerDeathSkillEffect), DEATH_SKILL_DELAY_MS);
+      }
     }
 
     const attackerOwnerBoard = attackerId === socket.id ? state.me.board : state.opponent.board;
@@ -2233,6 +2295,9 @@ function applyPendingAttackEffects(state) {
       reduceHpDisplay(attackerEl, counterDamage);
       if (defenderDeathSkillName) {
         setTimeout(() => showSkillNamePopup(targetEl, defenderDeathSkillName, "death"), DEATH_SKILL_DELAY_MS);
+        if (defenderDeathSkillEffect) {
+          setTimeout(() => showElementEffect(targetEl, defenderDeathSkillEffect), DEATH_SKILL_DELAY_MS);
+        }
       }
 
       const targetOwnerBoard = attackerId === socket.id ? state.opponent.board : state.me.board;

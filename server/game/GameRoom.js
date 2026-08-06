@@ -115,6 +115,7 @@ class GameRoom {
     player.mana -= card.cost;
 
     let onPlaySkillName = null;
+    let onPlaySkillEffect = null;
     let onPlayEffectResults = [];
     if (card.type === "spell") {
       applyEffectList(this, playerId, card.effects, "IMMEDIATE", context, card.requiredTargetTag);
@@ -132,12 +133,20 @@ class GameRoom {
       );
       if (card.effects?.[0]?.trigger === "ON_PLAY") {
         onPlaySkillName = card.skillName || null;
+        onPlaySkillEffect = card.skillEffect || null;
       }
     }
 
     return {
       ok: true,
-      card: { id: card.id, type: card.type, name: card.name, image: card.image, skillName: onPlaySkillName },
+      card: {
+        id: card.id,
+        type: card.type,
+        name: card.name,
+        image: card.image,
+        skillName: onPlaySkillName,
+        skillEffect: onPlaySkillEffect,
+      },
       effectResults: onPlayEffectResults,
     };
   }
@@ -226,6 +235,8 @@ class GameRoom {
 
     let defenderDeathSkillName = null;
     let attackerDeathSkillName = null;
+    let defenderDeathSkillEffect = null;
+    let attackerDeathSkillEffect = null;
     let defenderRevived = false;
     let attackerRevived = false;
     let heroDamage = null;
@@ -268,6 +279,7 @@ class GameRoom {
         );
         if (defender.effects?.[0]?.trigger === "ON_DEATH") {
           defenderDeathSkillName = defender.skillName || null;
+          defenderDeathSkillEffect = defender.skillEffect || null;
         }
         if (defender.hp <= 0) {
           const stillIndex = opponent.board.findIndex((card) => card.id === defender.id);
@@ -290,6 +302,7 @@ class GameRoom {
         );
         if (attacker.effects?.[0]?.trigger === "ON_DEATH") {
           attackerDeathSkillName = attacker.skillName || null;
+          attackerDeathSkillEffect = attacker.skillEffect || null;
         }
         if (attacker.hp <= 0) {
           player.board = player.board.filter((card) => card.id !== attacker.id);
@@ -304,9 +317,16 @@ class GameRoom {
     attacker.hasAttacked = true;
     return {
       ok: true,
-      attackerCard: { id: attacker.id, name: attacker.name, attackName: attacker.attackName || null },
+      attackerCard: {
+        id: attacker.id,
+        name: attacker.name,
+        attackName: attacker.attackName || null,
+        attackEffect: attacker.attackEffect || null,
+      },
       defenderDeathSkillName,
       attackerDeathSkillName,
+      defenderDeathSkillEffect,
+      attackerDeathSkillEffect,
       defenderRevived,
       attackerRevived,
       heroDamage,
