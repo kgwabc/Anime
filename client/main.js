@@ -549,6 +549,15 @@ function renderAdminCards(cards, token) {
     attackNameOverrideInput.value = card.attackNameOverride || "";
     attackNameOverrideInput.placeholder = "장착시 공격 이름 교체 (선택)";
 
+    const equipEffectSelect = createOptionSelect(
+      [["", "장착시 이펙트 없음"], ["fire", "🔥 불"], ["water", "💧 물"], ["lightning", "⚡ 번개"], ["heal", "✨ 힐"], ["sword", "🗡️ 검"]],
+      card.equipEffect || ""
+    );
+    const attackEffectOverrideSelect = createOptionSelect(
+      [["", "장착 후 공격 이펙트 교체 없음"], ["fire", "🔥 불"], ["water", "💧 물"], ["lightning", "⚡ 번개"], ["heal", "✨ 힐"], ["sword", "🗡️ 검"]],
+      card.attackEffectOverride || ""
+    );
+
     const matchupTagSelect = document.createElement("select");
     populateTagOptions(matchupTagSelect, loadedAdminCards, "상성 없음");
     matchupTagSelect.value = card.matchupVsTag || "";
@@ -615,6 +624,8 @@ function renderAdminCards(cards, token) {
       equipHpInput.classList.toggle("hidden", type !== "equipment");
       overridesAppearanceLabel.classList.toggle("hidden", type !== "equipment");
       attackNameOverrideInput.classList.toggle("hidden", type !== "equipment");
+      equipEffectSelect.classList.toggle("hidden", type !== "equipment");
+      attackEffectOverrideSelect.classList.toggle("hidden", type !== "equipment");
       requiredTagSelect.classList.toggle("hidden", type === "character");
       populateTriggerOptions(triggerSelect, type);
     }
@@ -663,6 +674,8 @@ function renderAdminCards(cards, token) {
         fields.equipHpBonus = Number(equipHpInput.value) || 0;
         fields.overridesAppearance = overridesAppearanceInput.checked;
         fields.attackNameOverride = attackNameOverrideInput.value || null;
+        fields.equipEffect = equipEffectSelect.value || null;
+        fields.attackEffectOverride = attackEffectOverrideSelect.value || null;
       }
       if (type === "spell" || type === "equipment") {
         fields.requiredTargetTag = requiredTagSelect.value || null;
@@ -699,6 +712,8 @@ function renderAdminCards(cards, token) {
       equipHpInput,
       overridesAppearanceLabel,
       attackNameOverrideInput,
+      equipEffectSelect,
+      attackEffectOverrideSelect,
       requiredTagSelect,
       triggerSelect,
       actionSelect,
@@ -803,6 +818,8 @@ document.getElementById("form-new-card").addEventListener("submit", async (e) =>
     fields.equipHpBonus = Number(document.getElementById("new-card-equip-hp").value) || 0;
     fields.overridesAppearance = document.getElementById("new-card-overrides-appearance").checked;
     fields.attackNameOverride = document.getElementById("new-card-attack-name-override").value || null;
+    fields.equipEffect = document.getElementById("new-card-equip-effect").value || null;
+    fields.attackEffectOverride = document.getElementById("new-card-attack-effect-override").value || null;
   }
   if (type === "spell" || type === "equipment") {
     fields.requiredTargetTag = document.getElementById("new-card-required-tag").value || null;
@@ -1628,7 +1645,7 @@ function registerSocketHandlers() {
     }
 
     if (targetCharacterId) {
-      pendingBuffEffects.set(targetCharacterId, { playerId, effectResults });
+      pendingBuffEffects.set(targetCharacterId, { playerId, effectResults, equipEffect: card?.equipEffect || null });
       return;
     }
 
@@ -1771,20 +1788,64 @@ function stepParticles(particles, dt) {
 function makeFireUpdater(width, height) {
   let particles = [];
   let smokeTimer = 0;
+  let spawnedBurst = false;
+  const cx = width / 2;
+  const cy = height * 0.55;
+
   return (t, dt, ctx) => {
-    if (particles.length < ELEMENT_PARTICLE_CAP && Math.random() < 0.55) {
+    // 공격 임팩트처럼 시작 순간 사방으로 터지는 첫 화염 폭발
+    if (!spawnedBurst) {
+      spawnedBurst = true;
+      const burstCount = 12;
+      for (let i = 0; i < burstCount; i += 1) {
+        const angle = (Math.PI * 2 * i) / burstCount + randRange(-0.2, 0.2);
+        const speed = randRange(140, 240);
+        particles.push({
+          x: cx,
+          y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed * 0.7 - 40,
+          gravity: 90,
+          drag: 0.9,
+          size: randRange(12, 20),
+          life: randRange(0.3, 0.45),
+          maxLife: 0.45,
+          age: 0,
+          fadeIn: 0.02,
+          color: Math.random() < 0.5 ? "255,170,60" : "255,100,20",
+        });
+      }
+    }
+
+    // 폭발 직후 짧고 강하게 번쩍이는 화염 플래시(임팩트 느낌의 핵심)
+    const flashDur = 0.18;
+    if (t / 1000 < flashDur) {
+      const flashFrac = 1 - t / 1000 / flashDur;
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, width * 0.55 * (0.6 + 0.4 * (1 - flashFrac)));
+      g.addColorStop(0, `rgba(255,235,180,${0.75 * flashFrac})`);
+      g.addColorStop(0.5, `rgba(255,140,50,${0.45 * flashFrac})`);
+      g.addColorStop(1, "rgba(255,90,20,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, width, height);
+      ctx.restore();
+    }
+
+    // 이후엔 계속 타오르는 불씨가 위로 솟아오름
+    if (particles.length < ELEMENT_PARTICLE_CAP && Math.random() < 0.6) {
       particles.push({
         x: randRange(width * 0.25, width * 0.75),
         y: height * 0.85,
-        vx: randRange(-14, 14),
-        vy: randRange(-70, -110),
+        vx: randRange(-16, 16),
+        vy: randRange(-90, -140),
         gravity: -30,
-        drag: 0.98,
-        size: randRange(10, 18),
-        life: randRange(0.5, 0.8),
-        maxLife: 0.8,
+        drag: 0.97,
+        size: randRange(10, 19),
+        life: randRange(0.45, 0.75),
+        maxLife: 0.75,
         age: 0,
-        fadeIn: 0.05,
+        fadeIn: 0.03,
         color: Math.random() < 0.5 ? "255,150,40" : "255,90,20",
       });
     }
@@ -2010,20 +2071,36 @@ function makeSwordUpdater(width, height, durationMs) {
       }
     });
 
+    const trailMaxAge = 0.15;
     trail.forEach((pt) => { pt.age += dt; });
     for (let i = trail.length - 1; i >= 0; i -= 1) {
-      if (trail[i].age > 0.25) trail.splice(i, 1);
+      if (trail[i].age > trailMaxAge) trail.splice(i, 1);
     }
+    // 날카로운 느낌을 위해 두 번 그린다: 아주 얇고 밝은 핵심 선(블러 없음) +
+    // 그 뒤에 살짝만 번지는 옅은 글로우(블러 최소화)로 "칼날" 대비를 준다.
     for (let i = 0; i < trail.length - 1; i += 1) {
       const a = trail[i];
       const b = trail[i + 1];
-      const alpha = Math.max(0, 1 - a.age / 0.25);
+      const alpha = Math.max(0, 1 - a.age / trailMaxAge);
+      if (alpha <= 0.02) continue;
+
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.35;
+      ctx.strokeStyle = "#e8ecff";
+      ctx.shadowColor = "#c9d2e3";
+      ctx.shadowBlur = 3;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+      ctx.restore();
+
       ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.strokeStyle = "#f5f8ff";
-      ctx.shadowColor = "#c9d2e3";
-      ctx.shadowBlur = 8;
-      ctx.lineWidth = 6 * alpha + 1;
+      ctx.strokeStyle = "#ffffff";
+      ctx.shadowBlur = 0;
+      ctx.lineWidth = 1.4;
       ctx.beginPath();
       ctx.moveTo(a.x, a.y);
       ctx.lineTo(b.x, b.y);
@@ -2562,9 +2639,10 @@ function applyPendingCardEffects(boardEl, role) {
       showEffectResultPopups(effectResults);
     }
     if (pendingBuffEffects.has(cardId)) {
-      const { effectResults } = pendingBuffEffects.get(cardId);
+      const { effectResults, equipEffect } = pendingBuffEffects.get(cardId);
       pendingBuffEffects.delete(cardId);
       flashClass(card, "buff-flash", 600);
+      if (equipEffect) showElementEffect(card, equipEffect);
       showEffectResultPopups(effectResults);
     }
   }

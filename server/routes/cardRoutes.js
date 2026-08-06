@@ -78,6 +78,8 @@ function validateCardFields(body, { partial, existingType } = {}) {
     attackNameOverride,
     attackEffect,
     skillEffect,
+    equipEffect,
+    attackEffectOverride,
   } = body;
   const effectiveType = type !== undefined ? type : existingType;
 
@@ -124,6 +126,12 @@ function validateCardFields(body, { partial, existingType } = {}) {
       if (attackNameOverride.length > 30) {
         return "attackNameOverride는 30자 이하여야 합니다.";
       }
+    }
+    if (equipEffect !== undefined && equipEffect !== null && !ELEMENT_EFFECTS.includes(equipEffect)) {
+      return `equipEffect는 ${ELEMENT_EFFECTS.join("/")} 중 하나이거나 없어야 합니다.`;
+    }
+    if (attackEffectOverride !== undefined && attackEffectOverride !== null && !ELEMENT_EFFECTS.includes(attackEffectOverride)) {
+      return `attackEffectOverride는 ${ELEMENT_EFFECTS.join("/")} 중 하나이거나 없어야 합니다.`;
     }
   }
   if (synergyTags !== undefined) {

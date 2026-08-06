@@ -205,6 +205,9 @@ class GameRoom {
     if (card.attackNameOverride) {
       target.attackName = card.attackNameOverride;
     }
+    if (card.attackEffectOverride) {
+      target.attackEffect = card.attackEffectOverride;
+    }
 
     const statBonusResult =
       card.equipAtkBonus || card.equipHpBonus
@@ -213,7 +216,7 @@ class GameRoom {
 
     return {
       ok: true,
-      card: { id: card.id, type: card.type, name: card.name, image: card.image },
+      card: { id: card.id, type: card.type, name: card.name, image: card.image, equipEffect: card.equipEffect || null },
       effectResults: [...statBonusResult, ...equipEffectResults],
     };
   }
