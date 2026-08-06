@@ -2072,6 +2072,8 @@ function applyPendingAttackEffects(state) {
     const attackerOwnerBoard = attackerId === socket.id ? state.me.board : state.opponent.board;
     const attackerDied = !attackerOwnerBoard.some((c) => c.id === attackerCardId);
     if (attackerDied) {
+      const hpEl = attackerEl?.querySelector(".hp");
+      if (hpEl) hpEl.textContent = "❤0";
       const shatterDelay = hasSkillThisAttack ? DEATH_SKILL_DELAY_MS : 120;
       setTimeout(() => spawnCardShatter(attackerEl), shatterDelay);
     }
@@ -2089,6 +2091,8 @@ function applyPendingAttackEffects(state) {
       const targetOwnerBoard = attackerId === socket.id ? state.opponent.board : state.me.board;
       const defenderDied = !targetOwnerBoard.some((c) => c.id === target.cardId);
       if (defenderDied) {
+        const hpEl = targetEl?.querySelector(".hp");
+        if (hpEl) hpEl.textContent = "❤0";
         const shatterDelay = hasSkillThisAttack ? DEATH_SKILL_DELAY_MS : 120;
         setTimeout(() => spawnCardShatter(targetEl), shatterDelay);
       }
