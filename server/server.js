@@ -17,7 +17,7 @@ const { getDeckByUserId } = require("./models/Deck");
 const { validateDeck } = require("./game/deckValidation");
 const { Matchmaker } = require("./game/matchmaking");
 const { GameRoom } = require("./game/GameRoom");
-const { STAGES } = require("./data/stages");
+const { getStageById } = require("./models/Stage");
 const { chooseCardToPlay, chooseAttack } = require("./game/aiPlayer");
 const { getHighestCleared, setHighestCleared } = require("./models/StageProgress");
 const { getStageDeckCardIds } = require("./models/StageDecks");
@@ -200,7 +200,7 @@ io.on("connection", (socket) => {
       return;
     }
 
-    const stage = STAGES.find((s) => s.id === stageId);
+    const stage = await getStageById(stageId);
     if (!stage) {
       socket.emit("stage_error", "존재하지 않는 스테이지입니다.");
       return;
@@ -232,7 +232,7 @@ io.on("connection", (socket) => {
       { id: socket.id, username: socket.data.username, userId: socket.data.userId },
       { id: aiId, username: stage.aiName, userId: aiId },
     ];
-    const aiDeckCardIds = (await getStageDeckCardIds(stage.id)) ?? stage.deckCardIds;
+    const aiDeckCardIds = (await getStageDeckCardIds(stage.id)) ?? [];
     const deckByPlayerId = {
       [socket.id]: cardIds.map((cardId) => ({ ...cardsById.get(cardId) })),
       [aiId]: aiDeckCardIds.map((cardId) => cardsById.get(cardId)).filter(Boolean).map((card) => ({ ...card })),

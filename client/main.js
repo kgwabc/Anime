@@ -10,6 +10,7 @@ let dragState = null;
 let pendingRenderState = null;
 let currentAdminToken = null;
 let loadedAdminCards = [];
+let loadedAdminStages = [];
 let currentAuthToken = null;
 let deckCatalog = [];
 let allowedCardIds = new Set();
@@ -1298,7 +1299,7 @@ document.getElementById("btn-save-starter-cards").addEventListener("click", asyn
   }
 });
 
-// ---------- 관리자: 스테이지 덱 편집 ----------
+// ---------- 관리자: 스테이지 추가/이름변경 + 덱 편집 ----------
 
 async function loadAdminStageDecks(token) {
   const errorEl = document.getElementById("admin-stage-deck-error");
@@ -1313,6 +1314,7 @@ async function loadAdminStageDecks(token) {
       return;
     }
 
+    loadedAdminStages = data.stages;
     const previousValue = selectEl.value;
     selectEl.innerHTML = "";
     for (const stage of data.stages) {
@@ -1325,14 +1327,86 @@ async function loadAdminStageDecks(token) {
       selectEl.value = previousValue;
     }
 
+    prefillStageRenameInputs(selectEl.value);
     await loadAdminStageDeck(selectEl.value, token);
   } catch (err) {
     errorEl.textContent = "스테이지 목록을 불러올 수 없습니다.";
   }
 }
 
+function prefillStageRenameInputs(stageId) {
+  const stage = loadedAdminStages.find((s) => String(s.id) === String(stageId));
+  document.getElementById("edit-stage-name").value = stage ? stage.name : "";
+  document.getElementById("edit-stage-ai-name").value = stage ? stage.aiName : "";
+}
+
 document.getElementById("admin-stage-select").addEventListener("change", (e) => {
+  prefillStageRenameInputs(e.target.value);
   if (currentAdminToken) loadAdminStageDeck(e.target.value, currentAdminToken);
+});
+
+document.getElementById("btn-add-stage").addEventListener("click", async () => {
+  const errorEl = document.getElementById("admin-stage-add-error");
+  errorEl.textContent = "";
+
+  const name = document.getElementById("new-stage-name").value.trim();
+  const aiName = document.getElementById("new-stage-ai-name").value.trim();
+  if (!name || !aiName) {
+    errorEl.textContent = "스테이지 이름과 AI 이름을 모두 입력해주세요.";
+    return;
+  }
+
+  try {
+    const res = await fetch(`${SERVER_URL}/stages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${currentAdminToken}` },
+      body: JSON.stringify({ name, aiName }),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      errorEl.textContent = data.message;
+      return;
+    }
+    document.getElementById("new-stage-name").value = "";
+    document.getElementById("new-stage-ai-name").value = "";
+    await loadAdminStageDecks(currentAdminToken);
+    document.getElementById("admin-stage-select").value = data.stage.id;
+    prefillStageRenameInputs(data.stage.id);
+    await loadAdminStageDeck(data.stage.id, currentAdminToken);
+  } catch (err) {
+    errorEl.textContent = "스테이지 추가 중 오류가 발생했습니다.";
+  }
+});
+
+document.getElementById("btn-rename-stage").addEventListener("click", async () => {
+  const errorEl = document.getElementById("admin-stage-rename-error");
+  errorEl.textContent = "";
+
+  const stageId = document.getElementById("admin-stage-select").value;
+  if (!stageId) return;
+
+  const name = document.getElementById("edit-stage-name").value.trim();
+  const aiName = document.getElementById("edit-stage-ai-name").value.trim();
+  if (!name || !aiName) {
+    errorEl.textContent = "스테이지 이름과 AI 이름을 모두 입력해주세요.";
+    return;
+  }
+
+  try {
+    const res = await fetch(`${SERVER_URL}/stages/${encodeURIComponent(stageId)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${currentAdminToken}` },
+      body: JSON.stringify({ name, aiName }),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      errorEl.textContent = data.message;
+      return;
+    }
+    await loadAdminStageDecks(currentAdminToken);
+  } catch (err) {
+    errorEl.textContent = "스테이지 이름 변경 중 오류가 발생했습니다.";
+  }
 });
 
 async function loadAdminStageDeck(stageId, token) {
@@ -1355,6 +1429,30 @@ async function loadAdminStageDeck(stageId, token) {
   }
 }
 
+function populateStageDeckSeriesFilterOptions(cards) {
+  const filterEl = document.getElementById("admin-stage-deck-series-filter");
+  const previousValue = filterEl.value;
+  const seriesValues = [...new Set(cards.map((card) => card.series))].sort();
+
+  filterEl.innerHTML = '<option value="">전체 계열</option>';
+  for (const series of seriesValues) {
+    const option = document.createElement("option");
+    option.value = series;
+    option.textContent = series;
+    filterEl.appendChild(option);
+  }
+  if (seriesValues.includes(previousValue)) filterEl.value = previousValue;
+}
+
+function applyStageDeckSeriesFilter() {
+  const selected = document.getElementById("admin-stage-deck-series-filter").value;
+  for (const row of document.querySelectorAll("#admin-stage-deck-list .admin-stage-deck-row")) {
+    row.style.display = !selected || row.dataset.series === selected ? "" : "none";
+  }
+}
+
+document.getElementById("admin-stage-deck-series-filter").addEventListener("change", applyStageDeckSeriesFilter);
+
 function renderAdminStageDeck(cardIds) {
   const listEl = document.getElementById("admin-stage-deck-list");
   listEl.innerHTML = "";
@@ -1367,6 +1465,7 @@ function renderAdminStageDeck(cardIds) {
   for (const card of loadedAdminCards) {
     const row = document.createElement("label");
     row.className = "admin-stage-deck-row";
+    row.dataset.series = card.series;
 
     const text = document.createElement("span");
     text.textContent = `${card.name} (${card.cost}코스트)`;
@@ -1381,6 +1480,9 @@ function renderAdminStageDeck(cardIds) {
 
     listEl.appendChild(row);
   }
+
+  populateStageDeckSeriesFilterOptions(loadedAdminCards);
+  applyStageDeckSeriesFilter();
 }
 
 document.getElementById("btn-save-stage-deck").addEventListener("click", async () => {

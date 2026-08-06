@@ -66,9 +66,27 @@
       <button id="btn-save-starter-cards">스타터 카드 저장</button>
       <p id="admin-starter-error" class="error"></p>
 
+      <h3>스테이지 관리</h3>
+      <p class="admin-hint">새 스테이지를 추가하거나 선택한 스테이지의 이름을 바꿀 수 있습니다.</p>
+      <div class="admin-stage-manage-row">
+        <input type="text" id="new-stage-name" placeholder="스테이지 이름 (예: 6스테이지)" />
+        <input type="text" id="new-stage-ai-name" placeholder="AI 이름" />
+        <button id="btn-add-stage">스테이지 추가</button>
+      </div>
+      <p id="admin-stage-add-error" class="error"></p>
+
       <h3>스테이지 덱 편집</h3>
       <p class="admin-hint">스테이지를 골라 AI 덱의 카드별 장수를 지정하세요 (장수 제한 없음).</p>
       <select id="admin-stage-select"></select>
+      <div class="admin-stage-manage-row">
+        <input type="text" id="edit-stage-name" placeholder="스테이지 이름" />
+        <input type="text" id="edit-stage-ai-name" placeholder="AI 이름" />
+        <button id="btn-rename-stage">이름 저장</button>
+      </div>
+      <p id="admin-stage-rename-error" class="error"></p>
+      <select id="admin-stage-deck-series-filter">
+        <option value="">전체 계열</option>
+      </select>
       <div id="admin-stage-deck-list"></div>
       <button id="btn-save-stage-deck">스테이지 덱 저장</button>
       <p id="admin-stage-deck-error" class="error"></p>

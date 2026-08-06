@@ -114,6 +114,19 @@ async function seedCardsIfEmpty(db) {
   console.log(`Seeded ${seedCards.length} cards from cards.json`);
 }
 
+async function seedStagesIfEmpty(db) {
+  const { rows } = await db.execute("SELECT COUNT(*) AS count FROM stages");
+  if (Number(rows[0].count) > 0) return;
+
+  for (const stage of STAGES) {
+    await db.execute({
+      sql: "INSERT INTO stages (id, name, ai_name) VALUES (?, ?, ?)",
+      args: [stage.id, stage.name, stage.aiName],
+    });
+  }
+  console.log(`Seeded ${STAGES.length} stages from stages.js`);
+}
+
 async function seedStageDecksIfEmpty(db) {
   for (const stage of STAGES) {
     const { rows } = await db.execute({
@@ -203,6 +216,14 @@ async function connectDB() {
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS stages (
+      id INTEGER PRIMARY KEY,
+      name TEXT NOT NULL,
+      ai_name TEXT NOT NULL
+    )
+  `);
+  await seedStagesIfEmpty(db);
   await seedStageDecksIfEmpty(db);
   console.log("Turso connected");
 }

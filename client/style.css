@@ -1487,6 +1487,29 @@ button:active {
   cursor: pointer;
 }
 
+.admin-stage-manage-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.admin-stage-manage-row input[type="text"] {
+  flex: 1;
+  min-width: 120px;
+  padding: 4px 6px;
+  font-size: 13px;
+}
+
+#admin-stage-deck-list {
+  max-height: 320px;
+  overflow-y: auto;
+  background: #1b1f2a;
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
 .admin-stage-deck-row {
   display: flex;
   align-items: center;
