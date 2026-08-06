@@ -1,6 +1,6 @@
 // SELF 타겟 해석 규칙 (가장 모호한 부분이라 명시적으로 문서화):
-// - action이 DRAW/HEAL이면 SELF는 항상 발동 주체(카드 컨트롤러) 플레이어(영웅)를 가리킨다.
-// - action이 BUFF/DAMAGE이고 trigger가 ON_PLAY/ON_DEATH(캐릭터 스킬)면 SELF는 카드 자기 자신.
+// - action이 DRAW면 SELF는 항상 발동 주체(카드 컨트롤러) 플레이어(영웅)를 가리킨다.
+// - action이 BUFF/DAMAGE/HEAL이고 trigger가 ON_PLAY/ON_DEATH(캐릭터 스킬)면 SELF는 카드 자기 자신.
 // - trigger가 IMMEDIATE(스펠)이면 스펠은 보드 위에 "자기 자신"이 없으므로 SELF는 시전자 영웅.
 //
 // 참고: DAMAGE 효과로 캐릭터가 죽는 경우(스킬/스펠) ON_DEATH는 발동하지 않는다 — 무한 연쇄를
@@ -50,7 +50,7 @@ function resolveTargets(room, playerId, effect, context, requiredTargetTag) {
       return [{ kind: "card", ref: found.card, owner: found.player }];
     }
     case "SELF": {
-      if (effect.action === "DRAW" || effect.action === "HEAL") {
+      if (effect.action === "DRAW") {
         return [{ kind: "player", ref: player }];
       }
       if (effect.trigger === "IMMEDIATE") {
