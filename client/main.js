@@ -1743,12 +1743,29 @@ function cardDescHtml(card) {
 }
 
 function fitCardName(nameEl) {
-  let size = 13;
-  nameEl.style.fontSize = `${size}px`;
-  while (nameEl.scrollWidth > nameEl.clientWidth && size > 5) {
-    size -= 0.5;
+  const STEP = 0.5;
+  const MIN = 5;
+  const MAX = 13;
+  const steps = Math.round((MAX - MIN) / STEP);
+
+  const fits = (size) => {
     nameEl.style.fontSize = `${size}px`;
+    return nameEl.scrollWidth <= nameEl.clientWidth;
+  };
+
+  if (fits(MAX)) return;
+
+  let lo = 0;
+  let hi = steps;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (fits(MIN + mid * STEP)) {
+      lo = mid;
+    } else {
+      hi = mid - 1;
+    }
   }
+  nameEl.style.fontSize = `${MIN + lo * STEP}px`;
 }
 
 function refitAllCardNames() {
