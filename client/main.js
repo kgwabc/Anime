@@ -856,6 +856,23 @@ document.getElementById("form-new-card").addEventListener("submit", async (e) =>
 
 const WAKE_RETRY_DELAY_MS = 4000;
 
+let loadingProgress = 0;
+let loadingDone = false;
+
+function setLoadingProgress(pct) {
+  loadingProgress = pct;
+  document.getElementById("loading-progress-fill").style.width = `${pct}%`;
+  document.getElementById("loading-percent").textContent = `${Math.floor(pct)}%`;
+}
+
+function tickSimulatedProgress() {
+  if (loadingDone) return;
+  if (loadingProgress < 90) {
+    setLoadingProgress(loadingProgress + (90 - loadingProgress) * 0.06 + 0.4);
+  }
+  setTimeout(tickSimulatedProgress, 150);
+}
+
 function wakeServer() {
   const statusEl = document.getElementById("loading-status");
   const startButton = document.getElementById("btn-start-game");
@@ -863,6 +880,8 @@ function wakeServer() {
   fetch(SERVER_URL)
     .then((res) => {
       if (!res.ok) throw new Error(`status ${res.status}`);
+      loadingDone = true;
+      setLoadingProgress(100);
       statusEl.textContent = "준비 완료!";
       startButton.classList.remove("hidden");
     })
@@ -883,6 +902,7 @@ document.getElementById("btn-start-game").addEventListener("click", () => {
 });
 
 showScreen("loading");
+tickSimulatedProgress();
 wakeServer();
 
 // ---------- 덱 편집 ----------
