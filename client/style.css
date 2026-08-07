@@ -394,10 +394,10 @@ button:active {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: rgba(6, 5, 12, 0.95);
+  background: #06050c;
   border: 1px solid var(--gold-dim);
   color: var(--gold);
-  font-size: 15px;
+  font-size: 17px;
   font-weight: bold;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
@@ -405,7 +405,7 @@ button:active {
 .hud-logout-btn {
   position: absolute;
   right: 2%;
-  top: 9%;
+  top: 12%;
   padding: 4px 10px;
   font-size: 15px;
   line-height: 1;
