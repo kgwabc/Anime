@@ -56,11 +56,11 @@ body {
 
 .screen--loading-art {
   position: fixed;
-  inset: 2.5%;
-  width: auto;
-  height: auto;
+  inset: 0;
+  margin: auto;
+  width: min(97.5vw, calc(97.5vh * 3 / 2));
+  height: min(97.5vh, calc(97.5vw * 2 / 3));
   max-width: none;
-  margin: 0;
   padding: 0;
   border: none;
   border-radius: 14px;
@@ -341,11 +341,11 @@ button:active {
 
 .screen--lobby-art {
   position: fixed;
-  inset: 2.5%;
-  width: auto;
-  height: auto;
+  inset: 0;
+  margin: auto;
+  width: min(97.5vw, calc(97.5vh * 3 / 2));
+  height: min(97.5vh, calc(97.5vw * 2 / 3));
   max-width: none;
-  margin: 0;
   padding: 0;
   border: none;
   border-radius: 14px;
@@ -358,6 +358,7 @@ button:active {
 #screen-lobby.screen--lobby-art:has(#admin-panel:not(.hidden)) {
   position: relative;
   inset: auto;
+  margin: 0;
   width: 100%;
   height: auto;
   min-height: 100vh;
@@ -473,34 +474,15 @@ button:active {
   padding: 0;
   margin: 0;
   border: none;
-  border-radius: 6px;
-  background-size: cover;
-  background-position: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 0;
+  background: none;
   cursor: pointer;
 }
 
 .lobby-card-hit button:hover {
-  transform: scale(1.06);
-  box-shadow: 0 0 24px rgba(255, 210, 79, 0.6);
-  z-index: 5;
-  position: relative;
-}
-
-.lobby-card-hit--queue button {
-  background-image: url("assets/lobby-card-queue.png");
-}
-
-.lobby-card-hit--adventure button {
-  background-image: url("assets/lobby-card-adventure.png");
-}
-
-.lobby-card-hit--deck button {
-  background-image: url("assets/lobby-card-deck.png");
-}
-
-.lobby-card-hit--shop button {
-  background-image: url("assets/lobby-card-shop.png");
+  filter: none;
+  transform: none;
+  box-shadow: none;
 }
 
 /* ---------- 대기 화면 ---------- */
