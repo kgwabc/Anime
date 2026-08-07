@@ -76,8 +76,8 @@ body:has(#screen-loading:not(.hidden)) {
 
 .loading-start-btn {
   position: absolute;
-  left: 32.9%;
-  top: 82.3%;
+  left: 36%;
+  top: 78.5%;
   width: 34.2%;
   height: 10.7%;
   margin: 0;
