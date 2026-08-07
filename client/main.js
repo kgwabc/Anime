@@ -2684,11 +2684,12 @@ function applyPendingCardEffects(boardEl, role) {
       const cardRect = card.getBoundingClientRect();
       const offsetX = boardRect.left + boardRect.width / 2 - (cardRect.left + cardRect.width / 2);
       card.style.setProperty("--spread-from-x", `${offsetX}px`);
-      flashClass(card, "card-spread-in", 450);
 
       if (skillName) showSkillNamePopup(card, skillName, "play");
       if (skillEffect) showElementEffect(card, skillEffect);
       showEffectResultPopups(effectResults);
+
+      flashClass(card, "card-spread-in", 450);
     }
     if (pendingBuffEffects.has(cardId)) {
       const { effectResults, equipEffect } = pendingBuffEffects.get(cardId);
