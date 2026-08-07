@@ -22,7 +22,9 @@
   </div>
 
   <div id="screen-loading" class="screen screen--loading-art">
-    <button id="btn-start-game" class="loading-start-btn hidden">게임 시작</button>
+    <div class="art-frame">
+      <button id="btn-start-game" class="loading-start-btn hidden">게임 시작</button>
+    </div>
   </div>
 
   <div id="screen-auth" class="screen hidden">
@@ -48,24 +50,26 @@
   </div>
 
   <div id="screen-lobby" class="screen screen--lobby-art hidden">
-    <span id="lobby-username" class="hud-username"></span>
-    <span id="lobby-coins" class="hud-coins">🪙 0</span>
-    <button id="btn-logout" class="hud-logout-btn" title="로그아웃">로그아웃</button>
-    <button id="btn-toggle-admin" class="hud-admin-btn hidden" title="관리자 패널">🛠️ 관리자</button>
+    <div class="art-frame">
+      <span id="lobby-username" class="hud-username"></span>
+      <span id="lobby-coins" class="hud-coins">🪙 0</span>
+      <button id="btn-logout" class="hud-logout-btn" title="로그아웃">로그아웃</button>
+      <button id="btn-toggle-admin" class="hud-admin-btn hidden" title="관리자 패널">🛠️ 관리자</button>
 
-    <p id="lobby-status" class="lobby-status-toast"></p>
+      <p id="lobby-status" class="lobby-status-toast"></p>
 
-    <div class="lobby-card-hit lobby-card-hit--queue">
-      <button id="btn-join-queue" aria-label="매칭 시작"></button>
-    </div>
-    <div class="lobby-card-hit lobby-card-hit--adventure">
-      <button id="btn-open-adventure" aria-label="어드벤처 모드"></button>
-    </div>
-    <div class="lobby-card-hit lobby-card-hit--deck">
-      <button id="btn-edit-deck" aria-label="덱 편집"></button>
-    </div>
-    <div class="lobby-card-hit lobby-card-hit--shop">
-      <button id="btn-open-shop" aria-label="상점"></button>
+      <div class="lobby-card-hit lobby-card-hit--queue">
+        <button id="btn-join-queue" aria-label="매칭 시작"></button>
+      </div>
+      <div class="lobby-card-hit lobby-card-hit--adventure">
+        <button id="btn-open-adventure" aria-label="어드벤처 모드"></button>
+      </div>
+      <div class="lobby-card-hit lobby-card-hit--deck">
+        <button id="btn-edit-deck" aria-label="덱 편집"></button>
+      </div>
+      <div class="lobby-card-hit lobby-card-hit--shop">
+        <button id="btn-open-shop" aria-label="상점"></button>
+      </div>
     </div>
 
     <div id="admin-panel-backdrop" class="hidden"></div>
