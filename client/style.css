@@ -54,17 +54,57 @@ body {
   backdrop-filter: blur(6px);
 }
 
-#screen-loading {
-  text-align: center;
+.screen--loading-art {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  overflow: hidden;
+  background: url("assets/loading-bg.png") center / cover no-repeat;
 }
 
-#screen-loading #loading-status {
-  margin: 18px 0;
-  color: #cfd6e6;
+body:has(#screen-loading:not(.hidden)) {
+  overflow: hidden;
 }
 
-#screen-loading button {
-  margin-top: 8px;
+.sr-only-loading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.loading-start-hit {
+  position: absolute;
+  left: 50%;
+  top: 82%;
+  transform: translate(-50%, -50%);
+  width: 240px;
+  height: 70px;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.loading-start-hit:hover {
+  transform: translate(-50%, -50%);
+  filter: none;
+  box-shadow: none;
 }
 
 .spinner {
@@ -84,8 +124,7 @@ body {
 }
 
 #screen-auth h1,
-#screen-lobby h1,
-#screen-loading h1 {
+#screen-lobby h1 {
   text-align: center;
   letter-spacing: 1px;
   color: var(--gold);
