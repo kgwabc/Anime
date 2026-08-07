@@ -82,6 +82,10 @@ async function handleGameOver(room, roomId) {
   socketToRoom.delete(winnerId);
 }
 
+function aiThinkDelay() {
+  return 2000 + Math.random() * 3000;
+}
+
 function stepAiTurn(room, roomId) {
   if (room.isGameOver() || !room.isPlayersTurn(room.aiPlayerId)) return;
   const aiId = room.aiPlayerId;
@@ -98,7 +102,7 @@ function stepAiTurn(room, roomId) {
       broadcastGameState(room);
     }
     handleGameOver(room, roomId);
-    if (!room.isGameOver()) setTimeout(() => stepAiTurn(room, roomId), 700);
+    if (!room.isGameOver()) setTimeout(() => stepAiTurn(room, roomId), aiThinkDelay());
     return;
   }
 
@@ -125,12 +129,14 @@ function stepAiTurn(room, roomId) {
       broadcastGameState(room);
     }
     handleGameOver(room, roomId);
-    if (!room.isGameOver()) setTimeout(() => stepAiTurn(room, roomId), 700);
+    if (!room.isGameOver()) setTimeout(() => stepAiTurn(room, roomId), aiThinkDelay());
     return;
   }
 
-  room.endTurn(aiId);
-  broadcastGameState(room);
+  setTimeout(() => {
+    room.endTurn(aiId);
+    broadcastGameState(room);
+  }, aiThinkDelay());
 }
 
 io.on("connection", (socket) => {
@@ -337,7 +343,7 @@ io.on("connection", (socket) => {
 
     broadcastGameState(room);
     if (room.isAiMatch && !room.isGameOver() && room.isPlayersTurn(room.aiPlayerId)) {
-      stepAiTurn(room, roomId);
+      setTimeout(() => stepAiTurn(room, roomId), aiThinkDelay());
     }
   });
 
