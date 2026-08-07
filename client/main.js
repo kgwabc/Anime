@@ -138,6 +138,10 @@ document.getElementById("btn-logout").addEventListener("click", () => {
   logout();
 });
 
+document.getElementById("btn-toggle-admin").addEventListener("click", () => {
+  document.getElementById("admin-panel").classList.toggle("hidden");
+});
+
 function onAuthenticated(token, username) {
   localStorage.setItem("tcg_token", token);
   localStorage.setItem("tcg_username", username);
@@ -165,15 +169,17 @@ function connectSocket(token, username) {
     refreshLobbyCoins();
 
     const adminPanel = document.getElementById("admin-panel");
+    const adminToggleBtn = document.getElementById("btn-toggle-admin");
+    adminPanel.classList.add("hidden");
     if (username === ADMIN_USERNAME) {
-      adminPanel.classList.remove("hidden");
+      adminToggleBtn.classList.remove("hidden");
       currentAdminToken = token;
       await loadAdminCards(token);
       loadAdminUsers(token);
       loadAdminStarterCards(token);
       loadAdminStageDecks(token);
     } else {
-      adminPanel.classList.add("hidden");
+      adminToggleBtn.classList.add("hidden");
     }
   });
 

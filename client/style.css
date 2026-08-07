@@ -56,15 +56,15 @@ body {
 
 .screen--loading-art {
   position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100dvh;
+  inset: 2.5%;
+  width: auto;
+  height: auto;
   max-width: none;
   margin: 0;
   padding: 0;
   border: none;
-  border-radius: 0;
-  box-shadow: none;
+  border-radius: 14px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
   backdrop-filter: none;
   overflow: hidden;
   background: url("assets/loading-bg.png") center / cover no-repeat;
@@ -77,12 +77,18 @@ body:has(#screen-loading:not(.hidden)) {
 .loading-progress-wrap {
   position: absolute;
   left: 50%;
-  top: 74%;
+  top: 79%;
   transform: translate(-50%, -50%);
-  width: 46%;
-  min-width: 260px;
-  max-width: 520px;
+  width: 50%;
+  min-width: 280px;
+  max-width: 560px;
   text-align: center;
+  padding: 22px 28px 28px;
+  border-radius: 18px;
+  background: rgba(8, 6, 16, 0.85);
+  border: 1px solid rgba(200, 170, 255, 0.4);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
 }
 
 .loading-progress-track {
@@ -118,26 +124,12 @@ body:has(#screen-loading:not(.hidden)) {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
-.loading-start-hit {
-  position: absolute;
-  left: 50%;
-  top: 82%;
-  transform: translate(-50%, -50%);
-  width: 240px;
-  height: 70px;
-  padding: 0;
-  margin: 0;
-  background: none;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  cursor: pointer;
-}
-
-.loading-start-hit:hover {
-  transform: translate(-50%, -50%);
-  filter: none;
-  box-shadow: none;
+.loading-start-btn {
+  margin-top: 16px;
+  padding: 12px 32px;
+  font-size: 16px;
+  background: linear-gradient(160deg, #b98cff, #7a4fff 55%, #4a2b99);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .spinner {
@@ -349,15 +341,15 @@ button:active {
 
 .screen--lobby-art {
   position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100dvh;
+  inset: 2.5%;
+  width: auto;
+  height: auto;
   max-width: none;
   margin: 0;
   padding: 0;
   border: none;
-  border-radius: 0;
-  box-shadow: none;
+  border-radius: 14px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
   backdrop-filter: none;
   overflow: hidden;
   background: url("assets/lobby-bg.png") center / cover no-repeat;
@@ -370,6 +362,8 @@ button:active {
   height: auto;
   min-height: 100vh;
   overflow: visible;
+  border-radius: 0;
+  box-shadow: none;
   background-attachment: fixed;
   padding-bottom: 40px;
 }
@@ -414,6 +408,22 @@ button:active {
 
 .hud-logout-btn:hover {
   transform: scale(1.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 210, 79, 0.4);
+}
+
+.hud-admin-btn {
+  position: absolute;
+  right: 2%;
+  top: 16%;
+  padding: 5px 12px;
+  font-size: 13px;
+  line-height: 1;
+  background: rgba(10, 8, 20, 0.55);
+  border: 1px solid var(--gold-dim);
+}
+
+.hud-admin-btn:hover {
+  transform: scale(1.05);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 210, 79, 0.4);
 }
 
