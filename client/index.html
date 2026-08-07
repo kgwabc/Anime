@@ -54,47 +54,25 @@
     </form>
   </div>
 
-  <div id="screen-lobby" class="screen screen--lobby hidden">
-    <div class="lobby-hud">
-      <div class="hud-user">
-        <span class="hud-user-icon">👤</span>
-        <div class="hud-user-info">
-          <strong id="lobby-username"></strong>
-          <span id="lobby-coins">🪙 0</span>
-        </div>
-      </div>
-      <button id="btn-logout" class="hud-icon-btn" title="로그아웃">🚪</button>
-    </div>
+  <div id="screen-lobby" class="screen screen--lobby-art hidden">
+    <span id="lobby-username" class="hud-username"></span>
+    <span id="lobby-coins" class="hud-coins">🪙 0</span>
+    <button id="btn-logout" class="hud-logout-btn" title="로그아웃">🚪</button>
 
-    <div class="lobby-brand">
-      <span class="lobby-brand-en">ANIME</span>
-      <span class="lobby-brand-en lobby-brand-en--accent">PSYKONGROO</span>
-    </div>
+    <p id="lobby-status" class="lobby-status-toast"></p>
 
-    <div class="menu-card-grid">
-      <button id="btn-join-queue" class="menu-card menu-card--queue">
-        <span class="menu-card-icon">⚔️</span>
-        <span class="menu-card-title">매칭 시작<small>MATCHING START</small></span>
-        <span class="menu-card-desc">전 세계의 플레이어와 실력을 겨뤄보세요!</span>
-      </button>
-      <button id="btn-open-adventure" class="menu-card menu-card--adventure">
-        <span class="menu-card-icon">🗺️</span>
-        <span class="menu-card-title">어드벤처 모드<small>ADVENTURE</small></span>
-        <span class="menu-card-desc">다양한 스테이지의 AI와 대결해보세요!</span>
-      </button>
-      <button id="btn-edit-deck" class="menu-card menu-card--deck">
-        <span class="menu-card-icon">🃏</span>
-        <span class="menu-card-title">덱 편집<small>DECK EDIT</small></span>
-        <span class="menu-card-desc">카드를 구성하고 나만의 덱을 만드세요!</span>
-      </button>
-      <button id="btn-open-shop" class="menu-card menu-card--shop">
-        <span class="menu-card-icon">🎁</span>
-        <span class="menu-card-title">상점<small>SHOP</small></span>
-        <span class="menu-card-desc">카드 팩과 다양한 아이템을 구매하세요!</span>
-      </button>
+    <div class="lobby-card-hit lobby-card-hit--queue">
+      <button id="btn-join-queue" aria-label="매칭 시작"></button>
     </div>
-
-    <p id="lobby-status"></p>
+    <div class="lobby-card-hit lobby-card-hit--adventure">
+      <button id="btn-open-adventure" aria-label="어드벤처 모드"></button>
+    </div>
+    <div class="lobby-card-hit lobby-card-hit--deck">
+      <button id="btn-edit-deck" aria-label="덱 편집"></button>
+    </div>
+    <div class="lobby-card-hit lobby-card-hit--shop">
+      <button id="btn-open-shop" aria-label="상점"></button>
+    </div>
 
     <div id="admin-panel" class="hidden">
       <h2>관리자 패널</h2>

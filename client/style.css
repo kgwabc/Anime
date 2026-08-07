@@ -345,220 +345,152 @@ button:active {
   transform: translateY(0) scale(0.98);
 }
 
-/* ---------- 로비 HUD / 메뉴 카드 ---------- */
+/* ---------- 로비 (이미지 기반) ---------- */
 
-.screen--lobby {
-  max-width: 980px;
+.screen--lobby-art {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  overflow: hidden;
+  background: url("assets/lobby-bg.png") center / cover no-repeat;
 }
 
-.lobby-hud {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 18px;
+#screen-lobby.screen--lobby-art:has(#admin-panel:not(.hidden)) {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  min-height: 100vh;
+  overflow: visible;
+  background-attachment: fixed;
+  padding-bottom: 40px;
 }
 
-.hud-user {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.hud-user-icon {
-  font-size: 28px;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #3a4664, #171b26);
+.hud-username {
+  position: absolute;
+  left: 2%;
+  top: 3%;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(10, 8, 20, 0.55);
   border: 1px solid var(--gold-dim);
-}
-
-.hud-user-info {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.3;
-}
-
-.hud-user-info strong {
   color: var(--text-main);
-  font-size: 15px;
+  font-size: 14px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
-.hud-user-info span {
-  font-size: 13px;
+.hud-coins {
+  position: absolute;
+  right: 2%;
+  top: 3%;
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: rgba(10, 8, 20, 0.55);
+  border: 1px solid var(--gold-dim);
   color: var(--gold);
+  font-size: 15px;
+  font-weight: bold;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
-.hud-icon-btn {
-  padding: 8px 12px;
-  font-size: 18px;
+.hud-logout-btn {
+  position: absolute;
+  right: 2%;
+  top: 9%;
+  padding: 4px 10px;
+  font-size: 15px;
   line-height: 1;
-  background: linear-gradient(160deg, #3a4664, #1c2130);
+  background: rgba(10, 8, 20, 0.55);
   border: 1px solid var(--gold-dim);
 }
 
-.hud-icon-btn:hover {
+.hud-logout-btn:hover {
   transform: scale(1.08);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 210, 79, 0.4);
 }
 
-.lobby-brand {
-  text-align: center;
-  margin: 4px 0 24px;
-  font-family: var(--font-display);
-  letter-spacing: 2px;
-}
-
-.lobby-brand-en {
-  display: block;
-  font-size: 30px;
-  color: var(--text-main);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
-}
-
-.lobby-brand-en--accent {
-  font-size: 40px;
-  background: linear-gradient(160deg, #ff8a8a, var(--red) 60%, #7a1414);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: none;
-  filter: drop-shadow(0 0 12px rgba(255, 107, 107, 0.45));
-}
-
-.menu-card-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  justify-content: center;
-  margin: 12px 0 20px;
-}
-
-button.menu-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 8px;
-  width: 200px;
-  min-height: 240px;
-  padding: 22px 16px;
-  border-radius: 14px;
-  color: var(--text-main);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: linear-gradient(170deg, rgba(80, 90, 130, 0.35), rgba(20, 23, 32, 0.7));
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-button.menu-card:hover {
-  transform: translateY(-6px) scale(1.05);
-  filter: none;
-}
-
-button.menu-card:active {
-  transform: translateY(-2px) scale(1.01);
-}
-
-.menu-card-icon {
-  font-size: 40px;
-  line-height: 1;
-  margin-bottom: 4px;
-}
-
-.menu-card-title {
-  font-family: var(--font-display);
-  font-size: 19px;
-  letter-spacing: 0.5px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.menu-card-title small {
-  font-size: 11px;
-  font-weight: normal;
-  letter-spacing: 2px;
+.lobby-status-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 4%;
+  transform: translateX(-50%);
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(10, 8, 20, 0.6);
   color: var(--text-dim);
-  font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  font-size: 13px;
+  min-height: 0;
+  white-space: nowrap;
 }
 
-.menu-card-desc {
-  font-size: 12.5px;
-  color: var(--text-dim);
-  line-height: 1.4;
+.lobby-card-hit {
+  position: absolute;
+  top: 37.6%;
+  height: 53.2%;
 }
 
-.menu-card--queue {
-  border-color: rgba(180, 130, 255, 0.5);
-  background: linear-gradient(170deg, rgba(120, 80, 200, 0.4), rgba(20, 23, 32, 0.75));
+.lobby-card-hit--queue {
+  left: 7.5%;
+  width: 20.6%;
 }
 
-.menu-card--queue:hover {
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5), 0 0 24px rgba(180, 130, 255, 0.5);
-  border-color: rgba(180, 130, 255, 0.9);
+.lobby-card-hit--adventure {
+  left: 28.1%;
+  width: 20.6%;
 }
 
-.menu-card--adventure {
-  border-color: rgba(79, 140, 255, 0.5);
-  background: linear-gradient(170deg, rgba(60, 100, 190, 0.4), rgba(20, 23, 32, 0.75));
+.lobby-card-hit--deck {
+  left: 48.7%;
+  width: 20.6%;
 }
 
-.menu-card--adventure:hover {
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5), 0 0 24px rgba(79, 140, 255, 0.5);
-  border-color: rgba(79, 140, 255, 0.9);
+.lobby-card-hit--shop {
+  left: 69.3%;
+  width: 20.5%;
 }
 
-.menu-card--deck {
-  border-color: rgba(90, 220, 170, 0.5);
-  background: linear-gradient(170deg, rgba(50, 150, 120, 0.4), rgba(20, 23, 32, 0.75));
+.lobby-card-hit button {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 6px;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
 }
 
-.menu-card--deck:hover {
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5), 0 0 24px rgba(90, 220, 170, 0.5);
-  border-color: rgba(90, 220, 170, 0.9);
+.lobby-card-hit button:hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 24px rgba(255, 210, 79, 0.6);
+  z-index: 5;
+  position: relative;
 }
 
-.menu-card--shop {
-  border-color: var(--gold-dim);
-  background: linear-gradient(170deg, rgba(180, 140, 40, 0.4), rgba(20, 23, 32, 0.75));
+.lobby-card-hit--queue button {
+  background-image: url("assets/lobby-card-queue.png");
 }
 
-.menu-card--shop:hover {
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5), 0 0 24px rgba(255, 210, 79, 0.5);
-  border-color: rgba(255, 210, 79, 0.9);
+.lobby-card-hit--adventure button {
+  background-image: url("assets/lobby-card-adventure.png");
 }
 
-@media (max-width: 600px) {
-  .menu-card-grid {
-    flex-direction: column;
-    align-items: stretch;
-  }
+.lobby-card-hit--deck button {
+  background-image: url("assets/lobby-card-deck.png");
+}
 
-  button.menu-card {
-    width: auto;
-    min-height: 0;
-    flex-direction: row;
-    text-align: left;
-    justify-content: flex-start;
-    padding: 14px 16px;
-  }
-
-  .menu-card-icon {
-    font-size: 28px;
-    margin-bottom: 0;
-  }
-
-  .lobby-brand-en {
-    font-size: 22px;
-  }
-
-  .lobby-brand-en--accent {
-    font-size: 28px;
-  }
+.lobby-card-hit--shop button {
+  background-image: url("assets/lobby-card-shop.png");
 }
 
 /* ---------- 대기 화면 ---------- */
