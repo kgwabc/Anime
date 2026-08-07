@@ -165,12 +165,54 @@ body:has(#screen-loading:not(.hidden)) {
 }
 
 #admin-panel {
-  margin-top: 20px;
-  padding: 16px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 720px);
+  max-height: 85vh;
+  overflow-y: auto;
+  z-index: 60;
+  padding: 16px 20px;
   background: #262b3a;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid var(--gold-dim);
-  max-width: 640px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+}
+
+#admin-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 55;
+}
+
+.admin-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: #262b3a;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.admin-panel-header h2 {
+  margin: 0;
+}
+
+.admin-close-btn {
+  padding: 4px 12px;
+  font-size: 15px;
+  line-height: 1;
+  background: rgba(255, 107, 107, 0.2);
+  border: 1px solid var(--red);
+  color: var(--text-main);
+}
+
+.admin-close-btn:hover {
+  background: var(--red);
 }
 
 .admin-card-form {
@@ -312,19 +354,6 @@ button:active {
   background: url("assets/lobby-bg.png") center / cover no-repeat;
 }
 
-#screen-lobby.screen--lobby-art:has(#admin-panel:not(.hidden)) {
-  position: relative;
-  inset: auto;
-  margin: 0;
-  width: 100%;
-  height: auto;
-  min-height: 100vh;
-  overflow: visible;
-  border-radius: 0;
-  box-shadow: none;
-  background-attachment: fixed;
-  padding-bottom: 40px;
-}
 
 .hud-username {
   position: absolute;

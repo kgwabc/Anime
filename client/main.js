@@ -138,8 +138,22 @@ document.getElementById("btn-logout").addEventListener("click", () => {
   logout();
 });
 
+function setAdminPanelOpen(open) {
+  document.getElementById("admin-panel").classList.toggle("hidden", !open);
+  document.getElementById("admin-panel-backdrop").classList.toggle("hidden", !open);
+}
+
 document.getElementById("btn-toggle-admin").addEventListener("click", () => {
-  document.getElementById("admin-panel").classList.toggle("hidden");
+  const isHidden = document.getElementById("admin-panel").classList.contains("hidden");
+  setAdminPanelOpen(isHidden);
+});
+
+document.getElementById("admin-panel-backdrop").addEventListener("click", () => {
+  setAdminPanelOpen(false);
+});
+
+document.getElementById("btn-close-admin").addEventListener("click", () => {
+  setAdminPanelOpen(false);
 });
 
 function onAuthenticated(token, username) {
@@ -168,9 +182,8 @@ function connectSocket(token, username) {
     showScreen("lobby");
     refreshLobbyCoins();
 
-    const adminPanel = document.getElementById("admin-panel");
     const adminToggleBtn = document.getElementById("btn-toggle-admin");
-    adminPanel.classList.add("hidden");
+    setAdminPanelOpen(false);
     if (username === ADMIN_USERNAME) {
       adminToggleBtn.classList.remove("hidden");
       currentAdminToken = token;

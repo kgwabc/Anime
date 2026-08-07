@@ -68,8 +68,12 @@
       <button id="btn-open-shop" aria-label="상점"></button>
     </div>
 
+    <div id="admin-panel-backdrop" class="hidden"></div>
     <div id="admin-panel" class="hidden">
-      <h2>관리자 패널</h2>
+      <div class="admin-panel-header">
+        <h2>관리자 패널</h2>
+        <button id="btn-close-admin" class="admin-close-btn" title="닫기">✕</button>
+      </div>
       <button id="btn-reset-all-decks">모든 유저 덱 초기화</button>
       <p id="admin-deck-reset-error" class="error"></p>
       <div id="admin-user-list"></div>
