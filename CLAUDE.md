@@ -55,10 +55,16 @@
   캐릭터"로 설계하기로 했었는데, 사용자가 실제 이름 사용을 명시적으로 선택해서 이 세트만
   예외로 진행함. 개인/비상업 프로젝트 단계라 진행했지만, 나중에 공개 배포/상업화(Vercel
   Commercial 전환 등)를 고려할 때는 저작권 이슈가 될 수 있다는 점을 유의.
-- 카드 효과(데미지/회복/드로우/버프)를 한 차례 구현했었으나, 설명 문구가 복잡하다는
-  피드백으로 다시 제거함. 지금은 캐릭터 카드 8장에 `id/name/series/type/cost/atk/hp/
-  synergyTags`만 있고 `effects`/`description` 필드 없음 — 순수 스탯 카드 상태.
-  `GameRoom.js`에는 `resolveEffect` 관련 코드가 전혀 없음(카드를 내면 그냥 보드에 배치만 됨).
+- 카드 효과(데미지/회복/드로우/버프)는 다시 도입되어 있음. 캐릭터/스펠/장비 카드 모두
+  `effects` 배열(`{trigger, action, target, value}`)을 가질 수 있고, `server/game/effects.js`의
+  `applyEffectList`/`resolveTargets`가 트리거 종류(캐릭터는 `ON_PLAY`/`ON_DEATH`, 스펠은
+  `IMMEDIATE`, 장비는 `ON_EQUIP`)와 무관하게 동일한 방식으로 해석함. `card.requiredTargetTag`
+  (특정 synergyTag를 가진 캐릭터만 대상 가능)도 스펠/장비뿐 아니라 캐릭터 스킬에도 동일하게
+  적용되며, 관리자 카드 에디터(`client/main.js`)에서 캐릭터 타입에도 이 필드를 지정할 수 있음.
+  `TARGET_CHARACTER`를 대상으로 하는 캐릭터 `ON_PLAY` 스킬은 카드를 내 보드에 드롭한 뒤
+  "대상 선택 모드"로 전환되어(보드 카드에 `.skill-target` 하이라이트) 클릭으로 대상을
+  확정하는 흐름을 따름(`pendingSkillTargetCard` 상태, 공격 대상 선택의 클릭 패턴을 그대로
+  본떠 만듦). `char_gintoki`는 `ON_DEATH`+`SELF`로 스스로를 회복하는 스킬(`부활`)을 가진 예시.
 ## 전투 시스템 (공격)
 - `GameRoom.attack(playerId, attackerCardId, target)` — 보드 위 캐릭터로 공격하는 유일한 방법.
   `target`은 `{type:"hero"}` 또는 `{type:"character", cardId}`.

@@ -1023,6 +1023,16 @@ button:active {
   outline: 2px dashed #ff6b6b;
 }
 
+.card.skill-target {
+  cursor: crosshair;
+  outline: 2px dashed #4fd1ff;
+}
+
+.card.skill-target:hover {
+  border-color: #4fd1ff;
+  box-shadow: 0 0 8px #4fd1ff;
+}
+
 .card.legendary {
   border-color: #ffd24f;
   box-shadow: 0 0 6px #ffd24f;

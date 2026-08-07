@@ -6,6 +6,7 @@ const DEATH_SKILL_REBUILD_BUFFER_MS = 400;
 let socket = null;
 let lastState = null;
 let selectedAttackerId = null;
+let pendingSkillTargetCard = null;
 let dragState = null;
 let pendingRenderState = null;
 let currentAdminToken = null;
@@ -645,7 +646,6 @@ function renderAdminCards(cards, token) {
       attackNameOverrideInput.classList.toggle("hidden", type !== "equipment");
       equipEffectSelect.classList.toggle("hidden", type !== "equipment");
       attackEffectOverrideSelect.classList.toggle("hidden", type !== "equipment");
-      requiredTagSelect.classList.toggle("hidden", type === "character");
       populateTriggerOptions(triggerSelect, type);
     }
     typeSelect.addEventListener("change", refreshFieldVisibility);
@@ -696,7 +696,7 @@ function renderAdminCards(cards, token) {
         fields.equipEffect = equipEffectSelect.value || null;
         fields.attackEffectOverride = attackEffectOverrideSelect.value || null;
       }
-      if (type === "spell" || type === "equipment") {
+      if (type === "spell" || type === "equipment" || type === "character") {
         fields.requiredTargetTag = requiredTagSelect.value || null;
       }
       if (imageInput.files[0]) {
@@ -840,7 +840,7 @@ document.getElementById("form-new-card").addEventListener("submit", async (e) =>
     fields.equipEffect = document.getElementById("new-card-equip-effect").value || null;
     fields.attackEffectOverride = document.getElementById("new-card-attack-effect-override").value || null;
   }
-  if (type === "spell" || type === "equipment") {
+  if (type === "spell" || type === "equipment" || type === "character") {
     fields.requiredTargetTag = document.getElementById("new-card-required-tag").value || null;
   }
   const imageFile = document.getElementById("new-card-image").files[0];
@@ -1603,6 +1603,23 @@ document.getElementById("btn-surrender").addEventListener("click", () => {
   }
 });
 
+let skillTargetModeArmed = false;
+
+document.addEventListener("click", (e) => {
+  if (!skillTargetModeArmed) return;
+  if (pendingSkillTargetCard && !e.target.closest(".skill-target")) {
+    pendingSkillTargetCard = null;
+    if (lastState) renderState(lastState);
+  }
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && pendingSkillTargetCard) {
+    pendingSkillTargetCard = null;
+    if (lastState) renderState(lastState);
+  }
+});
+
 function registerSocketHandlers() {
   socket.on("match_found", (state) => {
     showScreen("game");
@@ -1620,6 +1637,7 @@ function registerSocketHandlers() {
   socket.on("action_error", (reason) => {
     console.warn("action_error:", reason);
     selectedAttackerId = null;
+    pendingSkillTargetCard = null;
     if (lastState) renderState(lastState);
   });
 
@@ -1722,6 +1740,7 @@ function returnToLobby() {
     pendingBoardRebuildTimer = null;
   }
   selectedAttackerId = null;
+  pendingSkillTargetCard = null;
   dragState = null;
   pendingRenderState = null;
   lastState = null;
@@ -2325,6 +2344,17 @@ function cardNeedsTargetCharacter(card) {
   return (card.effects || []).some((effect) => effect.target === "TARGET_CHARACTER");
 }
 
+function characterNeedsPlayTarget(card) {
+  return (card.effects || []).some(
+    (effect) => effect.trigger === "ON_PLAY" && effect.target === "TARGET_CHARACTER"
+  );
+}
+
+function isValidSkillTarget(card, pendingCard) {
+  if (!pendingCard.requiredTargetTag) return true;
+  return (card.synergyTags || []).includes(pendingCard.requiredTargetTag);
+}
+
 function cardStatsHtml(card) {
   if (card.type === "character") {
     const atkBuff = card.buffAtk ? `<span class="buff-amount">+${card.buffAtk}</span>` : "";
@@ -2443,6 +2473,21 @@ function renderCard(card, role, isMyTurn) {
 
   el.innerHTML = cardFaceHtml(card);
 
+  if (pendingSkillTargetCard && (role === "my-board" || role === "opp-board")) {
+    if (isValidSkillTarget(card, pendingSkillTargetCard)) {
+      el.classList.add("skill-target");
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        socket.emit("play_card", {
+          cardId: pendingSkillTargetCard.id,
+          target: { cardId: card.id },
+        });
+        pendingSkillTargetCard = null;
+      });
+    }
+    return el;
+  }
+
   if (role === "hand") {
     el.style.touchAction = "none";
     el.addEventListener("pointerdown", (e) => startCardDrag(e, card, el));
@@ -2548,7 +2593,13 @@ function startCardDrag(e, card, el) {
   function onUp(ev) {
     const dropTarget = findDropTarget(ev.clientX, ev.clientY);
     if (dropIsValid(card, dropTarget)) {
-      if (card.type === "character" || (card.type === "spell" && !cardNeedsTargetCharacter(card))) {
+      if (card.type === "character" && characterNeedsPlayTarget(card)) {
+        pendingSkillTargetCard = card;
+        skillTargetModeArmed = false;
+        setTimeout(() => {
+          skillTargetModeArmed = true;
+        }, 0);
+      } else if (card.type === "character" || (card.type === "spell" && !cardNeedsTargetCharacter(card))) {
         socket.emit("play_card", { cardId: card.id });
       } else if (card.type === "spell") {
         socket.emit("play_card", { cardId: card.id, target: { cardId: dropTarget.cardEl.dataset.cardId } });
@@ -2793,6 +2844,10 @@ function renderState(state) {
     ? `▶ 내 턴 (턴 ${state.turnNumber})`
     : `상대 턴 (턴 ${state.turnNumber})`;
   document.getElementById("btn-end-turn").disabled = !isMyTurn;
+
+  if (pendingSkillTargetCard) {
+    document.getElementById("turn-indicator").textContent = "🎯 스킬 대상을 선택하세요 (취소: 빈 곳 클릭/Esc)";
+  }
 
   if (lastTurnPlayerId !== null && lastTurnPlayerId !== state.currentPlayerId) {
     flashClass(document.getElementById("turn-indicator"), "turn-flash", 600);
