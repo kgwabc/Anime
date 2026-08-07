@@ -74,62 +74,19 @@ body:has(#screen-loading:not(.hidden)) {
   overflow: hidden;
 }
 
-.loading-progress-wrap {
-  position: absolute;
-  left: 50%;
-  top: 79%;
-  transform: translate(-50%, -50%);
-  width: 50%;
-  min-width: 280px;
-  max-width: 560px;
-  text-align: center;
-  padding: 22px 28px 28px;
-  border-radius: 18px;
-  background: rgba(8, 6, 16, 0.85);
-  border: 1px solid rgba(200, 170, 255, 0.4);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(3px);
-}
-
-.loading-progress-track {
-  width: 100%;
-  height: 14px;
-  border-radius: 999px;
-  background: rgba(10, 8, 20, 0.6);
-  border: 1px solid rgba(200, 170, 255, 0.4);
-  overflow: hidden;
-  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
-}
-
-.loading-progress-fill {
-  width: 0%;
-  height: 100%;
-  background: linear-gradient(90deg, #7a4fff, #b98cff);
-  box-shadow: 0 0 10px rgba(185, 140, 255, 0.8);
-  transition: width 0.25s ease;
-}
-
-#screen-loading #loading-status {
-  margin: 10px 0 0;
-  font-size: 14px;
-  color: #e8e0ff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-}
-
-.loading-percent-line {
-  margin: 2px 0 0;
-  font-size: 13px;
-  font-weight: bold;
-  color: #d8c4ff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-}
-
 .loading-start-btn {
-  margin-top: 16px;
-  padding: 12px 32px;
-  font-size: 16px;
+  position: absolute;
+  left: 32.9%;
+  top: 82.3%;
+  width: 34.2%;
+  height: 10.7%;
+  margin: 0;
+  font-size: 18px;
+  font-family: var(--font-display);
+  letter-spacing: 1px;
   background: linear-gradient(160deg, #b98cff, #7a4fff 55%, #4a2b99);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 8px;
 }
 
 .spinner {
