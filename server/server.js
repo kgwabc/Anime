@@ -83,7 +83,7 @@ async function handleGameOver(room, roomId) {
 }
 
 function aiThinkDelay() {
-  return 2000 + Math.random() * 3000;
+  return 2000 + Math.random() * 1000;
 }
 
 function stepAiTurn(room, roomId) {
