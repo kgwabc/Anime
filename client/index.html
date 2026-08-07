@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
   <title>애니프사이콩그루</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap"
+    rel="stylesheet"
+  />
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#1b1f2a" />
@@ -44,14 +50,46 @@
     </form>
   </div>
 
-  <div id="screen-lobby" class="screen hidden">
-    <h1>애니프사이콩그루</h1>
-    <p>환영합니다, <strong id="lobby-username"></strong>님 · <span id="lobby-coins">🪙 0</span></p>
-    <button id="btn-join-queue">매칭 시작</button>
-    <button id="btn-open-adventure">어드벤처 모드</button>
-    <button id="btn-edit-deck">덱 편집</button>
-    <button id="btn-open-shop">상점</button>
-    <button id="btn-logout">로그아웃</button>
+  <div id="screen-lobby" class="screen screen--lobby hidden">
+    <div class="lobby-hud">
+      <div class="hud-user">
+        <span class="hud-user-icon">👤</span>
+        <div class="hud-user-info">
+          <strong id="lobby-username"></strong>
+          <span id="lobby-coins">🪙 0</span>
+        </div>
+      </div>
+      <button id="btn-logout" class="hud-icon-btn" title="로그아웃">🚪</button>
+    </div>
+
+    <div class="lobby-brand">
+      <span class="lobby-brand-en">ANIME</span>
+      <span class="lobby-brand-en lobby-brand-en--accent">PSYKONGROO</span>
+    </div>
+
+    <div class="menu-card-grid">
+      <button id="btn-join-queue" class="menu-card menu-card--queue">
+        <span class="menu-card-icon">⚔️</span>
+        <span class="menu-card-title">매칭 시작<small>MATCHING START</small></span>
+        <span class="menu-card-desc">전 세계의 플레이어와 실력을 겨뤄보세요!</span>
+      </button>
+      <button id="btn-open-adventure" class="menu-card menu-card--adventure">
+        <span class="menu-card-icon">🗺️</span>
+        <span class="menu-card-title">어드벤처 모드<small>ADVENTURE</small></span>
+        <span class="menu-card-desc">다양한 스테이지의 AI와 대결해보세요!</span>
+      </button>
+      <button id="btn-edit-deck" class="menu-card menu-card--deck">
+        <span class="menu-card-icon">🃏</span>
+        <span class="menu-card-title">덱 편집<small>DECK EDIT</small></span>
+        <span class="menu-card-desc">카드를 구성하고 나만의 덱을 만드세요!</span>
+      </button>
+      <button id="btn-open-shop" class="menu-card menu-card--shop">
+        <span class="menu-card-icon">🎁</span>
+        <span class="menu-card-title">상점<small>SHOP</small></span>
+        <span class="menu-card-desc">카드 팩과 다양한 아이템을 구매하세요!</span>
+      </button>
+    </div>
+
     <p id="lobby-status"></p>
 
     <div id="admin-panel" class="hidden">
@@ -208,8 +246,10 @@
     </div>
   </div>
 
-  <div id="screen-waiting" class="screen hidden">
+  <div id="screen-waiting" class="screen screen--waiting hidden">
     <h2>상대를 찾는 중...</h2>
+    <div class="spinner"></div>
+    <p class="waiting-hint">잠시만 기다려주세요</p>
   </div>
 
   <div id="screen-stage-select" class="screen hidden">

@@ -1100,6 +1100,7 @@ function renderStageList(stages) {
   for (const stage of stages) {
     const tile = document.createElement("div");
     tile.className = "stage-tile";
+    tile.classList.toggle("stage-tile--locked", !!stage.locked);
 
     const title = document.createElement("div");
     title.textContent = `${stage.name} — ${stage.aiName}${stage.cleared ? " ✅" : ""}`;
