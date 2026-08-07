@@ -2088,36 +2088,20 @@ function makeSwordUpdater(width, height, durationMs) {
       }
     });
 
-    const trailMaxAge = 0.15;
     trail.forEach((pt) => { pt.age += dt; });
     for (let i = trail.length - 1; i >= 0; i -= 1) {
-      if (trail[i].age > trailMaxAge) trail.splice(i, 1);
+      if (trail[i].age > 0.25) trail.splice(i, 1);
     }
-    // 날카로운 느낌을 위해 두 번 그린다: 아주 얇고 밝은 핵심 선(블러 없음) +
-    // 그 뒤에 살짝만 번지는 옅은 글로우(블러 최소화)로 "칼날" 대비를 준다.
     for (let i = 0; i < trail.length - 1; i += 1) {
       const a = trail[i];
       const b = trail[i + 1];
-      const alpha = Math.max(0, 1 - a.age / trailMaxAge);
-      if (alpha <= 0.02) continue;
-
-      ctx.save();
-      ctx.globalAlpha = alpha * 0.35;
-      ctx.strokeStyle = "#e8ecff";
-      ctx.shadowColor = "#c9d2e3";
-      ctx.shadowBlur = 3;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.stroke();
-      ctx.restore();
-
+      const alpha = Math.max(0, 1 - a.age / 0.25);
       ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.strokeStyle = "#ffffff";
-      ctx.shadowBlur = 0;
-      ctx.lineWidth = 1.4;
+      ctx.strokeStyle = "#f5f8ff";
+      ctx.shadowColor = "#c9d2e3";
+      ctx.shadowBlur = 8;
+      ctx.lineWidth = 6 * alpha + 1;
       ctx.beginPath();
       ctx.moveTo(a.x, a.y);
       ctx.lineTo(b.x, b.y);
