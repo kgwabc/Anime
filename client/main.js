@@ -1138,6 +1138,7 @@ function renderStageList(stages) {
 // ---------- 상점 ----------
 
 let shopPacks = [];
+let isPackOpening = false;
 
 document.getElementById("btn-open-shop").addEventListener("click", () => {
   showScreen("shop");
@@ -1145,6 +1146,7 @@ document.getElementById("btn-open-shop").addEventListener("click", () => {
 });
 
 document.getElementById("btn-shop-back").addEventListener("click", () => {
+  if (isPackOpening) return;
   showScreen("lobby");
 });
 
@@ -1207,7 +1209,11 @@ function renderShopPacks() {
 
     const btn = document.createElement("button");
     btn.textContent = "열기";
-    btn.addEventListener("click", () => openPack(pack.id));
+    btn.disabled = isPackOpening;
+    btn.addEventListener("click", () => {
+      if (isPackOpening) return;
+      openPack(pack.id);
+    });
     tile.appendChild(btn);
 
     listEl.appendChild(tile);
@@ -1246,6 +1252,10 @@ async function renderShopCollection(collectionData) {
 }
 
 async function openPack(packId) {
+  if (isPackOpening) return;
+  isPackOpening = true;
+  renderShopPacks();
+
   const errorEl = document.getElementById("shop-error");
   errorEl.textContent = "";
 
@@ -1260,7 +1270,7 @@ async function openPack(packId) {
       return;
     }
     setCoinDisplays(data.coins);
-    showPackReveal(data.card, data.isDuplicate, data.refund, packId);
+    await showPackReveal(data.card, data.isDuplicate, data.refund, packId);
     const collectionRes = await fetch(`${SERVER_URL}/shop/collection/mine`, {
       headers: { Authorization: `Bearer ${currentAuthToken}` },
     });
@@ -1268,52 +1278,60 @@ async function openPack(packId) {
     if (collectionData.ok) await renderShopCollection(collectionData);
   } catch (err) {
     errorEl.textContent = "카드팩 오픈 중 오류가 발생했습니다.";
+  } finally {
+    isPackOpening = false;
+    renderShopPacks();
   }
 }
 
 function showPackReveal(card, isDuplicate, refund, packId) {
   const layer = document.getElementById("pack-reveal-layer");
 
-  const revealCard = () => {
-    const wrapper = document.createElement("div");
-    wrapper.className = "pack-reveal-card";
+  return new Promise((resolve) => {
+    const revealCard = () => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "pack-reveal-card";
 
-    const cardEl = document.createElement("div");
-    cardEl.className = "card card-slam";
-    if (card.rarity === "legendary") cardEl.classList.add("legendary");
-    if (!card.image) cardEl.classList.add("no-image");
-    cardEl.innerHTML = cardFaceHtml(card);
-    wrapper.appendChild(cardEl);
+      const cardEl = document.createElement("div");
+      cardEl.className = "card card-slam";
+      if (card.rarity === "legendary") cardEl.classList.add("legendary");
+      if (!card.image) cardEl.classList.add("no-image");
+      cardEl.innerHTML = cardFaceHtml(card);
+      wrapper.appendChild(cardEl);
 
-    if (isDuplicate) {
-      const dupText = document.createElement("div");
-      dupText.className = "pack-reveal-duplicate";
-      dupText.textContent = `중복! 🪙 ${refund} 환급`;
-      wrapper.appendChild(dupText);
+      if (isDuplicate) {
+        const dupText = document.createElement("div");
+        dupText.className = "pack-reveal-duplicate";
+        dupText.textContent = `중복! 🪙 ${refund} 환급`;
+        wrapper.appendChild(dupText);
+      }
+
+      layer.appendChild(wrapper);
+      wrapper.querySelectorAll(".name").forEach(fitCardName);
+      setTimeout(() => {
+        wrapper.remove();
+        resolve();
+      }, 1600);
+    };
+
+    const artSrc = PACK_ART[packId];
+    if (!artSrc) {
+      revealCard();
+      return;
     }
 
-    layer.appendChild(wrapper);
-    wrapper.querySelectorAll(".name").forEach(fitCardName);
-    setTimeout(() => wrapper.remove(), 1600);
-  };
+    const packEl = document.createElement("img");
+    packEl.src = artSrc;
+    packEl.className = "pack-reveal-pack pack-shake";
+    layer.appendChild(packEl);
 
-  const artSrc = PACK_ART[packId];
-  if (!artSrc) {
-    revealCard();
-    return;
-  }
-
-  const packEl = document.createElement("img");
-  packEl.src = artSrc;
-  packEl.className = "pack-reveal-pack pack-shake";
-  layer.appendChild(packEl);
-
-  setTimeout(() => {
-    packEl.classList.remove("pack-shake");
-    packEl.classList.add("pack-burst");
-  }, 600);
-  setTimeout(revealCard, 750);
-  setTimeout(() => packEl.remove(), 950);
+    setTimeout(() => {
+      packEl.classList.remove("pack-shake");
+      packEl.classList.add("pack-burst");
+    }, 600);
+    setTimeout(revealCard, 750);
+    setTimeout(() => packEl.remove(), 950);
+  });
 }
 
 // ---------- 관리자: 스타터 카드 ----------
