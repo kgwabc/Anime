@@ -1733,11 +1733,13 @@ button:active {
   }
 
   .board {
-    flex: 7;
+    flex: 0 0 auto;
+    height: 22vh;
   }
 
   .hand {
-    flex: 3;
+    flex: 1;
+    min-height: 0;
   }
 
   #opponent-area {
@@ -1749,7 +1751,7 @@ button:active {
   }
 
   #my-hand {
-    flex: 3;
+    flex: 1;
   }
 
   #turn-indicator {
