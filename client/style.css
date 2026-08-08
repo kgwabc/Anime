@@ -79,7 +79,7 @@ body {
 }
 
 #screen-loading .art-frame {
-  background: url("assets/loading-bg.png") center / cover no-repeat;
+  background: url("assets/loading-bg.png") center / contain no-repeat;
 }
 
 body:has(#screen-loading:not(.hidden)) {
