@@ -1673,24 +1673,24 @@ button:active {
   }
 
   .hero-info-bar {
-    gap: 6px;
+    gap: 4px;
   }
 
   .hero-badge {
     margin: 0;
-    gap: 3px;
+    gap: 2px;
   }
 
   .hero-portrait {
-    width: 16px;
-    height: 16px;
-    font-size: 9px;
+    width: 13px;
+    height: 13px;
+    font-size: 8px;
   }
 
   .hero-hp-badge,
   .hero-mana-badge {
-    padding: 0 3px;
-    font-size: 8px;
+    padding: 0 2px;
+    font-size: 7px;
   }
 
   #screen-game .cost-badge,
@@ -1716,28 +1716,28 @@ button:active {
   }
 
   .hero-name {
-    font-size: 9px;
+    font-size: 8px;
   }
 
   .stats {
-    gap: 4px;
+    gap: 3px;
     margin-bottom: 0;
-    font-size: 8px;
+    font-size: 7px;
   }
 
   .board,
   .hand {
-    padding: 2px 2px;
+    padding: 1px 2px;
     margin-bottom: 0;
     gap: 3px;
   }
 
   .board {
-    flex: 4;
+    flex: 7;
   }
 
   .hand {
-    flex: 4.7;
+    flex: 3;
   }
 
   #opponent-area {
@@ -1749,12 +1749,12 @@ button:active {
   }
 
   #my-hand {
-    flex: 6.5;
+    flex: 3;
   }
 
   #turn-indicator {
     padding: 0;
-    font-size: 9px;
+    font-size: 8px;
   }
 
   .action-buttons {
@@ -1762,8 +1762,8 @@ button:active {
   }
 
   .action-buttons button {
-    padding: 4px 8px;
-    font-size: 11px;
+    padding: 3px 6px;
+    font-size: 10px;
   }
 }
 
