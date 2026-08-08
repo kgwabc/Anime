@@ -2389,11 +2389,6 @@ function showSpellEffect(card) {
   setTimeout(() => el.remove(), 1100);
 }
 
-function describeEffect(effect) {
-  if (!effect) return "";
-  return `${ACTION_LABELS[effect.action] || effect.action} ${effect.value} (${TARGET_LABELS[effect.target] || effect.target})`;
-}
-
 function cardNeedsTargetCharacter(card) {
   return (card.effects || []).some((effect) => effect.target === "TARGET_CHARACTER");
 }
@@ -2423,7 +2418,6 @@ function cardStatsHtml(card) {
 
 function cardDescHtml(card) {
   let descHtml = "";
-  if (card.effects?.length) descHtml += `<div class="effect-summary">${describeEffect(card.effects[0])}</div>`;
   if (card.matchupVsTag) {
     descHtml += `<div class="effect-summary">⚔ ${card.matchupVsTag} 상대 +${card.matchupAtkBonus || 0}</div>`;
   }
