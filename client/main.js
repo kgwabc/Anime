@@ -1172,6 +1172,11 @@ async function loadShop() {
   }
 }
 
+const PACK_ART = {
+  normal: "assets/pack-normal.png",
+  gold: "assets/pack-gold.png",
+};
+
 function renderShopPacks() {
   const listEl = document.getElementById("shop-pack-list");
   listEl.innerHTML = "";
@@ -1179,6 +1184,16 @@ function renderShopPacks() {
   for (const pack of shopPacks) {
     const tile = document.createElement("div");
     tile.className = `pack-card pack-card--${pack.id}`;
+
+    const art = document.createElement("div");
+    art.className = "pack-card-art";
+    if (PACK_ART[pack.id]) {
+      const artImg = document.createElement("img");
+      artImg.src = PACK_ART[pack.id];
+      artImg.alt = pack.name;
+      art.appendChild(artImg);
+    }
+    tile.appendChild(art);
 
     const name = document.createElement("div");
     name.className = "pack-card-name";
@@ -1245,7 +1260,7 @@ async function openPack(packId) {
       return;
     }
     setCoinDisplays(data.coins);
-    showPackReveal(data.card, data.isDuplicate, data.refund);
+    showPackReveal(data.card, data.isDuplicate, data.refund, packId);
     const collectionRes = await fetch(`${SERVER_URL}/shop/collection/mine`, {
       headers: { Authorization: `Bearer ${currentAuthToken}` },
     });
@@ -1256,28 +1271,49 @@ async function openPack(packId) {
   }
 }
 
-function showPackReveal(card, isDuplicate, refund) {
+function showPackReveal(card, isDuplicate, refund, packId) {
   const layer = document.getElementById("pack-reveal-layer");
-  const wrapper = document.createElement("div");
-  wrapper.className = "pack-reveal-card";
 
-  const cardEl = document.createElement("div");
-  cardEl.className = "card card-slam";
-  if (card.rarity === "legendary") cardEl.classList.add("legendary");
-  if (!card.image) cardEl.classList.add("no-image");
-  cardEl.innerHTML = cardFaceHtml(card);
-  wrapper.appendChild(cardEl);
+  const revealCard = () => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "pack-reveal-card";
 
-  if (isDuplicate) {
-    const dupText = document.createElement("div");
-    dupText.className = "pack-reveal-duplicate";
-    dupText.textContent = `중복! 🪙 ${refund} 환급`;
-    wrapper.appendChild(dupText);
+    const cardEl = document.createElement("div");
+    cardEl.className = "card card-slam";
+    if (card.rarity === "legendary") cardEl.classList.add("legendary");
+    if (!card.image) cardEl.classList.add("no-image");
+    cardEl.innerHTML = cardFaceHtml(card);
+    wrapper.appendChild(cardEl);
+
+    if (isDuplicate) {
+      const dupText = document.createElement("div");
+      dupText.className = "pack-reveal-duplicate";
+      dupText.textContent = `중복! 🪙 ${refund} 환급`;
+      wrapper.appendChild(dupText);
+    }
+
+    layer.appendChild(wrapper);
+    wrapper.querySelectorAll(".name").forEach(fitCardName);
+    setTimeout(() => wrapper.remove(), 1600);
+  };
+
+  const artSrc = PACK_ART[packId];
+  if (!artSrc) {
+    revealCard();
+    return;
   }
 
-  layer.appendChild(wrapper);
-  wrapper.querySelectorAll(".name").forEach(fitCardName);
-  setTimeout(() => wrapper.remove(), 1600);
+  const packEl = document.createElement("img");
+  packEl.src = artSrc;
+  packEl.className = "pack-reveal-pack pack-shake";
+  layer.appendChild(packEl);
+
+  setTimeout(() => {
+    packEl.classList.remove("pack-shake");
+    packEl.classList.add("pack-burst");
+  }, 600);
+  setTimeout(revealCard, 750);
+  setTimeout(() => packEl.remove(), 950);
 }
 
 // ---------- 관리자: 스타터 카드 ----------

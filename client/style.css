@@ -1930,6 +1930,22 @@ button:active {
   transform: translateY(-6px) scale(1.05);
 }
 
+.pack-card-art {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.pack-card-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .pack-card-name {
   font-size: 16px;
   font-weight: bold;
@@ -1976,6 +1992,56 @@ button:active {
 .pack-reveal-card .card {
   width: 220px;
   height: 300px;
+}
+
+.pack-reveal-pack {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 240px;
+  height: 360px;
+  object-fit: cover;
+  border-radius: 14px;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+
+@keyframes pack-shake {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  20% {
+    transform: rotate(-4deg) scale(1.02);
+  }
+  40% {
+    transform: rotate(4deg) scale(1.04);
+  }
+  60% {
+    transform: rotate(-3deg) scale(1.06);
+  }
+  80% {
+    transform: rotate(2deg) scale(1.08);
+  }
+}
+
+.pack-reveal-pack.pack-shake {
+  animation: pack-shake 0.6s ease-in-out;
+}
+
+@keyframes pack-burst {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+.pack-reveal-pack.pack-burst {
+  animation: pack-burst 0.35s ease-out forwards;
 }
 
 .pack-reveal-duplicate {
