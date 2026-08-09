@@ -1845,14 +1845,35 @@ button:active {
   background: linear-gradient(160deg, #6fa8ff, var(--blue) 55%, var(--blue-deep)) !important;
 }
 
-.admin-card-select {
-  max-width: 140px;
-  padding: 4px 6px;
+.admin-user-card-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #1b1f2a;
+  border-radius: 6px;
+  padding: 8px;
+  margin: -4px 0 10px;
+}
+
+.admin-user-card-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.admin-user-card-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 13px;
-  background: #262b3a;
-  color: #f0f0f0;
-  border: 1px solid #4f8cff;
-  border-radius: 4px;
+  cursor: pointer;
+}
+
+.admin-user-card-error {
+  font-size: 13px;
+  color: #ff8080;
 }
 
 /* ---------- 카드 상점 ---------- */

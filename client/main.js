@@ -248,26 +248,14 @@ function renderAdminUsers(users, token) {
     coinBtn.addEventListener("click", () => adjustAdminUserCoins(user.username, coinInput.value, token));
     row.appendChild(coinBtn);
 
-    const cardSelect = document.createElement("select");
-    cardSelect.className = "admin-card-select";
-    for (const card of loadedAdminCards) {
-      const option = document.createElement("option");
-      option.value = card.id;
-      option.textContent = card.name;
-      cardSelect.appendChild(option);
-    }
-    row.appendChild(cardSelect);
+    const cardPanel = document.createElement("div");
+    cardPanel.className = "admin-user-card-panel hidden";
 
-    const grantBtn = document.createElement("button");
-    grantBtn.className = "admin-coin-btn";
-    grantBtn.textContent = "카드 지급";
-    grantBtn.addEventListener("click", () => grantAdminUserCard(user.username, cardSelect.value, token));
-    row.appendChild(grantBtn);
-
-    const revokeBtn = document.createElement("button");
-    revokeBtn.textContent = "카드 회수";
-    revokeBtn.addEventListener("click", () => revokeAdminUserCard(user.username, cardSelect.value, token));
-    row.appendChild(revokeBtn);
+    const cardsBtn = document.createElement("button");
+    cardsBtn.className = "admin-coin-btn";
+    cardsBtn.textContent = "카드 관리";
+    cardsBtn.addEventListener("click", () => toggleUserCardPanel(user.username, cardPanel, token));
+    row.appendChild(cardsBtn);
 
     if (user.username !== ADMIN_USERNAME) {
       const deleteBtn = document.createElement("button");
@@ -277,6 +265,93 @@ function renderAdminUsers(users, token) {
     }
 
     listEl.appendChild(row);
+    listEl.appendChild(cardPanel);
+  }
+}
+
+async function toggleUserCardPanel(username, panelEl, token) {
+  const isHidden = panelEl.classList.contains("hidden");
+  if (!isHidden) {
+    panelEl.classList.add("hidden");
+    return;
+  }
+
+  panelEl.classList.remove("hidden");
+  await loadUserOwnedCards(username, panelEl, token);
+}
+
+async function loadUserOwnedCards(username, panelEl, token) {
+  panelEl.innerHTML = "불러오는 중...";
+
+  try {
+    const res = await fetch(`${SERVER_URL}/auth/users/${encodeURIComponent(username)}/cards`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      panelEl.textContent = data.message;
+      return;
+    }
+    renderUserCardChecklist(username, panelEl, new Set(data.cardIds), token);
+  } catch (err) {
+    panelEl.textContent = "보유 카드를 불러올 수 없습니다.";
+  }
+}
+
+function renderUserCardChecklist(username, panelEl, ownedCardIds, token) {
+  panelEl.innerHTML = "";
+
+  const listEl = document.createElement("div");
+  listEl.className = "admin-user-card-list";
+
+  for (const card of loadedAdminCards) {
+    const label = document.createElement("label");
+    label.className = "admin-user-card-row";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.dataset.cardId = card.id;
+    checkbox.checked = ownedCardIds.has(card.id);
+    label.appendChild(checkbox);
+
+    const text = document.createElement("span");
+    text.textContent = `${card.name} (${card.rarity === "legendary" ? "전설" : "일반"})`;
+    label.appendChild(text);
+
+    listEl.appendChild(label);
+  }
+  panelEl.appendChild(listEl);
+
+  const errorEl = document.createElement("div");
+  errorEl.className = "admin-user-card-error";
+  panelEl.appendChild(errorEl);
+
+  const saveBtn = document.createElement("button");
+  saveBtn.className = "admin-coin-btn";
+  saveBtn.textContent = "저장";
+  saveBtn.addEventListener("click", () => saveUserCards(username, panelEl, token, errorEl));
+  panelEl.appendChild(saveBtn);
+}
+
+async function saveUserCards(username, panelEl, token, errorEl) {
+  const cardIds = Array.from(
+    panelEl.querySelectorAll(".admin-user-card-list input[type=checkbox]:checked")
+  ).map((el) => el.dataset.cardId);
+
+  try {
+    const res = await fetch(`${SERVER_URL}/auth/users/${encodeURIComponent(username)}/cards`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ cardIds }),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      errorEl.textContent = data.message;
+      return;
+    }
+    panelEl.classList.add("hidden");
+  } catch (err) {
+    errorEl.textContent = "카드 저장 중 오류가 발생했습니다.";
   }
 }
 
@@ -301,41 +376,6 @@ async function adjustAdminUserCoins(username, amountStr, token) {
     loadAdminUsers(token);
   } catch (err) {
     alert("코인 조정 중 오류가 발생했습니다.");
-  }
-}
-
-async function grantAdminUserCard(username, cardId, token) {
-  if (!cardId) return;
-
-  try {
-    const res = await fetch(`${SERVER_URL}/auth/users/${encodeURIComponent(username)}/cards`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ cardId }),
-    });
-    const data = await res.json();
-    if (!data.ok) {
-      alert(data.message);
-    }
-  } catch (err) {
-    alert("카드 지급 중 오류가 발생했습니다.");
-  }
-}
-
-async function revokeAdminUserCard(username, cardId, token) {
-  if (!cardId) return;
-
-  try {
-    const res = await fetch(
-      `${SERVER_URL}/auth/users/${encodeURIComponent(username)}/cards/${encodeURIComponent(cardId)}`,
-      { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
-    );
-    const data = await res.json();
-    if (!data.ok) {
-      alert(data.message);
-    }
-  } catch (err) {
-    alert("카드 회수 중 오류가 발생했습니다.");
   }
 }
 

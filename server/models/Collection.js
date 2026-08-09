@@ -22,4 +22,15 @@ async function removeOwnedCard(userId, cardId) {
   });
 }
 
-module.exports = { listOwnedCardIds, addOwnedCard, removeOwnedCard };
+async function setOwnedCardIds(userId, cardIds) {
+  const db = getClient();
+  await db.execute({ sql: "DELETE FROM owned_cards WHERE user_id = ?", args: [userId] });
+  for (const cardId of cardIds) {
+    await db.execute({
+      sql: "INSERT OR IGNORE INTO owned_cards (user_id, card_id) VALUES (?, ?)",
+      args: [userId, cardId],
+    });
+  }
+}
+
+module.exports = { listOwnedCardIds, addOwnedCard, removeOwnedCard, setOwnedCardIds };
