@@ -1177,6 +1177,7 @@ async function loadShop() {
 const PACK_ART = {
   normal: "assets/pack-normal.png",
   gold: "assets/pack-gold.png",
+  premium: "assets/pack-premium.png",
 };
 
 function renderShopPacks() {
