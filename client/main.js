@@ -1695,6 +1695,11 @@ document.getElementById("btn-join-queue").addEventListener("click", () => {
   showScreen("waiting");
 });
 
+document.getElementById("btn-cancel-queue").addEventListener("click", () => {
+  socket.emit("leave_queue");
+  showScreen("lobby");
+});
+
 document.getElementById("btn-end-turn").addEventListener("click", () => {
   socket.emit("end_turn");
 });

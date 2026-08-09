@@ -202,6 +202,11 @@ io.on("connection", (socket) => {
     console.log(`[match] ${roomId} started`);
   });
 
+  socket.on("leave_queue", () => {
+    matchmaker.removeFromQueue(socket.id);
+    console.log(`[queue] ${socket.id} left. queue size=${matchmaker.waitingQueue.length}`);
+  });
+
   socket.on("start_stage_match", async ({ stageId }) => {
     if (socketToRoom.has(socket.id)) {
       socket.emit("stage_error", "이미 진행중인 게임이 있습니다.");
