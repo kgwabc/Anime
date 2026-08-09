@@ -284,38 +284,45 @@ async function loadUserOwnedCards(username, panelEl, token) {
   panelEl.innerHTML = "불러오는 중...";
 
   try {
-    const res = await fetch(`${SERVER_URL}/auth/users/${encodeURIComponent(username)}/cards`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    if (!data.ok) {
-      panelEl.textContent = data.message;
+    const [ownedRes, starterRes] = await Promise.all([
+      fetch(`${SERVER_URL}/auth/users/${encodeURIComponent(username)}/cards`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      fetch(`${SERVER_URL}/cards/starter`, { headers: { Authorization: `Bearer ${token}` } }),
+    ]);
+    const data = await ownedRes.json();
+    const starterData = await starterRes.json();
+    if (!data.ok || !starterData.ok) {
+      panelEl.textContent = data.message || starterData.message;
       return;
     }
-    renderUserCardChecklist(username, panelEl, new Set(data.cardIds), token);
+    renderUserCardChecklist(username, panelEl, new Set(data.cardIds), new Set(starterData.cardIds), token);
   } catch (err) {
     panelEl.textContent = "보유 카드를 불러올 수 없습니다.";
   }
 }
 
-function renderUserCardChecklist(username, panelEl, ownedCardIds, token) {
+function renderUserCardChecklist(username, panelEl, ownedCardIds, starterCardIds, token) {
   panelEl.innerHTML = "";
 
   const listEl = document.createElement("div");
   listEl.className = "admin-user-card-list";
 
   for (const card of loadedAdminCards) {
+    const isStarter = starterCardIds.has(card.id);
+
     const label = document.createElement("label");
     label.className = "admin-user-card-row";
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.dataset.cardId = card.id;
-    checkbox.checked = ownedCardIds.has(card.id);
+    checkbox.checked = isStarter || ownedCardIds.has(card.id);
+    checkbox.disabled = isStarter;
     label.appendChild(checkbox);
 
     const text = document.createElement("span");
-    text.textContent = `${card.name} (${card.rarity === "legendary" ? "전설" : "일반"})`;
+    text.textContent = `${card.name} (${card.rarity === "legendary" ? "전설" : "일반"}${isStarter ? ", 스타터" : ""})`;
     label.appendChild(text);
 
     listEl.appendChild(label);
@@ -335,7 +342,7 @@ function renderUserCardChecklist(username, panelEl, ownedCardIds, token) {
 
 async function saveUserCards(username, panelEl, token, errorEl) {
   const cardIds = Array.from(
-    panelEl.querySelectorAll(".admin-user-card-list input[type=checkbox]:checked")
+    panelEl.querySelectorAll(".admin-user-card-list input[type=checkbox]:checked:not(:disabled)")
   ).map((el) => el.dataset.cardId);
 
   try {
