@@ -48,12 +48,18 @@ class GameRoom {
         deck,
         board: [],
         // graveyard 의도적으로 생략 — 죽은 카드 기록을 나중에 참조하는 효과가 없음
+        originalDeck: deckByPlayerId[playerId],
       };
     });
   }
 
   getOpponentId(playerId) {
     return this.playerOrder.find((id) => id !== playerId);
+  }
+
+  /** 매치 시작 시 구성된 30장 원본 덱(뽑았는지 여부와 무관) — 덱 열람 UI용 */
+  getOriginalDeck(playerId) {
+    return this.players[playerId]?.originalDeck;
   }
 
   findPlayerIdByUserId(userId) {

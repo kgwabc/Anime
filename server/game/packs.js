@@ -6,10 +6,14 @@ const PACKS = {
 
 const DUPLICATE_REFUND = { common: 3000, legendary: 20000 };
 
-function rollCard(pack, allCards) {
+function rollCard(pack, allCards, starterCardIds = []) {
+  const starterSet = new Set(starterCardIds);
+  const eligibleCards = allCards.filter((card) => !starterSet.has(card.id));
+  const cardPool = eligibleCards.length > 0 ? eligibleCards : allCards;
+
   const wantLegendary = Math.random() < pack.legendaryChance;
-  const pool = allCards.filter((card) => card.rarity === (wantLegendary ? "legendary" : "common"));
-  const fallbackPool = pool.length > 0 ? pool : allCards;
+  const pool = cardPool.filter((card) => card.rarity === (wantLegendary ? "legendary" : "common"));
+  const fallbackPool = pool.length > 0 ? pool : cardPool;
   return fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
 }
 

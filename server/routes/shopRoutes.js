@@ -51,7 +51,7 @@ router.post("/packs/:packId/open", requireAuth, async (req, res) => {
       return res.status(400).json({ ok: false, message: "뽑을 수 있는 카드가 없습니다." });
     }
 
-    const card = rollCard(pack, cards);
+    const card = rollCard(pack, cards, starterCardIds);
     const alreadyOwned = ownedCardIds.includes(card.id) || starterCardIds.includes(card.id);
 
     let balance = await addCoins(req.user.userId, -pack.cost);

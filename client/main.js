@@ -157,6 +157,27 @@ document.getElementById("btn-close-admin").addEventListener("click", () => {
   setAdminPanelOpen(false);
 });
 
+function setDeckViewOpen(open) {
+  document.getElementById("deck-view-panel").classList.toggle("hidden", !open);
+  document.getElementById("deck-view-backdrop").classList.toggle("hidden", !open);
+}
+
+document.getElementById("btn-view-opp-deck").addEventListener("click", () => {
+  socket.emit("view_deck", { target: "opponent" });
+});
+
+document.getElementById("btn-view-my-deck").addEventListener("click", () => {
+  socket.emit("view_deck", { target: "me" });
+});
+
+document.getElementById("deck-view-backdrop").addEventListener("click", () => {
+  setDeckViewOpen(false);
+});
+
+document.getElementById("btn-close-deck-view").addEventListener("click", () => {
+  setDeckViewOpen(false);
+});
+
 function onAuthenticated(token, username) {
   localStorage.setItem("tcg_token", token);
   localStorage.setItem("tcg_username", username);
@@ -1106,6 +1127,33 @@ function renderDeckBuilder() {
   deckEl.querySelectorAll(".name").forEach(fitCardName);
 }
 
+function renderDeckView(target, cards) {
+  document.getElementById("deck-view-title").textContent = target === "opponent" ? "상대 덱" : "나의 덱";
+
+  const counts = new Map();
+  const cardsById = new Map();
+  for (const card of cards) {
+    counts.set(card.id, (counts.get(card.id) || 0) + 1);
+    cardsById.set(card.id, card);
+  }
+
+  const listEl = document.getElementById("deck-view-list");
+  listEl.innerHTML = "";
+  for (const [cardId, count] of counts) {
+    listEl.appendChild(
+      renderCardTile(cardsById.get(cardId), {
+        badgeText: `x${count}`,
+        buttonText: "",
+        buttonDisabled: true,
+        onButtonClick: () => {},
+      })
+    );
+  }
+  listEl.querySelectorAll(".name").forEach(fitCardName);
+
+  setDeckViewOpen(true);
+}
+
 // ---------- 코인 ----------
 
 function setCoinDisplays(coins) {
@@ -1739,6 +1787,10 @@ function registerSocketHandlers() {
       return;
     }
     renderState(state);
+  });
+
+  socket.on("deck_view_result", ({ target, cards }) => {
+    renderDeckView(target, cards);
   });
 
   socket.on("action_error", (reason) => {

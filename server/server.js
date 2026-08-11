@@ -263,6 +263,18 @@ io.on("connection", (socket) => {
     console.log(`[stage] ${roomId} started (stage ${stage.id})`);
   });
 
+  socket.on("view_deck", ({ target }) => {
+    const roomId = socketToRoom.get(socket.id);
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    const targetPlayerId = target === "opponent" ? room.getOpponentId(socket.id) : socket.id;
+    const cards = room.getOriginalDeck(targetPlayerId);
+    if (!cards) return;
+
+    socket.emit("deck_view_result", { target, cards });
+  });
+
   socket.on("play_card", ({ cardId, target }) => {
     const roomId = socketToRoom.get(socket.id);
     const room = rooms.get(roomId);

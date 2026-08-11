@@ -72,6 +72,15 @@
       </div>
     </div>
 
+    <div id="deck-view-backdrop" class="hidden"></div>
+    <div id="deck-view-panel" class="hidden">
+      <div class="admin-panel-header">
+        <h2 id="deck-view-title">덱 목록</h2>
+        <button id="btn-close-deck-view" class="admin-close-btn" title="닫기">✕</button>
+      </div>
+      <div id="deck-view-list"></div>
+    </div>
+
     <div id="admin-panel-backdrop" class="hidden"></div>
     <div id="admin-panel" class="hidden">
       <div class="admin-panel-header">
@@ -316,6 +325,7 @@
             <span>덱: <span id="opp-deck-count">-</span>장</span>
           </div>
           <div id="opp-deck-pile" class="deck-pile card-back"></div>
+          <button id="btn-view-opp-deck" class="deck-view-btn">상대 덱</button>
         </div>
         <div id="opp-board" class="board"></div>
       </div>
@@ -335,6 +345,7 @@
             <span>덱: <span id="my-deck-count">-</span>장</span>
           </div>
           <div id="my-deck-pile" class="deck-pile card-back"></div>
+          <button id="btn-view-my-deck" class="deck-view-btn">나의 덱</button>
           <div class="action-buttons">
             <button id="btn-end-turn">턴 종료</button>
             <button id="btn-surrender">기권</button>

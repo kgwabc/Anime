@@ -199,6 +199,29 @@ body:has(#screen-loading:not(.hidden)) {
   z-index: 55;
 }
 
+#deck-view-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 720px);
+  max-height: 85vh;
+  overflow-y: auto;
+  z-index: 60;
+  padding: 16px 20px;
+  background: #262b3a;
+  border-radius: 12px;
+  border: 1px solid var(--gold-dim);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+}
+
+#deck-view-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 55;
+}
+
 .admin-panel-header {
   display: flex;
   justify-content: space-between;
@@ -1065,7 +1088,8 @@ button:active {
 }
 
 #deck-catalog-list,
-#deck-current-list {
+#deck-current-list,
+#deck-view-list {
   max-height: 60vh;
   overflow-y: auto;
   background: #262b3a;
@@ -1102,6 +1126,16 @@ button:active {
   padding: 4px 12px;
   font-size: 13px;
   width: 100%;
+}
+
+.card-tile-footer button:empty {
+  display: none;
+}
+
+.deck-view-btn {
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  font-size: 12px;
 }
 
 .admin-card-thumb {
