@@ -21,6 +21,15 @@
     <p>화면을 가로로 돌려주세요</p>
   </div>
 
+  <div id="deck-view-backdrop" class="hidden"></div>
+  <div id="deck-view-panel" class="hidden">
+    <div class="admin-panel-header">
+      <h2 id="deck-view-title">덱 목록</h2>
+      <button id="btn-close-deck-view" class="admin-close-btn" title="닫기">✕</button>
+    </div>
+    <div id="deck-view-list"></div>
+  </div>
+
   <div id="screen-loading" class="screen screen--loading-art">
     <div class="art-frame">
       <button id="btn-start-game" class="loading-start-btn hidden">게임 시작</button>
@@ -70,15 +79,6 @@
       <div class="lobby-card-hit lobby-card-hit--shop">
         <button id="btn-open-shop" aria-label="상점"></button>
       </div>
-    </div>
-
-    <div id="deck-view-backdrop" class="hidden"></div>
-    <div id="deck-view-panel" class="hidden">
-      <div class="admin-panel-header">
-        <h2 id="deck-view-title">덱 목록</h2>
-        <button id="btn-close-deck-view" class="admin-close-btn" title="닫기">✕</button>
-      </div>
-      <div id="deck-view-list"></div>
     </div>
 
     <div id="admin-panel-backdrop" class="hidden"></div>
