@@ -25,12 +25,14 @@ class GameRoom {
   /**
    * @param {{id: string, username: string, userId: string}[]} players
    * @param {Record<string, object[]>} deckByPlayerId 플레이어 id -> 30장 카드 객체 배열
+   * @param {{id: string, label: string, entryCost: number, winReward: number}|null} tier 투기장 정보(없으면 null)
    */
-  constructor(roomId, players, deckByPlayerId) {
+  constructor(roomId, players, deckByPlayerId, tier = null) {
     this.roomId = roomId;
     this.turnNumber = 1;
     this.currentPlayerIndex = 0;
     this.playerOrder = players.map((p) => p.id);
+    this.tier = tier;
 
     this.players = {};
     players.forEach(({ id: playerId, username, userId }, index) => {
@@ -400,6 +402,7 @@ class GameRoom {
       roomId: this.roomId,
       turnNumber: this.turnNumber,
       currentPlayerId: this.playerOrder[this.currentPlayerIndex],
+      tier: this.tier,
       me: {
         id: me.id,
         username: me.username,

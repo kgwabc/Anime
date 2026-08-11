@@ -52,10 +52,22 @@ const TARGET_LABELS = {
   KILLER: "나를 파괴한 대상",
 };
 
+// 서버 server/data/arenaTiers.js와 동일한 표시용 정보 (실제 검증은 서버가 담당)
+const ARENA_TIERS = [
+  { id: "free", label: "0원 투기장", entryCost: 0, winReward: 1000 },
+  { id: "t5000", label: "5천원 투기장", entryCost: 2500, winReward: 5000 },
+  { id: "t10000", label: "1만원 투기장", entryCost: 5000, winReward: 10000 },
+  { id: "t20000", label: "2만원 투기장", entryCost: 10000, winReward: 20000 },
+  { id: "t50000", label: "5만원 투기장", entryCost: 25000, winReward: 50000 },
+];
+
+let currentCoins = 0;
+
 const screens = {
   loading: document.getElementById("screen-loading"),
   auth: document.getElementById("screen-auth"),
   lobby: document.getElementById("screen-lobby"),
+  arenaSelect: document.getElementById("screen-arena-select"),
   waiting: document.getElementById("screen-waiting"),
   stageSelect: document.getElementById("screen-stage-select"),
   deckBuilder: document.getElementById("screen-deck-builder"),
@@ -1157,7 +1169,12 @@ function renderDeckView(target, cards) {
 // ---------- 코인 ----------
 
 function setCoinDisplays(coins) {
-  for (const el of [document.getElementById("lobby-coins"), document.getElementById("shop-coins")]) {
+  currentCoins = coins;
+  for (const el of [
+    document.getElementById("lobby-coins"),
+    document.getElementById("shop-coins"),
+    document.getElementById("arena-select-coins"),
+  ]) {
     if (el) el.textContent = `🪙 ${coins}`;
   }
 }
@@ -1738,9 +1755,47 @@ document.getElementById("btn-reset-all-decks").addEventListener("click", async (
 
 // ---------- 게임 ----------
 
+function renderArenaTierList() {
+  const listEl = document.getElementById("arena-tier-list");
+  document.getElementById("arena-select-error").textContent = "";
+  listEl.innerHTML = "";
+
+  for (const tier of ARENA_TIERS) {
+    const tile = document.createElement("div");
+    tile.className = "arena-tier-tile";
+
+    const title = document.createElement("div");
+    title.textContent = tier.label;
+    tile.appendChild(title);
+
+    const detail = document.createElement("div");
+    detail.textContent =
+      tier.entryCost > 0
+        ? `입장 🪙${tier.entryCost} / 승리시 🪙${tier.winReward}`
+        : `무료 입장 / 승리시 🪙${tier.winReward}`;
+    tile.appendChild(detail);
+
+    const enterBtn = document.createElement("button");
+    const canAfford = currentCoins >= tier.entryCost;
+    enterBtn.textContent = canAfford ? "입장" : "코인 부족";
+    enterBtn.disabled = !canAfford;
+    enterBtn.addEventListener("click", () => {
+      socket.emit("join_queue", { tier: tier.id });
+      showScreen("waiting");
+    });
+    tile.appendChild(enterBtn);
+
+    listEl.appendChild(tile);
+  }
+}
+
 document.getElementById("btn-join-queue").addEventListener("click", () => {
-  socket.emit("join_queue");
-  showScreen("waiting");
+  showScreen("arenaSelect");
+  renderArenaTierList();
+});
+
+document.getElementById("btn-arena-select-back").addEventListener("click", () => {
+  showScreen("lobby");
 });
 
 document.getElementById("btn-cancel-queue").addEventListener("click", () => {
@@ -1801,8 +1856,10 @@ function registerSocketHandlers() {
   });
 
   socket.on("queue_error", (message) => {
+    document.getElementById("arena-select-error").textContent = message;
     document.getElementById("lobby-status").textContent = message;
-    showScreen("lobby");
+    showScreen("arenaSelect");
+    renderArenaTierList();
   });
 
   socket.on("stage_error", (message) => {
@@ -1810,21 +1867,21 @@ function registerSocketHandlers() {
     showScreen("stageSelect");
   });
 
-  socket.on("opponent_disconnected", () => {
-    document.getElementById("result-text").textContent = "상대가 접속을 종료했습니다.";
-    showScreen("result");
-    resultAutoReturnTimer = setTimeout(returnToLobby, 15000);
-  });
-
-  socket.on("game_over", ({ result, stageId }) => {
+  socket.on("game_over", ({ result, stageId, reason, coinsDelta }) => {
     let text;
-    if (stageId) {
+    if (reason === "opponent_disconnected") {
+      text = "상대가 접속을 종료하여 승리했습니다!";
+    } else if (stageId) {
       text = result === "win" ? `${stageId}스테이지 클리어!` : "패배했습니다. 다시 도전해보세요.";
     } else {
       text = result === "win" ? "승리했습니다!" : "패배했습니다.";
     }
+    if (coinsDelta) {
+      text += coinsDelta > 0 ? ` (🪙+${coinsDelta})` : ` (🪙${coinsDelta})`;
+    }
     document.getElementById("result-text").textContent = text;
     showScreen("result");
+    refreshLobbyCoins();
     resultAutoReturnTimer = setTimeout(returnToLobby, 15000);
   });
 

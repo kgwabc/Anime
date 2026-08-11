@@ -21,6 +21,8 @@ const { getStageById } = require("./models/Stage");
 const { chooseCardToPlay, chooseAttack } = require("./game/aiPlayer");
 const { getHighestCleared, setHighestCleared } = require("./models/StageProgress");
 const { getStageDeckCardIds } = require("./models/StageDecks");
+const { getArenaTier } = require("./data/arenaTiers");
+const { addCoins, deductCoins } = require("./models/User");
 
 const PORT = process.env.PORT || 3001;
 
@@ -44,7 +46,13 @@ io.use(socketAuthMiddleware);
 
 const RECONNECT_GRACE_MS = Number(process.env.RECONNECT_GRACE_MS) || 30000;
 
-const matchmaker = new Matchmaker();
+/** @type {Map<string, Matchmaker>} tierId -> Matchmaker (투기장 티어별로 큐를 분리) */
+const matchmakers = new Map();
+function getMatchmaker(tierId) {
+  if (!matchmakers.has(tierId)) matchmakers.set(tierId, new Matchmaker());
+  return matchmakers.get(tierId);
+}
+
 /** @type {Map<string, GameRoom>} roomId -> GameRoom */
 const rooms = new Map();
 /** @type {Map<string, string>} socketId -> roomId, 소켓이 어느 방에 있는지 조회용 */
@@ -64,13 +72,25 @@ function broadcastEffect(room, event, payload) {
   }
 }
 
-async function handleGameOver(room, roomId) {
+async function handleGameOver(room, roomId, { reason } = {}) {
   if (!room.isGameOver()) return;
 
   const loserId = room.playerOrder.find((id) => room.players[id].hp <= 0);
   const winnerId = room.getOpponentId(loserId);
-  io.to(winnerId).emit("game_over", { result: "win", stageId: room.stageId });
-  io.to(loserId).emit("game_over", { result: "lose", stageId: room.stageId });
+
+  // 투기장 매치: 입장료는 이미 큐 진입시 차감됐으므로, 승자에게 winReward만 지급하면
+  // 결과적으로 승자는 (winReward - entryCost) 순이익, 패자는 -entryCost 순손실이 된다.
+  let winnerCoinsDelta = 0;
+  let loserCoinsDelta = 0;
+  if (room.tier) {
+    const winnerUserId = room.players[winnerId].userId;
+    await addCoins(winnerUserId, room.tier.winReward);
+    winnerCoinsDelta = room.tier.winReward - room.tier.entryCost;
+    loserCoinsDelta = -room.tier.entryCost;
+  }
+
+  io.to(winnerId).emit("game_over", { result: "win", stageId: room.stageId, reason, coinsDelta: winnerCoinsDelta });
+  io.to(loserId).emit("game_over", { result: "lose", stageId: room.stageId, reason, coinsDelta: loserCoinsDelta });
 
   if (room.isAiMatch && winnerId !== room.aiPlayerId) {
     const winnerUserId = room.players[winnerId].userId;
@@ -156,7 +176,13 @@ io.on("connection", (socket) => {
     }
   }
 
-  socket.on("join_queue", async () => {
+  socket.on("join_queue", async ({ tier: tierId } = {}) => {
+    const tier = getArenaTier(tierId);
+    if (!tier) {
+      socket.emit("queue_error", "잘못된 투기장입니다.");
+      return;
+    }
+
     const currentCards = await listCards();
     const cardsById = new Map(currentCards.map((card) => [card.id, card]));
 
@@ -171,10 +197,36 @@ io.on("connection", (socket) => {
       return;
     }
 
-    matchmaker.addToQueue(socket.id);
-    console.log(`[queue] ${socket.id} joined. queue size=${matchmaker.waitingQueue.length}`);
+    if (tier.entryCost > 0) {
+      const newBalance = await deductCoins(socket.data.userId, tier.entryCost);
+      if (newBalance === null) {
+        socket.emit("queue_error", "코인이 부족합니다.");
+        return;
+      }
+    }
 
-    const pair = matchmaker.tryMatch();
+    socket.data.currentTier = tier.id;
+    const matchmaker = getMatchmaker(tier.id);
+    matchmaker.addToQueue(socket.id);
+    console.log(`[queue] ${socket.id} joined ${tier.id}. queue size=${matchmaker.waitingQueue.length}`);
+
+    let pair = matchmaker.tryMatch();
+    while (pair) {
+      const [candidateA, candidateB] = pair;
+      const userIdA = io.sockets.sockets.get(candidateA)?.data.userId;
+      const userIdB = io.sockets.sockets.get(candidateB)?.data.userId;
+      if (!(userIdA && userIdA === userIdB)) break;
+
+      // 같은 계정끼리는 매칭시키지 않는다(입장료 재차감 없이 큐에 되돌려놓음).
+      // 남은 큐가 비어있으면(=이 둘뿐이면) 되돌린 뒤 더 시도하지 않고 종료 — 계속 재시도하면
+      // 항상 이 둘만 뽑혀 무한루프가 된다. 다른 유저가 있으면 그 유저가 앞으로 오도록
+      // 순서가 바뀌므로 즉시 재시도해서 정상 매칭을 이어간다.
+      const hasOtherCandidate = matchmaker.waitingQueue.length > 0;
+      matchmaker.addToQueue(candidateA);
+      matchmaker.addToQueue(candidateB);
+      if (!hasOtherCandidate) return;
+      pair = matchmaker.tryMatch();
+    }
     if (!pair) return;
 
     const [playerA, playerB] = pair;
@@ -185,13 +237,18 @@ io.on("connection", (socket) => {
       userId: io.sockets.sockets.get(id)?.data.userId,
     }));
 
+    for (const player of players) {
+      const playerSocket = io.sockets.sockets.get(player.id);
+      if (playerSocket) playerSocket.data.currentTier = null;
+    }
+
     const deckByPlayerId = {};
     for (const player of players) {
       const playerCardIds = await getDeckByUserId(player.userId);
       deckByPlayerId[player.id] = playerCardIds.map((cardId) => ({ ...cardsById.get(cardId) }));
     }
 
-    const room = new GameRoom(roomId, players, deckByPlayerId);
+    const room = new GameRoom(roomId, players, deckByPlayerId, tier);
     rooms.set(roomId, room);
     socketToRoom.set(playerA, roomId);
     socketToRoom.set(playerB, roomId);
@@ -199,12 +256,22 @@ io.on("connection", (socket) => {
     for (const playerId of [playerA, playerB]) {
       io.to(playerId).emit("match_found", room.toClientState(playerId));
     }
-    console.log(`[match] ${roomId} started`);
+    console.log(`[match] ${roomId} started (tier ${tier.id})`);
   });
 
-  socket.on("leave_queue", () => {
+  socket.on("leave_queue", async () => {
+    const tierId = socket.data.currentTier;
+    if (!tierId) return;
+
+    const tier = getArenaTier(tierId);
+    const matchmaker = getMatchmaker(tierId);
     matchmaker.removeFromQueue(socket.id);
-    console.log(`[queue] ${socket.id} left. queue size=${matchmaker.waitingQueue.length}`);
+    socket.data.currentTier = null;
+    console.log(`[queue] ${socket.id} left ${tierId}. queue size=${matchmaker.waitingQueue.length}`);
+
+    if (tier && tier.entryCost > 0) {
+      await addCoins(socket.data.userId, tier.entryCost);
+    }
   });
 
   socket.on("start_stage_match", async ({ stageId }) => {
@@ -376,9 +443,20 @@ io.on("connection", (socket) => {
     handleGameOver(room, roomId);
   });
 
-  socket.on("disconnect", () => {
+  socket.on("disconnect", async () => {
     console.log(`[disconnect] ${socket.id}`);
-    matchmaker.removeFromQueue(socket.id);
+
+    const tierId = socket.data.currentTier;
+    if (tierId) {
+      const tier = getArenaTier(tierId);
+      const matchmaker = getMatchmaker(tierId);
+      const wasQueued = matchmaker.waitingQueue.includes(socket.id);
+      matchmaker.removeFromQueue(socket.id);
+      socket.data.currentTier = null;
+      if (wasQueued && tier && tier.entryCost > 0) {
+        await addCoins(socket.data.userId, tier.entryCost);
+      }
+    }
 
     const roomId = socketToRoom.get(socket.id);
     socketToRoom.delete(socket.id);
@@ -389,10 +467,9 @@ io.on("connection", (socket) => {
     // 재연결 유예: 바로 방을 없애지 않고, 같은 유저가 다시 접속하면 복귀시킴
     const timeoutHandle = setTimeout(() => {
       pendingDisconnects.delete(socket.data.userId);
-      const opponentId = room.getOpponentId(socket.id);
-      io.to(opponentId).emit("opponent_disconnected");
-      rooms.delete(roomId);
-      socketToRoom.delete(opponentId);
+      // 기권과 동일한 경로(handleGameOver)를 태워서 투기장 판돈 정산이 똑같이 적용되게 함
+      room.surrender(socket.id);
+      handleGameOver(room, roomId, { reason: "opponent_disconnected" });
     }, RECONNECT_GRACE_MS);
 
     pendingDisconnects.set(socket.data.userId, {

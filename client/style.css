@@ -1974,6 +1974,32 @@ button:active {
   filter: grayscale(0.4);
 }
 
+#arena-tier-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.arena-tier-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 18px;
+  min-width: 220px;
+  flex: 1 1 220px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  background: linear-gradient(170deg, rgba(80, 90, 130, 0.3), rgba(20, 23, 32, 0.6));
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.arena-tier-tile:hover {
+  transform: translateY(-4px) scale(1.02);
+  border-color: var(--gold-dim);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45), 0 0 18px rgba(255, 210, 79, 0.3);
+}
+
 .pack-card {
   display: flex;
   flex-direction: column;

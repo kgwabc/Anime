@@ -46,4 +46,21 @@ async function addCoins(userId, delta) {
   return result.rows[0] ? Number(result.rows[0].coins) : null;
 }
 
-module.exports = { findUserByUsername, createUser, listUsers, deleteUserByUsername, addCoins, getCoins };
+/** 잔액이 amount 이상일 때만 원자적으로 차감. 잔액 부족시 아무것도 하지 않고 null 반환. */
+async function deductCoins(userId, amount) {
+  const result = await getClient().execute({
+    sql: "UPDATE users SET coins = coins - ? WHERE id = ? AND coins >= ? RETURNING coins",
+    args: [amount, userId, amount],
+  });
+  return result.rows[0] ? Number(result.rows[0].coins) : null;
+}
+
+module.exports = {
+  findUserByUsername,
+  createUser,
+  listUsers,
+  deleteUserByUsername,
+  addCoins,
+  deductCoins,
+  getCoins,
+};
