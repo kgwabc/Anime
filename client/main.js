@@ -190,6 +190,23 @@ document.getElementById("btn-close-deck-view").addEventListener("click", () => {
   setDeckViewOpen(false);
 });
 
+function setRulebookOpen(open) {
+  document.getElementById("rulebook-panel").classList.toggle("hidden", !open);
+  document.getElementById("rulebook-backdrop").classList.toggle("hidden", !open);
+}
+
+document.getElementById("btn-open-rulebook").addEventListener("click", () => {
+  setRulebookOpen(true);
+});
+
+document.getElementById("rulebook-backdrop").addEventListener("click", () => {
+  setRulebookOpen(false);
+});
+
+document.getElementById("btn-close-rulebook").addEventListener("click", () => {
+  setRulebookOpen(false);
+});
+
 function onAuthenticated(token, username) {
   localStorage.setItem("tcg_token", token);
   localStorage.setItem("tcg_username", username);

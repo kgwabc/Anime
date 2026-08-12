@@ -222,6 +222,29 @@ body:has(#screen-loading:not(.hidden)) {
   z-index: 55;
 }
 
+.modal-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 720px);
+  max-height: 85vh;
+  overflow-y: auto;
+  z-index: 60;
+  padding: 16px 20px;
+  background: #262b3a;
+  border-radius: 12px;
+  border: 1px solid var(--gold-dim);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 55;
+}
+
 .admin-panel-header {
   display: flex;
   justify-content: space-between;
@@ -454,6 +477,22 @@ button:active {
 }
 
 .hud-admin-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 210, 79, 0.4);
+}
+
+.hud-rulebook-btn {
+  position: absolute;
+  right: 2%;
+  top: 20%;
+  padding: 5px 12px;
+  font-size: 13px;
+  line-height: 1;
+  background: rgba(10, 8, 20, 0.55);
+  border: 1px solid var(--gold-dim);
+}
+
+.hud-rulebook-btn:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 210, 79, 0.4);
 }

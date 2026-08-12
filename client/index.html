@@ -64,6 +64,7 @@
       <span id="lobby-coins" class="hud-coins">🪙 0</span>
       <button id="btn-logout" class="hud-logout-btn" title="로그아웃">로그아웃</button>
       <button id="btn-toggle-admin" class="hud-admin-btn hidden" title="관리자 패널">🛠️ 관리자</button>
+      <button id="btn-open-rulebook" class="hud-rulebook-btn" title="룰북 보기">📖 룰북</button>
 
       <p id="lobby-status" class="lobby-status-toast"></p>
 
@@ -236,6 +237,49 @@
         <option value="">전체 계열</option>
       </select>
       <div id="admin-card-list"></div>
+    </div>
+
+    <div id="rulebook-backdrop" class="hidden modal-backdrop"></div>
+    <div id="rulebook-panel" class="hidden modal-panel">
+      <div class="admin-panel-header">
+        <h2>룰북</h2>
+        <button id="btn-close-rulebook" class="admin-close-btn" title="닫기">✕</button>
+      </div>
+
+      <h3>1. 기본 규칙</h3>
+      <p>마나: 첫 턴엔 마나 1, 이후 턴마다 자동으로 +1씩 증가합니다(최대치까지).</p>
+      <p>드로우: 첫 턴엔 초기 손패로 시작하며 추가로 뽑지 않습니다. 이후 턴마다 마나가
+        최대치에 도달하기 전엔 1장, 최대치에 도달한 뒤부터는 2장씩 뽑습니다.</p>
+      <p>턴: 내 턴에 카드를 내고 공격한 뒤 "턴 종료" 버튼으로 상대에게 턴을 넘깁니다.</p>
+
+      <h3>2. 전투 규칙</h3>
+      <p>서모닝 시크니스: 이번 턴에 낸 캐릭터는 그 턴엔 공격할 수 없고, 자신의 다음
+        턴이 시작되면 공격 가능해집니다.</p>
+      <p>영웅 직공 제한: 상대 보드에 캐릭터가 남아있으면 상대 영웅을 직접 공격할 수
+        없습니다. 먼저 캐릭터를 제거해야 합니다.</p>
+      <p>캐릭터 전투: 미니언끼리 싸우면 서로 상대의 공격력만큼 피해를 주고받습니다
+        (쌍방 피해). 체력이 0 이하가 되면 파괴됩니다.</p>
+      <p>공격 횟수: 캐릭터 한 장당 자신의 턴에 1회만 공격할 수 있습니다.</p>
+
+      <h3>3. 카드 타입 &amp; 효과</h3>
+      <p>카드 타입 3종: 캐릭터(character), 스펠(spell), 장비(equipment).</p>
+      <p>캐릭터는 필드에 냈을 때(출격시) 또는 파괴됐을 때(파괴시) 효과가 발동할 수
+        있습니다. 스펠은 사용 즉시 효과가 발동합니다. 장비는 캐릭터에 장착하는 순간
+        효과가 발동하며 공격력/체력 보너스를 부여합니다.</p>
+      <p>효과 종류: 피해(DAMAGE), 회복(HEAL), 카드뽑기(DRAW), 스탯부여(BUFF).</p>
+      <p>효과 대상: 적 영웅, 적 전체, 내 캐릭터 전체, 지정 캐릭터(직접 선택), 자신,
+        나를 파괴한 대상.</p>
+      <p>일부 카드는 특정 계열(시너지 태그)을 가진 캐릭터만 대상으로 지정할 수
+        있습니다.</p>
+
+      <h3>4. UI 사용법</h3>
+      <p>로비 화면: 매칭 시작(즉시 상대와 대전), 어드벤처(스테이지별 AI와 대전), 덱
+        편집(내 덱 구성), 상점(카드팩 구매).</p>
+      <p>매칭 취소: 매칭 대기 중 "매칭 취소" 버튼으로 취소할 수 있습니다.</p>
+      <p>덱 보기: 대전 중 상대/나의 덱 버튼으로 남은 카드 목록을 모달로 확인할 수
+        있습니다.</p>
+      <p>공격 방법: 공격할 내 캐릭터를 먼저 선택한 뒤, 공격할 대상(적 캐릭터 또는 적
+        영웅)을 클릭합니다.</p>
     </div>
   </div>
 
