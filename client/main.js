@@ -73,6 +73,7 @@ const screens = {
   stageSelect: document.getElementById("screen-stage-select"),
   deckBuilder: document.getElementById("screen-deck-builder"),
   shop: document.getElementById("screen-shop"),
+  cardex: document.getElementById("screen-cardex"),
   game: document.getElementById("screen-game"),
   result: document.getElementById("screen-result"),
 };
@@ -1292,6 +1293,16 @@ document.getElementById("btn-shop-back").addEventListener("click", () => {
   showScreen("lobby");
 });
 
+document.getElementById("btn-shop-dex").addEventListener("click", () => {
+  if (isPackOpening) return;
+  showScreen("cardex");
+  loadCardDex();
+});
+
+document.getElementById("btn-cardex-back").addEventListener("click", () => {
+  showScreen("shop");
+});
+
 async function loadShop() {
   const errorEl = document.getElementById("shop-error");
   errorEl.textContent = "";
@@ -1310,7 +1321,6 @@ async function loadShop() {
     shopPacks = packsData.packs;
     setCoinDisplays(collectionData.coins);
     renderShopPacks();
-    await renderShopCollection(collectionData);
   } catch (err) {
     errorEl.textContent = "상점 정보를 불러올 수 없습니다.";
   }
@@ -1363,30 +1373,38 @@ function renderShopPacks() {
   }
 }
 
-async function renderShopCollection(collectionData) {
-  const gridEl = document.getElementById("shop-collection-grid");
+async function loadCardDex() {
+  const gridEl = document.getElementById("cardex-grid");
+  const errorEl = document.getElementById("cardex-error");
+  errorEl.textContent = "";
   gridEl.innerHTML = "불러오는 중...";
 
   try {
-    const res = await fetch(`${SERVER_URL}/cards`, { headers: { Authorization: `Bearer ${currentAuthToken}` } });
-    const data = await res.json();
-    if (!data.ok) {
-      gridEl.textContent = data.message;
+    const [cardsRes, collectionRes] = await Promise.all([
+      fetch(`${SERVER_URL}/cards`, { headers: { Authorization: `Bearer ${currentAuthToken}` } }),
+      fetch(`${SERVER_URL}/shop/collection/mine`, { headers: { Authorization: `Bearer ${currentAuthToken}` } }),
+    ]);
+    const cardsData = await cardsRes.json();
+    const collectionData = await collectionRes.json();
+    if (!cardsData.ok || !collectionData.ok) {
+      errorEl.textContent = cardsData.message || collectionData.message;
+      gridEl.innerHTML = "";
       return;
     }
-    const allowedIds = new Set([...collectionData.ownedCardIds, ...collectionData.starterCardIds]);
-    const ownedCards = data.cards.filter((card) => allowedIds.has(card.id));
+
+    const ownedIds = new Set([...collectionData.ownedCardIds, ...collectionData.starterCardIds]);
 
     gridEl.innerHTML = "";
-    for (const card of ownedCards) {
-      gridEl.appendChild(
-        renderCardTile(card, {
-          badgeText: collectionData.starterCardIds.includes(card.id) ? "스타터" : "보유중",
-          buttonText: "✓ 보유",
-          buttonDisabled: true,
-          onButtonClick: () => {},
-        })
-      );
+    for (const card of cardsData.cards) {
+      const owned = ownedIds.has(card.id);
+      const tile = renderCardTile(card, {
+        badgeText: owned ? (collectionData.starterCardIds.includes(card.id) ? "스타터" : "보유중") : "미보유",
+        buttonText: owned ? "✓ 보유" : "미보유",
+        buttonDisabled: true,
+        onButtonClick: () => {},
+      });
+      if (!owned) tile.classList.add("card-tile--unowned");
+      gridEl.appendChild(tile);
     }
     gridEl.querySelectorAll(".name").forEach(fitCardName);
   } catch (err) {
@@ -1414,11 +1432,6 @@ async function openPack(packId) {
     }
     setCoinDisplays(data.coins);
     await showPackReveal(data.card, data.isDuplicate, data.refund, packId);
-    const collectionRes = await fetch(`${SERVER_URL}/shop/collection/mine`, {
-      headers: { Authorization: `Bearer ${currentAuthToken}` },
-    });
-    const collectionData = await collectionRes.json();
-    if (collectionData.ok) await renderShopCollection(collectionData);
   } catch (err) {
     errorEl.textContent = "카드팩 오픈 중 오류가 발생했습니다.";
   } finally {

@@ -2001,7 +2001,7 @@ button:active {
   font-weight: bold;
 }
 
-#shop-collection-grid {
+#cardex-grid {
   max-height: 50vh;
   overflow-y: auto;
   background: #262b3a;
@@ -2011,6 +2011,11 @@ button:active {
   flex-wrap: wrap;
   gap: 10px;
   align-content: flex-start;
+}
+
+.card-tile--unowned {
+  opacity: 0.55;
+  filter: grayscale(0.4);
 }
 
 .shop-pack-list {
