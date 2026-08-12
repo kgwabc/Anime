@@ -661,6 +661,12 @@ function renderAdminCards(cards, token) {
     overridesAppearanceInput.checked = !!card.overridesAppearance;
     overridesAppearanceLabel.append(overridesAppearanceInput, "장착시 외형 교체");
 
+    const allowDuplicateEquipLabel = document.createElement("label");
+    const allowDuplicateEquipInput = document.createElement("input");
+    allowDuplicateEquipInput.type = "checkbox";
+    allowDuplicateEquipInput.checked = !!card.allowDuplicateEquip;
+    allowDuplicateEquipLabel.append(allowDuplicateEquipInput, "중복 장착 허용");
+
     const attackNameOverrideInput = document.createElement("input");
     attackNameOverrideInput.type = "text";
     attackNameOverrideInput.maxLength = 30;
@@ -741,6 +747,7 @@ function renderAdminCards(cards, token) {
       equipAtkInput.classList.toggle("hidden", type !== "equipment");
       equipHpInput.classList.toggle("hidden", type !== "equipment");
       overridesAppearanceLabel.classList.toggle("hidden", type !== "equipment");
+      allowDuplicateEquipLabel.classList.toggle("hidden", type !== "equipment");
       attackNameOverrideInput.classList.toggle("hidden", type !== "equipment");
       equipEffectSelect.classList.toggle("hidden", type !== "equipment");
       attackEffectOverrideSelect.classList.toggle("hidden", type !== "equipment");
@@ -790,6 +797,7 @@ function renderAdminCards(cards, token) {
         fields.equipAtkBonus = Number(equipAtkInput.value) || 0;
         fields.equipHpBonus = Number(equipHpInput.value) || 0;
         fields.overridesAppearance = overridesAppearanceInput.checked;
+        fields.allowDuplicateEquip = allowDuplicateEquipInput.checked;
         fields.attackNameOverride = attackNameOverrideInput.value || null;
         fields.equipEffect = equipEffectSelect.value || null;
         fields.attackEffectOverride = attackEffectOverrideSelect.value || null;
@@ -828,6 +836,7 @@ function renderAdminCards(cards, token) {
       equipAtkInput,
       equipHpInput,
       overridesAppearanceLabel,
+      allowDuplicateEquipLabel,
       attackNameOverrideInput,
       equipEffectSelect,
       attackEffectOverrideSelect,
@@ -934,6 +943,7 @@ document.getElementById("form-new-card").addEventListener("submit", async (e) =>
     fields.equipAtkBonus = Number(document.getElementById("new-card-equip-atk").value) || 0;
     fields.equipHpBonus = Number(document.getElementById("new-card-equip-hp").value) || 0;
     fields.overridesAppearance = document.getElementById("new-card-overrides-appearance").checked;
+    fields.allowDuplicateEquip = document.getElementById("new-card-allow-duplicate-equip").checked;
     fields.attackNameOverride = document.getElementById("new-card-attack-name-override").value || null;
     fields.equipEffect = document.getElementById("new-card-equip-effect").value || null;
     fields.attackEffectOverride = document.getElementById("new-card-attack-effect-override").value || null;
@@ -2776,7 +2786,7 @@ function dropIsValid(card, dropTarget) {
   if (card.type === "equipment") {
     if (dropTarget.boardSide !== "my" || !dropTarget.cardEl) return false;
     const targetCard = lastState?.me.board.find((c) => c.id === dropTarget.cardEl.dataset.cardId);
-    return !targetCard?.equippedItems?.length;
+    return !targetCard?.equippedItems?.length || !!card.allowDuplicateEquip;
   }
   if (card.type === "spell") {
     if (cardNeedsTargetCharacter(card)) return Boolean(dropTarget.cardEl);

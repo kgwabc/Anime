@@ -80,6 +80,7 @@ function validateCardFields(body, { partial, existingType } = {}) {
     skillEffect,
     equipEffect,
     attackEffectOverride,
+    allowDuplicateEquip,
   } = body;
   const effectiveType = type !== undefined ? type : existingType;
 
@@ -118,6 +119,9 @@ function validateCardFields(body, { partial, existingType } = {}) {
     }
     if (overridesAppearance !== undefined && typeof overridesAppearance !== "boolean") {
       return "overridesAppearance는 boolean이어야 합니다.";
+    }
+    if (allowDuplicateEquip !== undefined && typeof allowDuplicateEquip !== "boolean") {
+      return "allowDuplicateEquip는 boolean이어야 합니다.";
     }
     if (attackNameOverride !== undefined && attackNameOverride !== null) {
       if (typeof attackNameOverride !== "string") {

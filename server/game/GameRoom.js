@@ -182,7 +182,7 @@ class GameRoom {
     if (!target) {
       return { ok: false, reason: "target_not_on_board" };
     }
-    if (target.equippedItems?.length) {
+    if (target.equippedItems?.length && !card.allowDuplicateEquip) {
       return { ok: false, reason: "already_equipped" };
     }
     if (card.requiredTargetTag && !(target.synergyTags || []).includes(card.requiredTargetTag)) {

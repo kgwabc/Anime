@@ -27,6 +27,7 @@ function rowToCard(row) {
     skillEffect: row.skill_effect ?? null,
     equipEffect: row.equip_effect ?? null,
     attackEffectOverride: row.attack_effect_override ?? null,
+    allowDuplicateEquip: !!row.allow_duplicate_equip,
   };
 }
 
@@ -93,13 +94,14 @@ async function createCard({
   skillEffect,
   equipEffect,
   attackEffectOverride,
+  allowDuplicateEquip,
 }) {
   const id = await generateCardId(name);
   const isCharacter = type === "character";
   const isEquipment = type === "equipment";
   await getClient().execute({
-    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag, rarity, image, attack_name, skill_name, overrides_appearance, attack_name_override, attack_effect, skill_effect, equip_effect, attack_effect_override)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag, rarity, image, attack_name, skill_name, overrides_appearance, attack_name_override, attack_effect, skill_effect, equip_effect, attack_effect_override, allow_duplicate_equip)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       name,
@@ -126,6 +128,7 @@ async function createCard({
       isCharacter ? skillEffect ?? null : null,
       isEquipment ? equipEffect ?? null : null,
       isEquipment ? attackEffectOverride ?? null : null,
+      isEquipment && allowDuplicateEquip ? 1 : 0,
     ],
   });
   return getCardById(id);
@@ -142,7 +145,8 @@ async function updateCard(id, fields) {
     sql: `UPDATE cards SET name = ?, series = ?, type = ?, cost = ?, atk = ?, hp = ?, synergy_tags = ?,
           effects = ?, equip_atk_bonus = ?, equip_hp_bonus = ?, description = ?,
           matchup_vs_tag = ?, matchup_atk_bonus = ?, required_target_tag = ?, rarity = ?, image = ?, attack_name = ?, skill_name = ?,
-          overrides_appearance = ?, attack_name_override = ?, attack_effect = ?, skill_effect = ?, equip_effect = ?, attack_effect_override = ?
+          overrides_appearance = ?, attack_name_override = ?, attack_effect = ?, skill_effect = ?, equip_effect = ?, attack_effect_override = ?,
+          allow_duplicate_equip = ?
           WHERE id = ?`,
     args: [
       merged.name,
@@ -169,6 +173,7 @@ async function updateCard(id, fields) {
       isCharacter ? merged.skillEffect ?? null : null,
       isEquipment ? merged.equipEffect ?? null : null,
       isEquipment ? merged.attackEffectOverride ?? null : null,
+      isEquipment && merged.allowDuplicateEquip ? 1 : 0,
       id,
     ],
   });

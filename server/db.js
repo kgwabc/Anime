@@ -91,6 +91,9 @@ async function migrateCardsTable(db) {
   if (!existingCols.has("attack_effect_override")) {
     await db.execute("ALTER TABLE cards ADD COLUMN attack_effect_override TEXT");
   }
+  if (!existingCols.has("allow_duplicate_equip")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN allow_duplicate_equip INTEGER NOT NULL DEFAULT 0");
+  }
 }
 
 async function seedCardsIfEmpty(db) {
@@ -193,7 +196,8 @@ async function connectDB() {
       attack_effect TEXT,
       skill_effect TEXT,
       equip_effect TEXT,
-      attack_effect_override TEXT
+      attack_effect_override TEXT,
+      allow_duplicate_equip INTEGER NOT NULL DEFAULT 0
     )
   `);
   await migrateCardsTable(db);
