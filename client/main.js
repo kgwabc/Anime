@@ -1876,10 +1876,12 @@ document.addEventListener("keydown", (e) => {
 function registerSocketHandlers() {
   socket.on("match_found", (state) => {
     showScreen("game");
+    startTurnTimerTicker(state.turnRemainingMs);
     renderState(state);
   });
 
   socket.on("game_state_update", (state) => {
+    startTurnTimerTicker(state.turnRemainingMs);
     if (dragState) {
       pendingRenderState = state;
       return;
@@ -3149,7 +3151,6 @@ function renderState(state) {
     ? `▶ 내 턴 (턴 ${state.turnNumber})`
     : `상대 턴 (턴 ${state.turnNumber})`;
   document.getElementById("btn-end-turn").disabled = !isMyTurn;
-  startTurnTimerTicker(state.turnRemainingMs);
 
   if (pendingSkillTargetCard) {
     document.getElementById("turn-indicator").textContent = "🎯 스킬 대상을 선택하세요 (취소: 빈 곳 클릭/Esc)";
