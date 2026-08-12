@@ -1073,10 +1073,8 @@ button:active {
   opacity: 1;
 }
 
-@media (hover: none), (pointer: coarse) {
-  .card-hover-info {
-    opacity: 1;
-  }
+.card.touch-active .card-hover-info {
+  opacity: 1;
 }
 
 .card .name {

@@ -2678,6 +2678,24 @@ window.addEventListener("orientationchange", () => {
   resizeFitTimer = setTimeout(refitAllCardNames, 150);
 });
 
+document.addEventListener("pointerdown", (e) => {
+  if (e.pointerType === "mouse") return;
+  const cardEl = e.target.closest(".card");
+  if (cardEl) cardEl.classList.add("touch-active");
+});
+
+function clearTouchActiveCards() {
+  document.querySelectorAll(".card.touch-active").forEach((el) => el.classList.remove("touch-active"));
+}
+document.addEventListener("pointerup", (e) => {
+  if (e.pointerType === "mouse") return;
+  clearTouchActiveCards();
+});
+document.addEventListener("pointercancel", (e) => {
+  if (e.pointerType === "mouse") return;
+  clearTouchActiveCards();
+});
+
 function equipBadgesHtml(card) {
   if (!card.equippedItems?.length) return "";
   return `<div class="equip-badges">${card.equippedItems
