@@ -1079,9 +1079,10 @@ button:active {
 #turn-timer {
   flex: 0 0 auto;
   text-align: center;
-  font-size: 12px;
+  font-size: 20px;
+  font-weight: bold;
   color: #ccc;
-  margin: -1px 0 2px;
+  margin: 0 0 4px;
 }
 
 #turn-timer.timer-low {

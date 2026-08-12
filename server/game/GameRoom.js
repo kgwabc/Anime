@@ -402,7 +402,7 @@ class GameRoom {
       roomId: this.roomId,
       turnNumber: this.turnNumber,
       currentPlayerId: this.playerOrder[this.currentPlayerIndex],
-      turnEndsAt: this.turnEndsAt ?? null,
+      turnRemainingMs: this.turnEndsAt ? Math.max(0, this.turnEndsAt - Date.now()) : null,
       tier: this.tier,
       me: {
         id: me.id,

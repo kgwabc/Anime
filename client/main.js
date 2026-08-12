@@ -2891,17 +2891,20 @@ function updateTurnTimerDisplay(turnEndsAt) {
   el.classList.toggle("timer-low", remainingSec <= 10);
 }
 
-function startTurnTimerTicker(turnEndsAt) {
+function startTurnTimerTicker(turnRemainingMs) {
   if (turnTimerInterval) {
     clearInterval(turnTimerInterval);
     turnTimerInterval = null;
   }
-  if (!turnEndsAt) {
+  if (turnRemainingMs === null || turnRemainingMs === undefined) {
     updateTurnTimerDisplay(null);
     return;
   }
-  updateTurnTimerDisplay(turnEndsAt);
-  turnTimerInterval = setInterval(() => updateTurnTimerDisplay(turnEndsAt), 250);
+  // 서버-클라이언트 시계가 서로 다를 수 있으므로, 절대 시각이 아니라 "남은 시간"을 받아
+  // 수신 시점의 내 로컬 시계 기준으로 마감 시각을 다시 계산한다.
+  const localDeadline = Date.now() + turnRemainingMs;
+  updateTurnTimerDisplay(localDeadline);
+  turnTimerInterval = setInterval(() => updateTurnTimerDisplay(localDeadline), 250);
 }
 
 function animateDrawIn(cardEl, fromEl) {
@@ -3103,7 +3106,7 @@ function renderState(state) {
     ? `▶ 내 턴 (턴 ${state.turnNumber})`
     : `상대 턴 (턴 ${state.turnNumber})`;
   document.getElementById("btn-end-turn").disabled = !isMyTurn;
-  startTurnTimerTicker(state.turnEndsAt);
+  startTurnTimerTicker(state.turnRemainingMs);
 
   if (pendingSkillTargetCard) {
     document.getElementById("turn-indicator").textContent = "🎯 스킬 대상을 선택하세요 (취소: 빈 곳 클릭/Esc)";
