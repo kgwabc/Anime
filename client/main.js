@@ -975,11 +975,13 @@ const WAKE_RETRY_DELAY_MS = 4000;
 
 function wakeServer() {
   const startButton = document.getElementById("btn-start-game");
+  const loadingStatus = document.getElementById("loading-status");
 
   fetch(SERVER_URL)
     .then((res) => {
       if (!res.ok) throw new Error(`status ${res.status}`);
       startButton.classList.remove("hidden");
+      loadingStatus.classList.add("hidden");
     })
     .catch(() => {
       setTimeout(wakeServer, WAKE_RETRY_DELAY_MS);

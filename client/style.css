@@ -101,6 +101,21 @@ body:has(#screen-loading:not(.hidden)) {
   border-radius: 8px;
 }
 
+.loading-status {
+  position: absolute;
+  left: 0;
+  top: 72%;
+  width: 100%;
+  text-align: center;
+  color: #fff;
+  font-family: var(--font-display);
+  letter-spacing: 1px;
+}
+
+.loading-status p {
+  margin: 8px 0 0;
+}
+
 .spinner {
   width: 48px;
   height: 48px;
