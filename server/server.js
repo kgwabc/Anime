@@ -45,6 +45,7 @@ const io = new Server(server, {
 io.use(socketAuthMiddleware);
 
 const RECONNECT_GRACE_MS = Number(process.env.RECONNECT_GRACE_MS) || 30000;
+const AI_MODE_WIN_REWARD = 500;
 
 /** @type {Map<string, Matchmaker>} tierId -> Matchmaker (투기장 티어별로 큐를 분리) */
 const matchmakers = new Map();
@@ -87,6 +88,10 @@ async function handleGameOver(room, roomId, { reason } = {}) {
     await addCoins(winnerUserId, room.tier.winReward);
     winnerCoinsDelta = room.tier.winReward - room.tier.entryCost;
     loserCoinsDelta = -room.tier.entryCost;
+  } else if (room.isAiMatch && winnerId !== room.aiPlayerId) {
+    const winnerUserId = room.players[winnerId].userId;
+    await addCoins(winnerUserId, AI_MODE_WIN_REWARD);
+    winnerCoinsDelta = AI_MODE_WIN_REWARD;
   }
 
   io.to(winnerId).emit("game_over", { result: "win", stageId: room.stageId, reason, coinsDelta: winnerCoinsDelta });
