@@ -402,6 +402,7 @@ class GameRoom {
       roomId: this.roomId,
       turnNumber: this.turnNumber,
       currentPlayerId: this.playerOrder[this.currentPlayerIndex],
+      turnEndsAt: this.turnEndsAt ?? null,
       tier: this.tier,
       me: {
         id: me.id,

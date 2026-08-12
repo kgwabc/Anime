@@ -45,6 +45,7 @@ const io = new Server(server, {
 io.use(socketAuthMiddleware);
 
 const RECONNECT_GRACE_MS = Number(process.env.RECONNECT_GRACE_MS) || 30000;
+const TURN_DURATION_MS = Number(process.env.TURN_DURATION_MS) || 60000;
 const AI_MODE_WIN_REWARD = 500;
 
 /** @type {Map<string, Matchmaker>} tierId -> Matchmaker (투기장 티어별로 큐를 분리) */
@@ -60,6 +61,39 @@ const rooms = new Map();
 const socketToRoom = new Map();
 /** @type {Map<string, {roomId: string, oldSocketId: string, timeoutHandle: NodeJS.Timeout}>} userId -> 재연결 유예 정보 */
 const pendingDisconnects = new Map();
+/** @type {Map<string, NodeJS.Timeout>} roomId -> 턴 제한시간 타이머 핸들 */
+const turnTimers = new Map();
+
+function clearTurnTimer(roomId) {
+  clearTimeout(turnTimers.get(roomId));
+  turnTimers.delete(roomId);
+}
+
+// 턴이 시작될 때마다 호출: 이전 타이머를 정리하고 TURN_DURATION_MS 뒤 자동 턴 종료를 예약한다.
+function scheduleTurnTimer(room, roomId) {
+  clearTurnTimer(roomId);
+  if (room.isGameOver()) return;
+
+  room.turnEndsAt = Date.now() + TURN_DURATION_MS;
+  const handle = setTimeout(() => handleTurnTimeout(roomId), TURN_DURATION_MS);
+  turnTimers.set(roomId, handle);
+}
+
+// 시간 초과로 자동 턴 종료. 정상적으로 턴이 끝난 경우 이 타이머는 항상 먼저
+// clearTurnTimer로 정리되므로, 여기 도달했다는 것 자체가 아직 유효한 만료임을 의미한다.
+function handleTurnTimeout(roomId) {
+  const room = rooms.get(roomId);
+  if (!room || room.isGameOver()) return;
+
+  const currentPlayerId = room.playerOrder[room.currentPlayerIndex];
+  room.endTurn(currentPlayerId);
+  if (!room.isGameOver()) scheduleTurnTimer(room, roomId);
+  broadcastGameState(room);
+
+  if (!room.isGameOver() && room.isAiMatch && room.isPlayersTurn(room.aiPlayerId)) {
+    setTimeout(() => stepAiTurn(room, roomId), aiThinkDelay());
+  }
+}
 
 function broadcastGameState(room) {
   for (const playerId of room.playerOrder) {
@@ -102,6 +136,7 @@ async function handleGameOver(room, roomId, { reason } = {}) {
     await setHighestCleared(winnerUserId, room.stageId);
   }
 
+  clearTurnTimer(roomId);
   rooms.delete(roomId);
   socketToRoom.delete(loserId);
   socketToRoom.delete(winnerId);
@@ -159,8 +194,13 @@ function stepAiTurn(room, roomId) {
   }
 
   setTimeout(() => {
-    room.endTurn(aiId);
-    broadcastGameState(room);
+    // 이 사이 턴 타이머가 먼저 만료되어 AI 턴이 이미 강제 종료됐을 수 있으므로,
+    // endTurn이 실제로 성공했을 때만(정말 아직 AI 턴일 때만) 타이머를 재시작한다.
+    const result = room.endTurn(aiId);
+    if (result.ok) {
+      scheduleTurnTimer(room, roomId);
+      broadcastGameState(room);
+    }
   }, aiThinkDelay());
 }
 
@@ -257,6 +297,7 @@ io.on("connection", (socket) => {
     rooms.set(roomId, room);
     socketToRoom.set(playerA, roomId);
     socketToRoom.set(playerB, roomId);
+    scheduleTurnTimer(room, roomId);
 
     for (const playerId of [playerA, playerB]) {
       io.to(playerId).emit("match_found", room.toClientState(playerId));
@@ -330,6 +371,7 @@ io.on("connection", (socket) => {
 
     rooms.set(roomId, room);
     socketToRoom.set(socket.id, roomId);
+    scheduleTurnTimer(room, roomId);
 
     io.to(socket.id).emit("match_found", room.toClientState(socket.id));
     console.log(`[stage] ${roomId} started (stage ${stage.id})`);
@@ -430,6 +472,7 @@ io.on("connection", (socket) => {
       return;
     }
 
+    scheduleTurnTimer(room, roomId);
     broadcastGameState(room);
     if (room.isAiMatch && !room.isGameOver() && room.isPlayersTurn(room.aiPlayerId)) {
       setTimeout(() => stepAiTurn(room, roomId), aiThinkDelay());

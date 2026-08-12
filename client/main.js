@@ -18,6 +18,7 @@ let allowedCardIds = new Set();
 let currentDeckCardIds = [];
 let lastTurnPlayerId = null;
 let resultAutoReturnTimer = null;
+let turnTimerInterval = null;
 let pendingBoardRebuildTimer = null;
 const pendingInstallEffects = new Map(); // cardId -> { playerId }
 const pendingBuffEffects = new Map(); // targetCharacterId -> { playerId }
@@ -1899,6 +1900,11 @@ function registerSocketHandlers() {
     document.getElementById("result-text").textContent = text;
     showScreen("result");
     refreshLobbyCoins();
+    if (turnTimerInterval) {
+      clearInterval(turnTimerInterval);
+      turnTimerInterval = null;
+    }
+    updateTurnTimerDisplay(null);
     resultAutoReturnTimer = setTimeout(returnToLobby, 15000);
   });
 
@@ -2873,6 +2879,31 @@ function flashClass(el, className, durationMs) {
   setTimeout(clear, durationMs);
 }
 
+function updateTurnTimerDisplay(turnEndsAt) {
+  const el = document.getElementById("turn-timer");
+  if (!turnEndsAt) {
+    el.textContent = "";
+    el.classList.remove("timer-low");
+    return;
+  }
+  const remainingSec = Math.max(0, Math.ceil((turnEndsAt - Date.now()) / 1000));
+  el.textContent = `⏱ ${remainingSec}초`;
+  el.classList.toggle("timer-low", remainingSec <= 10);
+}
+
+function startTurnTimerTicker(turnEndsAt) {
+  if (turnTimerInterval) {
+    clearInterval(turnTimerInterval);
+    turnTimerInterval = null;
+  }
+  if (!turnEndsAt) {
+    updateTurnTimerDisplay(null);
+    return;
+  }
+  updateTurnTimerDisplay(turnEndsAt);
+  turnTimerInterval = setInterval(() => updateTurnTimerDisplay(turnEndsAt), 250);
+}
+
 function animateDrawIn(cardEl, fromEl) {
   if (!cardEl || !fromEl) return;
   const fromRect = fromEl.getBoundingClientRect();
@@ -3072,6 +3103,7 @@ function renderState(state) {
     ? `▶ 내 턴 (턴 ${state.turnNumber})`
     : `상대 턴 (턴 ${state.turnNumber})`;
   document.getElementById("btn-end-turn").disabled = !isMyTurn;
+  startTurnTimerTicker(state.turnEndsAt);
 
   if (pendingSkillTargetCard) {
     document.getElementById("turn-indicator").textContent = "🎯 스킬 대상을 선택하세요 (취소: 빈 곳 클릭/Esc)";

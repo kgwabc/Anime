@@ -1076,6 +1076,19 @@ button:active {
   border-bottom: 1px solid rgba(255, 210, 79, 0.4);
 }
 
+#turn-timer {
+  flex: 0 0 auto;
+  text-align: center;
+  font-size: 12px;
+  color: #ccc;
+  margin: -1px 0 2px;
+}
+
+#turn-timer.timer-low {
+  color: #ff5555;
+  font-weight: bold;
+}
+
 .card.cannot-attack {
   opacity: 0.5;
   cursor: default;
