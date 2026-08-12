@@ -364,6 +364,10 @@ body:has(#screen-loading:not(.hidden)) {
   font-size: 10px;
   color: #c9d2e3;
   line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .admin-user-row {
@@ -1067,6 +1071,12 @@ button:active {
 
 .card:hover .card-hover-info {
   opacity: 1;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .card-hover-info {
+    opacity: 1;
+  }
 }
 
 .card .name {

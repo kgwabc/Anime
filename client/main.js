@@ -2627,7 +2627,7 @@ function cardDescHtml(card) {
 
 function fitCardName(nameEl) {
   const STEP = 0.5;
-  const MIN = 5;
+  const MIN = window.matchMedia("(pointer: coarse)").matches ? 8 : 5;
   const MAX = 13;
   const steps = Math.round((MAX - MIN) / STEP);
 
