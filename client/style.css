@@ -1070,15 +1070,17 @@ button:active {
 
 .card-hover-info {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   z-index: 3;
   padding: 6px;
   background: rgba(20, 24, 34, 0.92);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.15s ease;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .card:hover .card-hover-info {
@@ -1094,6 +1096,13 @@ button:active {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.card-hover-info .name {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  flex: 0 0 auto;
 }
 
 #turn-indicator {
