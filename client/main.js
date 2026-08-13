@@ -732,7 +732,12 @@ function renderAdminCards(cards, token) {
     const skillEffectSelect = createOptionSelect(elementEffectOptions, card.skillEffect || "");
 
     const transformTriggerEquipSelect = createOptionSelect(
-      [["", "변신 없음"], ...loadedAdminCards.filter((c) => c.type === "equipment").map((c) => [c.id, c.name])],
+      [
+        ["", "변신 없음"],
+        ...loadedAdminCards
+          .filter((c) => c.type === "equipment" || c.type === "spell")
+          .map((c) => [c.id, c.name]),
+      ],
       card.transformTriggerEquipId || ""
     );
 

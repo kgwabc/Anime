@@ -25,6 +25,21 @@ function buildDeck(deckCards, playerId) {
   }));
 }
 
+function registerTransformTrigger(target, catalogId) {
+  if (!target.transformTriggerEquipId || target.isTransformed) return;
+  if (catalogId !== target.transformTriggerEquipId) return;
+  target.transformProgress = (target.transformProgress || 0) + 1;
+  if (target.transformProgress >= (target.transformRequiredCount || 2)) {
+    target.isTransformed = true;
+    if (target.transformAtk != null) target.atk = target.transformAtk;
+    if (target.transformHp != null) target.hp = target.transformHp;
+    if (target.transformName) target.name = target.transformName;
+    if (target.transformImage) target.image = target.transformImage;
+    if (target.transformAttackName) target.attackName = target.transformAttackName;
+    if (target.transformAttackEffect) target.attackEffect = target.transformAttackEffect;
+  }
+}
+
 class GameRoom {
   /**
    * @param {{id: string, username: string, userId: string}[]} players
@@ -131,6 +146,13 @@ class GameRoom {
     let onPlayEffectResults = [];
     if (card.type === "spell") {
       applyEffectList(this, playerId, card.effects, "IMMEDIATE", context, card.requiredTargetTag);
+      if (chosenTargetCardId) {
+        const opponent = this.players[this.getOpponentId(playerId)];
+        const targetChar =
+          player.board.find((c) => c.id === chosenTargetCardId) ||
+          opponent?.board.find((c) => c.id === chosenTargetCardId);
+        if (targetChar) registerTransformTrigger(targetChar, card.catalogId);
+      }
     } else {
       card.canAttack = false;
       card.hasAttacked = false;
@@ -221,20 +243,7 @@ class GameRoom {
       target.attackEffect = card.attackEffectOverride;
     }
 
-    if (target.transformTriggerEquipId && !target.isTransformed) {
-      const matchCount = target.equippedItems.filter(
-        (item) => item.catalogId === target.transformTriggerEquipId
-      ).length;
-      if (matchCount >= (target.transformRequiredCount || 2)) {
-        target.isTransformed = true;
-        if (target.transformAtk != null) target.atk = target.transformAtk;
-        if (target.transformHp != null) target.hp = target.transformHp;
-        if (target.transformName) target.name = target.transformName;
-        if (target.transformImage) target.image = target.transformImage;
-        if (target.transformAttackName) target.attackName = target.transformAttackName;
-        if (target.transformAttackEffect) target.attackEffect = target.transformAttackEffect;
-      }
-    }
+    registerTransformTrigger(target, card.catalogId);
 
     const statBonusResult =
       card.equipAtkBonus || card.equipHpBonus
