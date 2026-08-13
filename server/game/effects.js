@@ -37,11 +37,17 @@ function resolveTargets(room, playerId, effect, context, requiredTargetTag) {
         .filter((card) => card.id !== context.sourceCardId)
         .filter((card) => matchesRequiredTag(card, requiredTargetTag))
         .map((card) => ({ kind: "card", ref: card, owner: player }));
-    case "TARGET_CHARACTER": {
-      const found = findCharacterOnEitherBoard(room, context.chosenTargetCardId);
+    case "TARGET_ALLY_CHARACTER": {
+      const found = player.board.find((card) => card.id === context.chosenTargetCardId);
       if (!found) return null;
-      if (!matchesRequiredTag(found.card, requiredTargetTag)) return null;
-      return [{ kind: "card", ref: found.card, owner: found.player }];
+      if (!matchesRequiredTag(found, requiredTargetTag)) return null;
+      return [{ kind: "card", ref: found, owner: player }];
+    }
+    case "TARGET_ENEMY_CHARACTER": {
+      const found = opponent.board.find((card) => card.id === context.chosenTargetCardId);
+      if (!found) return null;
+      if (!matchesRequiredTag(found, requiredTargetTag)) return null;
+      return [{ kind: "card", ref: found, owner: opponent }];
     }
     case "KILLER": {
       if (!context.killerCardId) return null;
@@ -99,17 +105,24 @@ function applyAction(effect, targets) {
   return results;
 }
 
-/** 특정 trigger의 효과 목록에 TARGET_CHARACTER가 있는데 해석 불가능한 타겟이 있으면 true.
- * 상태 변경(마나 차감/손패 제거) 전에 미리 검증하는 용도. requiredTargetTag가 있으면
- * 대상 캐릭터의 synergyTags에 그 태그가 없는 경우도 해석 불가능으로 취급한다. */
+/** 특정 trigger의 효과 목록에 TARGET_ALLY_CHARACTER/TARGET_ENEMY_CHARACTER가 있는데 해석 불가능한
+ * 타겟이 있으면 true. 상태 변경(마나 차감/손패 제거) 전에 미리 검증하는 용도. requiredTargetTag가
+ * 있으면 대상 캐릭터의 synergyTags에 그 태그가 없는 경우도 해석 불가능으로 취급한다.
+ * 호출부(GameRoom.playCard)는 ON_PLAY(캐릭터 스킬)에는 이 함수를 쓰지 않는다 — 대상이 없어도
+ * 카드는 내고, 효과만 조용히 스킵되게 하기 위함. IMMEDIATE(스펠)에만 사용해 대상 필수를 강제한다. */
 function hasUnresolvableTarget(room, playerId, effects, trigger, context = {}, requiredTargetTag) {
   return (effects || [])
     .filter((effect) => effect.trigger === trigger)
     .some((effect) => {
-      if (effect.target !== "TARGET_CHARACTER") return false;
-      const found = findCharacterOnEitherBoard(room, context.chosenTargetCardId);
+      if (effect.target !== "TARGET_ALLY_CHARACTER" && effect.target !== "TARGET_ENEMY_CHARACTER") return false;
+      const opponentId = room.getOpponentId(playerId);
+      const board =
+        effect.target === "TARGET_ALLY_CHARACTER"
+          ? room.players[playerId].board
+          : room.players[opponentId].board;
+      const found = board.find((card) => card.id === context.chosenTargetCardId);
       if (!found) return true;
-      if (requiredTargetTag && !(found.card.synergyTags || []).includes(requiredTargetTag)) return true;
+      if (requiredTargetTag && !(found.synergyTags || []).includes(requiredTargetTag)) return true;
       return false;
     });
 }

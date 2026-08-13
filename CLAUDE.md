@@ -61,10 +61,15 @@
   `IMMEDIATE`, 장비는 `ON_EQUIP`)와 무관하게 동일한 방식으로 해석함. `card.requiredTargetTag`
   (특정 synergyTag를 가진 캐릭터만 대상 가능)도 스펠/장비뿐 아니라 캐릭터 스킬에도 동일하게
   적용되며, 관리자 카드 에디터(`client/main.js`)에서 캐릭터 타입에도 이 필드를 지정할 수 있음.
-  `TARGET_CHARACTER`를 대상으로 하는 캐릭터 `ON_PLAY` 스킬은 카드를 내 보드에 드롭한 뒤
-  "대상 선택 모드"로 전환되어(보드 카드에 `.skill-target` 하이라이트) 클릭으로 대상을
-  확정하는 흐름을 따름(`pendingSkillTargetCard` 상태, 공격 대상 선택의 클릭 패턴을 그대로
-  본떠 만듦). `char_gintoki`는 `ON_DEATH`+`SELF`로 스스로를 회복하는 스킬(`부활`)을 가진 예시.
+  `TARGET_ALLY_CHARACTER`(아군 지정 캐릭터)/`TARGET_ENEMY_CHARACTER`(적군 지정 캐릭터)를
+  대상으로 하는 캐릭터 `ON_PLAY` 스킬은 카드를 내 보드에 드롭한 뒤 해당 진영 보드에 유효한
+  대상이 있으면 "대상 선택 모드"로 전환되어(보드 카드에 `.skill-target` 하이라이트) 클릭으로
+  대상을 확정하는 흐름을 따름(`pendingSkillTargetCard` 상태, 공격 대상 선택의 클릭 패턴을
+  그대로 본떠 만듦). 유효한 대상이 하나도 없으면(예: 해당 진영 보드가 비어있음) 대상 선택
+  모드로 들어가지 않고 그냥 대상 없이 카드를 냄 — 서버(`GameRoom.playCard`)도 `ON_PLAY` 트리거는
+  대상 미해결을 이유로 카드 자체를 막지 않고, `applyEffectList`가 해석 불가능한 타겟의 효과만
+  조용히 스킵함(스펠의 `IMMEDIATE` 트리거는 여전히 대상 필수). `char_gintoki`는 `ON_DEATH`+`SELF`로
+  스스로를 회복하는 스킬(`부활`)을 가진 예시.
 ## 전투 시스템 (공격)
 - `GameRoom.attack(playerId, attackerCardId, target)` — 보드 위 캐릭터로 공격하는 유일한 방법.
   `target`은 `{type:"hero"}` 또는 `{type:"character", cardId}`.

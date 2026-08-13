@@ -48,7 +48,8 @@ const TARGET_LABELS = {
   ENEMY_HERO: "적 영웅",
   ALL_ENEMIES: "적 전체",
   ALL_ALLIES: "내 캐릭터 전체",
-  TARGET_CHARACTER: "지정 캐릭터",
+  TARGET_ALLY_CHARACTER: "아군 지정 캐릭터",
+  TARGET_ENEMY_CHARACTER: "적군 지정 캐릭터",
   SELF: "자신",
   KILLER: "나를 파괴한 대상",
 };
@@ -2884,17 +2885,28 @@ function showSpellEffect(card) {
   setTimeout(() => el.remove(), 1100);
 }
 
+const TARGETED_CHARACTER_TYPES = ["TARGET_ALLY_CHARACTER", "TARGET_ENEMY_CHARACTER"];
+
 function cardNeedsTargetCharacter(card) {
-  return (card.effects || []).some((effect) => effect.target === "TARGET_CHARACTER");
+  return (card.effects || []).some((effect) => TARGETED_CHARACTER_TYPES.includes(effect.target));
 }
 
 function characterNeedsPlayTarget(card) {
   return (card.effects || []).some(
-    (effect) => effect.trigger === "ON_PLAY" && effect.target === "TARGET_CHARACTER"
+    (effect) => effect.trigger === "ON_PLAY" && TARGETED_CHARACTER_TYPES.includes(effect.target)
   );
 }
 
-function isValidSkillTarget(card, pendingCard) {
+function targetSideOf(pendingCard) {
+  const effect = (pendingCard.effects || []).find((e) => TARGETED_CHARACTER_TYPES.includes(e.target));
+  if (!effect) return null;
+  return effect.target === "TARGET_ALLY_CHARACTER" ? "ally" : "enemy";
+}
+
+function isValidSkillTarget(card, pendingCard, role) {
+  const requiredSide = targetSideOf(pendingCard);
+  if (requiredSide === "ally" && role !== "my-board") return false;
+  if (requiredSide === "enemy" && role !== "opp-board") return false;
   if (!pendingCard.requiredTargetTag) return true;
   return (card.synergyTags || []).includes(pendingCard.requiredTargetTag);
 }
@@ -3035,7 +3047,7 @@ function renderCard(card, role, isMyTurn) {
   el.innerHTML = cardFaceHtml(card);
 
   if (pendingSkillTargetCard && (role === "my-board" || role === "opp-board")) {
-    if (isValidSkillTarget(card, pendingSkillTargetCard)) {
+    if (isValidSkillTarget(card, pendingSkillTargetCard, role)) {
       el.classList.add("skill-target");
       el.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -3155,11 +3167,19 @@ function startCardDrag(e, card, el) {
     const dropTarget = findDropTarget(ev.clientX, ev.clientY);
     if (dropIsValid(card, dropTarget)) {
       if (card.type === "character" && characterNeedsPlayTarget(card)) {
-        pendingSkillTargetCard = card;
-        skillTargetModeArmed = false;
-        setTimeout(() => {
-          skillTargetModeArmed = true;
-        }, 0);
+        const side = targetSideOf(card);
+        const pool = side === "ally" ? lastState.me.board : lastState.opponent.board;
+        const role = side === "ally" ? "my-board" : "opp-board";
+        const hasTarget = pool.some((c) => isValidSkillTarget(c, card, role));
+        if (hasTarget) {
+          pendingSkillTargetCard = card;
+          skillTargetModeArmed = false;
+          setTimeout(() => {
+            skillTargetModeArmed = true;
+          }, 0);
+        } else {
+          socket.emit("play_card", { cardId: card.id });
+        }
       } else if (card.type === "character" || (card.type === "spell" && !cardNeedsTargetCharacter(card))) {
         socket.emit("play_card", { cardId: card.id });
       } else if (card.type === "spell") {

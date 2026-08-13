@@ -134,7 +134,10 @@ class GameRoom {
 
     const trigger = card.type === "spell" ? "IMMEDIATE" : "ON_PLAY";
     const context = { sourceCardId: card.id, chosenTargetCardId };
-    if (hasUnresolvableTarget(this, playerId, card.effects, trigger, context, card.requiredTargetTag)) {
+    if (
+      trigger === "IMMEDIATE" &&
+      hasUnresolvableTarget(this, playerId, card.effects, trigger, context, card.requiredTargetTag)
+    ) {
       return { ok: false, reason: "target_required" };
     }
 

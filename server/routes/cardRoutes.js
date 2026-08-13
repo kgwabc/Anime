@@ -10,7 +10,7 @@ const CARD_TYPES = ["character", "spell", "equipment"];
 const RARITIES = ["common", "legendary"];
 const TRIGGERS = ["ON_PLAY", "ON_DEATH", "IMMEDIATE", "ON_EQUIP"];
 const ACTIONS = ["DAMAGE", "HEAL", "DRAW", "BUFF"];
-const TARGETS = ["ENEMY_HERO", "ALL_ENEMIES", "ALL_ALLIES", "TARGET_CHARACTER", "SELF", "KILLER"];
+const TARGETS = ["ENEMY_HERO", "ALL_ENEMIES", "ALL_ALLIES", "TARGET_ALLY_CHARACTER", "TARGET_ENEMY_CHARACTER", "SELF", "KILLER"];
 const ELEMENT_EFFECTS = ["fire", "water", "lightning", "heal", "sword", "plasma", "darkness", "light"];
 
 const ALLOWED_TRIGGERS_BY_TYPE = {
