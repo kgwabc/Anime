@@ -18,7 +18,11 @@ function buildDeck(deckCards, playerId) {
   // 같은 카드를 여러 장 넣을 수 있으므로, 원래 카드 종류 id를 그대로 두면 사본끼리
   // 구분이 안 되어 공격/효과 타겟팅이 엉뚱한 사본에 적용되는 버그가 생김 — 그래서
   // 여기서 사본마다(플레이어+순번 조합으로) 고유한 인스턴스 id를 새로 부여한다.
-  return shuffle(deckCards).map((card, index) => ({ ...card, id: `${playerId}_${card.id}_${index}` }));
+  return shuffle(deckCards).map((card, index) => ({
+    ...card,
+    catalogId: card.id,
+    id: `${playerId}_${card.id}_${index}`,
+  }));
 }
 
 class GameRoom {
@@ -206,7 +210,7 @@ class GameRoom {
     );
 
     target.equippedItems = target.equippedItems || [];
-    target.equippedItems.push({ id: card.id, name: card.name, image: card.image });
+    target.equippedItems.push({ id: card.id, catalogId: card.catalogId, name: card.name, image: card.image });
     if (card.overridesAppearance && card.image) {
       target.image = card.image;
     }
@@ -219,7 +223,7 @@ class GameRoom {
 
     if (target.transformTriggerEquipId && !target.isTransformed) {
       const matchCount = target.equippedItems.filter(
-        (item) => item.id === target.transformTriggerEquipId
+        (item) => item.catalogId === target.transformTriggerEquipId
       ).length;
       if (matchCount >= (target.transformRequiredCount || 2)) {
         target.isTransformed = true;
