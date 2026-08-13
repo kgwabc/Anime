@@ -724,6 +724,9 @@ function renderAdminCards(cards, token) {
       ["lightning", "⚡ 번개"],
       ["heal", "✨ 힐"],
       ["sword", "🗡️ 검"],
+      ["plasma", "🟣 플라즈마"],
+      ["darkness", "🌑 어둠"],
+      ["light", "💡 빛"],
     ];
     const attackEffectSelect = createOptionSelect(elementEffectOptions, card.attackEffect || "");
     const skillEffectSelect = createOptionSelect(elementEffectOptions, card.skillEffect || "");
@@ -2070,6 +2073,9 @@ const ELEMENT_FX_DURATION = {
   lightning: 750,
   heal: 2000,
   sword: 700,
+  plasma: 1400,
+  darkness: 1600,
+  light: 1200,
 };
 const ELEMENT_PARTICLE_CAP = 30;
 
@@ -2418,12 +2424,186 @@ function makeSwordUpdater(width, height, durationMs) {
   };
 }
 
+function makePlasmaUpdater(width, height, durationMs) {
+  let particles = [];
+  let spawnedBurst = false;
+  const cx = width / 2;
+  const cy = height * 0.5;
+
+  // 번개와 비슷하지만 직선 볼트 대신 보라빛 에너지가 사방으로 튀는 둥근 파열
+  return (t, dt, ctx) => {
+    if (!spawnedBurst) {
+      spawnedBurst = true;
+      const burstCount = 16;
+      for (let i = 0; i < burstCount; i += 1) {
+        const angle = (Math.PI * 2 * i) / burstCount + randRange(-0.15, 0.15);
+        const speed = randRange(180, 300);
+        particles.push({
+          x: cx,
+          y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          gravity: 0,
+          drag: 0.9,
+          size: randRange(8, 15),
+          life: randRange(0.35, 0.55),
+          maxLife: 0.55,
+          age: 0,
+          fadeIn: 0.02,
+          color: Math.random() < 0.5 ? "200,80,255" : "140,40,220",
+        });
+      }
+    }
+
+    const flashDur = 0.16;
+    if (t / 1000 < flashDur) {
+      const flashFrac = 1 - t / 1000 / flashDur;
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, width * 0.6 * (0.6 + 0.4 * (1 - flashFrac)));
+      g.addColorStop(0, `rgba(230,180,255,${0.7 * flashFrac})`);
+      g.addColorStop(0.5, `rgba(180,80,255,${0.4 * flashFrac})`);
+      g.addColorStop(1, "rgba(140,40,220,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, width, height);
+      ctx.restore();
+    }
+
+    // 지속시간 동안 잔여 스파크가 계속 파직거림
+    if (particles.length < ELEMENT_PARTICLE_CAP && t < durationMs * 0.8 && Math.random() < 0.4) {
+      const angle = randRange(0, Math.PI * 2);
+      particles.push({
+        x: cx + Math.cos(angle) * randRange(0, width * 0.3),
+        y: cy + Math.sin(angle) * randRange(0, height * 0.3),
+        vx: randRange(-40, 40),
+        vy: randRange(-40, 40),
+        gravity: 0,
+        drag: 0.92,
+        size: randRange(4, 8),
+        life: randRange(0.2, 0.35),
+        maxLife: 0.35,
+        age: 0,
+        fadeIn: 0.01,
+        color: "220,140,255",
+      });
+    }
+
+    particles = stepParticles(particles, dt);
+    particles.forEach((p) => drawGlowParticle(ctx, p, "lighter"));
+  };
+}
+
+function makeDarknessUpdater(width, height, durationMs) {
+  let particles = [];
+  let spawnTimer = 0;
+  const cx = width / 2;
+  const cy = height / 2;
+  const spawnCutoffMs = durationMs * 0.7;
+
+  // 어두운 안개가 중심으로 빨려들어가고, 테두리에 보랏빛 림 글로우가 남는다
+  return (t, dt, ctx) => {
+    spawnTimer += dt;
+    if (t < spawnCutoffMs && spawnTimer > 0.05 && particles.length < ELEMENT_PARTICLE_CAP) {
+      spawnTimer = 0;
+      const angle = randRange(0, Math.PI * 2);
+      const startRadius = Math.max(width, height) * 0.6;
+      const x = cx + Math.cos(angle) * startRadius;
+      const y = cy + Math.sin(angle) * startRadius;
+      const speed = randRange(140, 220);
+      particles.push({
+        x,
+        y,
+        vx: ((cx - x) / startRadius) * speed,
+        vy: ((cy - y) / startRadius) * speed,
+        gravity: 0,
+        drag: 1,
+        size: randRange(14, 24),
+        life: randRange(0.5, 0.8),
+        maxLife: 0.8,
+        age: 0,
+        fadeIn: 0.15,
+        alphaMul: 0.55,
+        color: Math.random() < 0.5 ? "40,10,60" : "10,5,20",
+      });
+    }
+
+    const ringFrac = Math.min(1, t / (durationMs * 0.4));
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.strokeStyle = `rgba(150,60,200,${0.5 * (1 - ringFrac)})`;
+    ctx.lineWidth = 3;
+    ctx.shadowColor = "rgba(120,40,180,0.8)";
+    ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.arc(cx, cy, Math.max(width, height) * 0.45, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    particles = stepParticles(particles, dt);
+    particles.forEach((p) => drawGlowParticle(ctx, p, "source-over"));
+  };
+}
+
+function makeLightUpdater(width, height) {
+  let particles = [];
+  let spawnedBurst = false;
+  let spawnTimer = 0;
+  const cx = width / 2;
+  const cy = height * 0.5;
+
+  // 중심에서 사방으로 계속 확산되는 흰색/노란빛 파티클(빛이 퍼져나가는 느낌)
+  return (t, dt, ctx) => {
+    if (!spawnedBurst) {
+      spawnedBurst = true;
+      const flashCanvas = () => {
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, width * 0.7);
+        g.addColorStop(0, "rgba(255,255,255,0.85)");
+        g.addColorStop(0.4, "rgba(255,240,180,0.5)");
+        g.addColorStop(1, "rgba(255,220,140,0)");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+      };
+      flashCanvas();
+    }
+
+    spawnTimer += dt;
+    if (spawnTimer > 0.05 && particles.length < ELEMENT_PARTICLE_CAP) {
+      spawnTimer = 0;
+      const angle = randRange(0, Math.PI * 2);
+      const speed = randRange(90, 180);
+      particles.push({
+        x: cx,
+        y: cy,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        gravity: 0,
+        drag: 0.96,
+        size: randRange(6, 12),
+        life: randRange(0.5, 0.8),
+        maxLife: 0.8,
+        age: 0,
+        fadeIn: 0.05,
+        color: Math.random() < 0.5 ? "255,255,255" : "255,240,180",
+      });
+    }
+
+    particles = stepParticles(particles, dt);
+    particles.forEach((p) => drawGlowParticle(ctx, p, "lighter"));
+  };
+}
+
 const ELEMENT_FX_UPDATERS = {
   fire: makeFireUpdater,
   water: makeWaterUpdater,
   lightning: makeLightningUpdater,
   heal: makeHealUpdater,
   sword: makeSwordUpdater,
+  plasma: makePlasmaUpdater,
+  darkness: makeDarknessUpdater,
+  light: makeLightUpdater,
 };
 
 function showElementEffect(cardEl, effectType) {
