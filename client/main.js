@@ -201,6 +201,18 @@ document.getElementById("btn-open-rulebook").addEventListener("click", () => {
   setRulebookOpen(true);
 });
 
+const btnToggleSound = document.getElementById("btn-toggle-sound");
+function refreshSoundButtonLabel() {
+  const enabled = window.GameSound?.isEnabled() ?? true;
+  btnToggleSound.textContent = enabled ? "🔊 효과음" : "🔇 효과음";
+}
+refreshSoundButtonLabel();
+btnToggleSound.addEventListener("click", () => {
+  const enabled = window.GameSound?.isEnabled() ?? true;
+  window.GameSound?.setEnabled(!enabled);
+  refreshSoundButtonLabel();
+});
+
 document.getElementById("rulebook-backdrop").addEventListener("click", () => {
   setRulebookOpen(false);
 });
@@ -1847,6 +1859,7 @@ document.getElementById("btn-cancel-queue").addEventListener("click", () => {
 });
 
 document.getElementById("btn-end-turn").addEventListener("click", () => {
+  window.GameSound?.playTurnEndSound();
   socket.emit("end_turn");
 });
 
@@ -1924,6 +1937,9 @@ function registerSocketHandlers() {
     if (coinsDelta) {
       text += coinsDelta > 0 ? ` (🪙+${coinsDelta})` : ` (🪙${coinsDelta})`;
     }
+    const didWin = reason === "opponent_disconnected" || result === "win";
+    if (didWin) window.GameSound?.playVictorySound();
+    else window.GameSound?.playDefeatSound();
     document.getElementById("result-text").textContent = text;
     showScreen("result");
     refreshLobbyCoins();
@@ -1936,6 +1952,8 @@ function registerSocketHandlers() {
   });
 
   socket.on("card_played", ({ playerId, card, targetCharacterId, effectResults }) => {
+    window.GameSound?.playCardSound();
+
     if (card?.type === "spell") {
       showSpellEffect(card);
       return;
@@ -1976,6 +1994,7 @@ function registerSocketHandlers() {
       counterDamage,
       effectResults,
     }) => {
+      window.GameSound?.playAttackSound();
       pendingAttackEffects.push({
         attackerId,
         attackerCardId,
