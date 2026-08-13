@@ -231,6 +231,8 @@ class GameRoom {
         if (target.transformHp != null) target.hp = target.transformHp;
         if (target.transformName) target.name = target.transformName;
         if (target.transformImage) target.image = target.transformImage;
+        if (target.transformAttackName) target.attackName = target.transformAttackName;
+        if (target.transformAttackEffect) target.attackEffect = target.transformAttackEffect;
       }
     }
 

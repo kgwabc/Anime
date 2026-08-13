@@ -112,6 +112,12 @@ async function migrateCardsTable(db) {
   if (!existingCols.has("transform_image")) {
     await db.execute("ALTER TABLE cards ADD COLUMN transform_image TEXT");
   }
+  if (!existingCols.has("transform_attack_name")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN transform_attack_name TEXT");
+  }
+  if (!existingCols.has("transform_attack_effect")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN transform_attack_effect TEXT");
+  }
 }
 
 async function seedCardsIfEmpty(db) {
@@ -221,7 +227,9 @@ async function connectDB() {
       transform_atk INTEGER,
       transform_hp INTEGER,
       transform_name TEXT,
-      transform_image TEXT
+      transform_image TEXT,
+      transform_attack_name TEXT,
+      transform_attack_effect TEXT
     )
   `);
   await migrateCardsTable(db);

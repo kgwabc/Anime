@@ -760,6 +760,17 @@ function renderAdminCards(cards, token) {
     transformNameInput.value = card.transformName || "";
     transformNameInput.placeholder = "변신 후 이름 (선택)";
 
+    const transformAttackNameInput = document.createElement("input");
+    transformAttackNameInput.type = "text";
+    transformAttackNameInput.maxLength = 30;
+    transformAttackNameInput.value = card.transformAttackName || "";
+    transformAttackNameInput.placeholder = "변신 후 공격 이름 (선택)";
+
+    const transformAttackEffectSelect = createOptionSelect(
+      [["", "변신 후 이펙트 없음"], ...elementEffectOptions.slice(1)],
+      card.transformAttackEffect || ""
+    );
+
     const transformThumbImg = document.createElement("img");
     transformThumbImg.className = "admin-card-thumb";
     transformThumbImg.title = "변신 후 이미지 (저장된 미리보기)";
@@ -805,6 +816,8 @@ function renderAdminCards(cards, token) {
       transformAtkInput.classList.toggle("hidden", type !== "character");
       transformHpInput.classList.toggle("hidden", type !== "character");
       transformNameInput.classList.toggle("hidden", type !== "character");
+      transformAttackNameInput.classList.toggle("hidden", type !== "character");
+      transformAttackEffectSelect.classList.toggle("hidden", type !== "character");
       transformImageInput.classList.toggle("hidden", type !== "character");
       transformThumbImg.classList.toggle("hidden", type !== "character" || !card.transformImage);
       equipAtkInput.classList.toggle("hidden", type !== "equipment");
@@ -860,6 +873,8 @@ function renderAdminCards(cards, token) {
         fields.transformAtk = Number(transformAtkInput.value) || 0;
         fields.transformHp = Number(transformHpInput.value) || 0;
         fields.transformName = transformNameInput.value || null;
+        fields.transformAttackName = transformAttackNameInput.value || null;
+        fields.transformAttackEffect = transformAttackEffectSelect.value || null;
         if (transformImageInput.files[0]) {
           fields.transformImage = await readImageAsCompressedDataUrl(transformImageInput.files[0]);
         }
@@ -909,6 +924,8 @@ function renderAdminCards(cards, token) {
       transformAtkInput,
       transformHpInput,
       transformNameInput,
+      transformAttackNameInput,
+      transformAttackEffectSelect,
       transformThumbImg,
       transformImageInput,
       equipAtkInput,

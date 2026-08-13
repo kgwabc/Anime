@@ -87,6 +87,8 @@ function validateCardFields(body, { partial, existingType } = {}) {
     transformHp,
     transformName,
     transformImage,
+    transformAttackName,
+    transformAttackEffect,
   } = body;
   const effectiveType = type !== undefined ? type : existingType;
 
@@ -146,6 +148,21 @@ function validateCardFields(body, { partial, existingType } = {}) {
       if (transformImage.length > 500000) {
         return "transformImage 용량이 너무 큽니다. 더 작은 이미지를 사용해주세요.";
       }
+    }
+    if (transformAttackName !== undefined && transformAttackName !== null) {
+      if (typeof transformAttackName !== "string") {
+        return "transformAttackName은 문자열이어야 합니다.";
+      }
+      if (transformAttackName.length > 30) {
+        return "transformAttackName은 30자 이하여야 합니다.";
+      }
+    }
+    if (
+      transformAttackEffect !== undefined &&
+      transformAttackEffect !== null &&
+      !ELEMENT_EFFECTS.includes(transformAttackEffect)
+    ) {
+      return `transformAttackEffect는 ${ELEMENT_EFFECTS.join("/")} 중 하나이거나 없어야 합니다.`;
     }
   }
   if (effectiveType === "equipment") {
