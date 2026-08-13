@@ -686,12 +686,23 @@ function renderAdminCards(cards, token) {
     attackNameOverrideInput.value = card.attackNameOverride || "";
     attackNameOverrideInput.placeholder = "장착시 공격 이름 교체 (선택)";
 
+    const elementEffectOptions = [
+      ["", "이펙트 없음"],
+      ["fire", "🔥 불"],
+      ["water", "💧 물"],
+      ["lightning", "⚡ 번개"],
+      ["heal", "✨ 힐"],
+      ["sword", "🗡️ 검"],
+      ["plasma", "🟣 플라즈마"],
+      ["darkness", "🌑 어둠"],
+      ["light", "💡 빛"],
+    ];
     const equipEffectSelect = createOptionSelect(
-      [["", "장착시 이펙트 없음"], ["fire", "🔥 불"], ["water", "💧 물"], ["lightning", "⚡ 번개"], ["heal", "✨ 힐"], ["sword", "🗡️ 검"]],
+      [["", "장착시 이펙트 없음"], ...elementEffectOptions.slice(1)],
       card.equipEffect || ""
     );
     const attackEffectOverrideSelect = createOptionSelect(
-      [["", "장착 후 공격 이펙트 교체 없음"], ["fire", "🔥 불"], ["water", "💧 물"], ["lightning", "⚡ 번개"], ["heal", "✨ 힐"], ["sword", "🗡️ 검"]],
+      [["", "장착 후 공격 이펙트 교체 없음"], ...elementEffectOptions.slice(1)],
       card.attackEffectOverride || ""
     );
 
@@ -717,17 +728,6 @@ function renderAdminCards(cards, token) {
     skillNameInput.value = card.skillName || "";
     skillNameInput.placeholder = "기술 이름 (설치시/파괴시, 선택)";
 
-    const elementEffectOptions = [
-      ["", "이펙트 없음"],
-      ["fire", "🔥 불"],
-      ["water", "💧 물"],
-      ["lightning", "⚡ 번개"],
-      ["heal", "✨ 힐"],
-      ["sword", "🗡️ 검"],
-      ["plasma", "🟣 플라즈마"],
-      ["darkness", "🌑 어둠"],
-      ["light", "💡 빛"],
-    ];
     const attackEffectSelect = createOptionSelect(elementEffectOptions, card.attackEffect || "");
     const skillEffectSelect = createOptionSelect(elementEffectOptions, card.skillEffect || "");
 
@@ -759,6 +759,12 @@ function renderAdminCards(cards, token) {
     transformNameInput.maxLength = 30;
     transformNameInput.value = card.transformName || "";
     transformNameInput.placeholder = "변신 후 이름 (선택)";
+
+    const transformThumbImg = document.createElement("img");
+    transformThumbImg.className = "admin-card-thumb";
+    transformThumbImg.title = "변신 후 이미지 (저장된 미리보기)";
+    transformThumbImg.src = card.transformImage || "";
+    transformThumbImg.classList.toggle("hidden", !card.transformImage);
 
     const transformImageInput = document.createElement("input");
     transformImageInput.type = "file";
@@ -800,6 +806,7 @@ function renderAdminCards(cards, token) {
       transformHpInput.classList.toggle("hidden", type !== "character");
       transformNameInput.classList.toggle("hidden", type !== "character");
       transformImageInput.classList.toggle("hidden", type !== "character");
+      transformThumbImg.classList.toggle("hidden", type !== "character" || !card.transformImage);
       equipAtkInput.classList.toggle("hidden", type !== "equipment");
       equipHpInput.classList.toggle("hidden", type !== "equipment");
       overridesAppearanceLabel.classList.toggle("hidden", type !== "equipment");
@@ -902,6 +909,7 @@ function renderAdminCards(cards, token) {
       transformAtkInput,
       transformHpInput,
       transformNameInput,
+      transformThumbImg,
       transformImageInput,
       equipAtkInput,
       equipHpInput,
