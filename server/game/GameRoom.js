@@ -217,6 +217,19 @@ class GameRoom {
       target.attackEffect = card.attackEffectOverride;
     }
 
+    if (target.transformTriggerEquipId && !target.isTransformed) {
+      const matchCount = target.equippedItems.filter(
+        (item) => item.id === target.transformTriggerEquipId
+      ).length;
+      if (matchCount >= (target.transformRequiredCount || 2)) {
+        target.isTransformed = true;
+        if (target.transformAtk != null) target.atk = target.transformAtk;
+        if (target.transformHp != null) target.hp = target.transformHp;
+        if (target.transformName) target.name = target.transformName;
+        if (target.transformImage) target.image = target.transformImage;
+      }
+    }
+
     const statBonusResult =
       card.equipAtkBonus || card.equipHpBonus
         ? [{ kind: "card", id: target.id, action: "BUFF", atk: card.equipAtkBonus || 0, hp: card.equipHpBonus || 0 }]

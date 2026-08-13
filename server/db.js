@@ -94,6 +94,24 @@ async function migrateCardsTable(db) {
   if (!existingCols.has("allow_duplicate_equip")) {
     await db.execute("ALTER TABLE cards ADD COLUMN allow_duplicate_equip INTEGER NOT NULL DEFAULT 0");
   }
+  if (!existingCols.has("transform_trigger_equip_id")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN transform_trigger_equip_id TEXT");
+  }
+  if (!existingCols.has("transform_required_count")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN transform_required_count INTEGER");
+  }
+  if (!existingCols.has("transform_atk")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN transform_atk INTEGER");
+  }
+  if (!existingCols.has("transform_hp")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN transform_hp INTEGER");
+  }
+  if (!existingCols.has("transform_name")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN transform_name TEXT");
+  }
+  if (!existingCols.has("transform_image")) {
+    await db.execute("ALTER TABLE cards ADD COLUMN transform_image TEXT");
+  }
 }
 
 async function seedCardsIfEmpty(db) {
@@ -197,7 +215,13 @@ async function connectDB() {
       skill_effect TEXT,
       equip_effect TEXT,
       attack_effect_override TEXT,
-      allow_duplicate_equip INTEGER NOT NULL DEFAULT 0
+      allow_duplicate_equip INTEGER NOT NULL DEFAULT 0,
+      transform_trigger_equip_id TEXT,
+      transform_required_count INTEGER,
+      transform_atk INTEGER,
+      transform_hp INTEGER,
+      transform_name TEXT,
+      transform_image TEXT
     )
   `);
   await migrateCardsTable(db);

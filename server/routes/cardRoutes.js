@@ -81,6 +81,12 @@ function validateCardFields(body, { partial, existingType } = {}) {
     equipEffect,
     attackEffectOverride,
     allowDuplicateEquip,
+    transformTriggerEquipId,
+    transformRequiredCount,
+    transformAtk,
+    transformHp,
+    transformName,
+    transformImage,
   } = body;
   const effectiveType = type !== undefined ? type : existingType;
 
@@ -108,6 +114,38 @@ function validateCardFields(body, { partial, existingType } = {}) {
     }
     if (!partial || hp !== undefined) {
       if (!isNonNegativeInt(hp)) return "hp는 0 이상의 정수여야 합니다.";
+    }
+    if (transformTriggerEquipId !== undefined && transformTriggerEquipId !== null) {
+      if (typeof transformTriggerEquipId !== "string" || transformTriggerEquipId.trim().length === 0) {
+        return "transformTriggerEquipId는 비어있지 않은 문자열이어야 합니다.";
+      }
+    }
+    if (transformRequiredCount !== undefined && transformRequiredCount !== null) {
+      if (!Number.isInteger(transformRequiredCount) || transformRequiredCount < 1) {
+        return "transformRequiredCount는 1 이상의 정수여야 합니다.";
+      }
+    }
+    if (transformAtk !== undefined && transformAtk !== null && !isNonNegativeInt(transformAtk)) {
+      return "transformAtk는 0 이상의 정수여야 합니다.";
+    }
+    if (transformHp !== undefined && transformHp !== null && !isNonNegativeInt(transformHp)) {
+      return "transformHp는 0 이상의 정수여야 합니다.";
+    }
+    if (transformName !== undefined && transformName !== null) {
+      if (typeof transformName !== "string") {
+        return "transformName은 문자열이어야 합니다.";
+      }
+      if (transformName.length > 30) {
+        return "transformName은 30자 이하여야 합니다.";
+      }
+    }
+    if (transformImage !== undefined && transformImage !== null) {
+      if (typeof transformImage !== "string" || !transformImage.startsWith("data:image/")) {
+        return "transformImage는 data:image/ 로 시작하는 문자열이어야 합니다.";
+      }
+      if (transformImage.length > 500000) {
+        return "transformImage 용량이 너무 큽니다. 더 작은 이미지를 사용해주세요.";
+      }
     }
   }
   if (effectiveType === "equipment") {

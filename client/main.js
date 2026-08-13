@@ -731,6 +731,40 @@ function renderAdminCards(cards, token) {
     const attackEffectSelect = createOptionSelect(elementEffectOptions, card.attackEffect || "");
     const skillEffectSelect = createOptionSelect(elementEffectOptions, card.skillEffect || "");
 
+    const transformTriggerEquipSelect = createOptionSelect(
+      [["", "변신 없음"], ...loadedAdminCards.filter((c) => c.type === "equipment").map((c) => [c.id, c.name])],
+      card.transformTriggerEquipId || ""
+    );
+
+    const transformRequiredCountInput = document.createElement("input");
+    transformRequiredCountInput.type = "number";
+    transformRequiredCountInput.min = "1";
+    transformRequiredCountInput.value = card.transformRequiredCount || 2;
+    transformRequiredCountInput.placeholder = "변신 필요 장착 수";
+
+    const transformAtkInput = document.createElement("input");
+    transformAtkInput.type = "number";
+    transformAtkInput.min = "0";
+    transformAtkInput.value = card.transformAtk || 0;
+    transformAtkInput.placeholder = "변신 후 공격력";
+
+    const transformHpInput = document.createElement("input");
+    transformHpInput.type = "number";
+    transformHpInput.min = "0";
+    transformHpInput.value = card.transformHp || 0;
+    transformHpInput.placeholder = "변신 후 체력";
+
+    const transformNameInput = document.createElement("input");
+    transformNameInput.type = "text";
+    transformNameInput.maxLength = 30;
+    transformNameInput.value = card.transformName || "";
+    transformNameInput.placeholder = "변신 후 이름 (선택)";
+
+    const transformImageInput = document.createElement("input");
+    transformImageInput.type = "file";
+    transformImageInput.accept = "image/*";
+    transformImageInput.title = "변신 후 이미지 (선택)";
+
     const requiredTagSelect = document.createElement("select");
     populateTagOptions(requiredTagSelect, loadedAdminCards, "대상 제한 없음");
     requiredTagSelect.value = card.requiredTargetTag || "";
@@ -760,6 +794,12 @@ function renderAdminCards(cards, token) {
       skillNameInput.classList.toggle("hidden", type !== "character");
       attackEffectSelect.classList.toggle("hidden", type !== "character");
       skillEffectSelect.classList.toggle("hidden", type !== "character");
+      transformTriggerEquipSelect.classList.toggle("hidden", type !== "character");
+      transformRequiredCountInput.classList.toggle("hidden", type !== "character");
+      transformAtkInput.classList.toggle("hidden", type !== "character");
+      transformHpInput.classList.toggle("hidden", type !== "character");
+      transformNameInput.classList.toggle("hidden", type !== "character");
+      transformImageInput.classList.toggle("hidden", type !== "character");
       equipAtkInput.classList.toggle("hidden", type !== "equipment");
       equipHpInput.classList.toggle("hidden", type !== "equipment");
       overridesAppearanceLabel.classList.toggle("hidden", type !== "equipment");
@@ -808,6 +848,14 @@ function renderAdminCards(cards, token) {
         fields.skillName = skillNameInput.value || null;
         fields.attackEffect = attackEffectSelect.value || null;
         fields.skillEffect = skillEffectSelect.value || null;
+        fields.transformTriggerEquipId = transformTriggerEquipSelect.value || null;
+        fields.transformRequiredCount = Number(transformRequiredCountInput.value) || 2;
+        fields.transformAtk = Number(transformAtkInput.value) || 0;
+        fields.transformHp = Number(transformHpInput.value) || 0;
+        fields.transformName = transformNameInput.value || null;
+        if (transformImageInput.files[0]) {
+          fields.transformImage = await readImageAsCompressedDataUrl(transformImageInput.files[0]);
+        }
       }
       if (type === "equipment") {
         fields.equipAtkBonus = Number(equipAtkInput.value) || 0;
@@ -849,6 +897,12 @@ function renderAdminCards(cards, token) {
       skillNameInput,
       attackEffectSelect,
       skillEffectSelect,
+      transformTriggerEquipSelect,
+      transformRequiredCountInput,
+      transformAtkInput,
+      transformHpInput,
+      transformNameInput,
+      transformImageInput,
       equipAtkInput,
       equipHpInput,
       overridesAppearanceLabel,

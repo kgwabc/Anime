@@ -28,6 +28,12 @@ function rowToCard(row) {
     equipEffect: row.equip_effect ?? null,
     attackEffectOverride: row.attack_effect_override ?? null,
     allowDuplicateEquip: !!row.allow_duplicate_equip,
+    transformTriggerEquipId: row.transform_trigger_equip_id ?? null,
+    transformRequiredCount: row.transform_required_count ?? null,
+    transformAtk: row.transform_atk ?? null,
+    transformHp: row.transform_hp ?? null,
+    transformName: row.transform_name ?? null,
+    transformImage: row.transform_image ?? null,
   };
 }
 
@@ -95,13 +101,19 @@ async function createCard({
   equipEffect,
   attackEffectOverride,
   allowDuplicateEquip,
+  transformTriggerEquipId,
+  transformRequiredCount,
+  transformAtk,
+  transformHp,
+  transformName,
+  transformImage,
 }) {
   const id = await generateCardId(name);
   const isCharacter = type === "character";
   const isEquipment = type === "equipment";
   await getClient().execute({
-    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag, rarity, image, attack_name, skill_name, overrides_appearance, attack_name_override, attack_effect, skill_effect, equip_effect, attack_effect_override, allow_duplicate_equip)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag, rarity, image, attack_name, skill_name, overrides_appearance, attack_name_override, attack_effect, skill_effect, equip_effect, attack_effect_override, allow_duplicate_equip, transform_trigger_equip_id, transform_required_count, transform_atk, transform_hp, transform_name, transform_image)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       name,
@@ -129,6 +141,12 @@ async function createCard({
       isEquipment ? equipEffect ?? null : null,
       isEquipment ? attackEffectOverride ?? null : null,
       isEquipment && allowDuplicateEquip ? 1 : 0,
+      isCharacter ? transformTriggerEquipId ?? null : null,
+      isCharacter ? transformRequiredCount ?? null : null,
+      isCharacter ? transformAtk ?? null : null,
+      isCharacter ? transformHp ?? null : null,
+      isCharacter ? transformName ?? null : null,
+      isCharacter ? transformImage ?? null : null,
     ],
   });
   return getCardById(id);
@@ -146,7 +164,8 @@ async function updateCard(id, fields) {
           effects = ?, equip_atk_bonus = ?, equip_hp_bonus = ?, description = ?,
           matchup_vs_tag = ?, matchup_atk_bonus = ?, required_target_tag = ?, rarity = ?, image = ?, attack_name = ?, skill_name = ?,
           overrides_appearance = ?, attack_name_override = ?, attack_effect = ?, skill_effect = ?, equip_effect = ?, attack_effect_override = ?,
-          allow_duplicate_equip = ?
+          allow_duplicate_equip = ?, transform_trigger_equip_id = ?, transform_required_count = ?, transform_atk = ?, transform_hp = ?,
+          transform_name = ?, transform_image = ?
           WHERE id = ?`,
     args: [
       merged.name,
@@ -174,6 +193,12 @@ async function updateCard(id, fields) {
       isEquipment ? merged.equipEffect ?? null : null,
       isEquipment ? merged.attackEffectOverride ?? null : null,
       isEquipment && merged.allowDuplicateEquip ? 1 : 0,
+      isCharacter ? merged.transformTriggerEquipId ?? null : null,
+      isCharacter ? merged.transformRequiredCount ?? null : null,
+      isCharacter ? merged.transformAtk ?? null : null,
+      isCharacter ? merged.transformHp ?? null : null,
+      isCharacter ? merged.transformName ?? null : null,
+      isCharacter ? merged.transformImage ?? null : null,
       id,
     ],
   });
