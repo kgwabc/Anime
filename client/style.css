@@ -1528,6 +1528,37 @@ button:active {
   animation: element-flash-light 1.2s ease-out;
 }
 
+@keyframes element-flash-explosion {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+    box-shadow: none;
+  }
+  12% {
+    transform: scale(1.12);
+    filter: brightness(2.2);
+    box-shadow: 0 0 40px 16px rgba(255, 160, 60, 0.85);
+  }
+  30% {
+    transform: scale(1.04);
+    filter: brightness(1.4);
+    box-shadow: 0 0 24px 10px rgba(255, 120, 40, 0.6);
+  }
+}
+.card.element-flash-explosion {
+  animation: element-flash-explosion 0.9s ease-out;
+}
+
+@keyframes element-flash-punch {
+  0%, 100% { transform: translateX(0) scale(1); }
+  15% { transform: translateX(-8px) scale(0.96); }
+  35% { transform: translateX(6px) scale(1.05); }
+  55% { transform: translateX(-3px) scale(0.99); }
+}
+.card.element-flash-punch {
+  animation: element-flash-punch 0.4s ease-out;
+}
+
 #spell-effect-layer {
   position: fixed;
   inset: 0;

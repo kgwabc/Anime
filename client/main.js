@@ -699,6 +699,8 @@ function renderAdminCards(cards, token) {
       ["plasma", "🟣 플라즈마"],
       ["darkness", "🌑 어둠"],
       ["light", "💡 빛"],
+      ["explosion", "💥 폭파"],
+      ["punch", "👊 펀치"],
     ];
     const equipEffectSelect = createOptionSelect(
       [["", "장착시 이펙트 없음"], ...elementEffectOptions.slice(1)],
@@ -2203,6 +2205,8 @@ const ELEMENT_FX_DURATION = {
   plasma: 1400,
   darkness: 1600,
   light: 1200,
+  explosion: 900,
+  punch: 400,
 };
 const ELEMENT_PARTICLE_CAP = 30;
 
@@ -2722,6 +2726,122 @@ function makeLightUpdater(width, height) {
   };
 }
 
+function makeExplosionUpdater(width, height) {
+  let particles = [];
+  let spawnedBurst = false;
+  const cx = width / 2;
+  const cy = height * 0.55;
+
+  // 화염 이펙트보다 훨씬 크고 넓게 퍼지는 파편 + 잔여 연기로 폭발감을 표현
+  return (t, dt, ctx) => {
+    if (!spawnedBurst) {
+      spawnedBurst = true;
+      const burstCount = 22;
+      for (let i = 0; i < burstCount; i += 1) {
+        const angle = (Math.PI * 2 * i) / burstCount + randRange(-0.25, 0.25);
+        const speed = randRange(200, 340);
+        particles.push({
+          x: cx,
+          y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 60,
+          gravity: 220,
+          drag: 0.92,
+          size: randRange(14, 26),
+          life: randRange(0.4, 0.6),
+          maxLife: 0.6,
+          age: 0,
+          fadeIn: 0.02,
+          color: Math.random() < 0.5 ? "255,180,70" : "90,90,90",
+        });
+      }
+      for (let i = 0; i < 14; i += 1) {
+        particles.push({
+          x: cx + randRange(-10, 10),
+          y: cy + randRange(-10, 10),
+          vx: randRange(-30, 30),
+          vy: randRange(-110, -60),
+          gravity: -20,
+          drag: 0.96,
+          size: randRange(18, 30),
+          life: randRange(0.7, 1.1),
+          maxLife: 1.1,
+          age: 0,
+          fadeIn: 0.05,
+          color: "120,120,120",
+        });
+      }
+    }
+
+    // 폭발 순간 화면 전체를 크게 덮는 강한 플래시
+    const flashDur = 0.22;
+    if (t / 1000 < flashDur) {
+      const flashFrac = 1 - t / 1000 / flashDur;
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, width * 0.7 * (0.6 + 0.4 * (1 - flashFrac)));
+      g.addColorStop(0, `rgba(255,240,200,${0.85 * flashFrac})`);
+      g.addColorStop(0.5, `rgba(255,140,50,${0.5 * flashFrac})`);
+      g.addColorStop(1, "rgba(120,60,20,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, width, height);
+      ctx.restore();
+    }
+
+    particles = stepParticles(particles, dt);
+    particles.forEach((p) => drawGlowParticle(ctx, p, "lighter"));
+  };
+}
+
+function makePunchUpdater(width, height, durationMs) {
+  let sparks = [];
+  let spawnedBurst = false;
+  const cx = width / 2;
+  const cy = height * 0.5;
+
+  // 폭파보다 짧고 단순하게: 충격 링 하나 + 소수의 강한 스파크로 타격감만 표현
+  return (t, dt, ctx) => {
+    if (!spawnedBurst) {
+      spawnedBurst = true;
+      const sparkCount = 10;
+      for (let i = 0; i < sparkCount; i += 1) {
+        const angle = (Math.PI * 2 * i) / sparkCount + randRange(-0.2, 0.2);
+        const speed = randRange(160, 260);
+        sparks.push({
+          x: cx,
+          y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          gravity: 0,
+          drag: 0.88,
+          size: randRange(5, 9),
+          life: 0.22,
+          maxLife: 0.22,
+          age: 0,
+          fadeIn: 0.01,
+          color: "255,255,255",
+        });
+      }
+    }
+
+    const ringDur = Math.min(220, durationMs * 0.6);
+    if (t < ringDur) {
+      const progress = t / ringDur;
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      ctx.strokeStyle = `rgba(255,255,255,${0.9 * (1 - progress)})`;
+      ctx.lineWidth = 6 * (1 - progress) + 1;
+      ctx.beginPath();
+      ctx.arc(cx, cy, Math.min(width, height) * 0.15 * (0.4 + progress), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    sparks = stepParticles(sparks, dt);
+    sparks.forEach((p) => drawGlowParticle(ctx, p, "lighter"));
+  };
+}
+
 const ELEMENT_FX_UPDATERS = {
   fire: makeFireUpdater,
   water: makeWaterUpdater,
@@ -2731,6 +2851,8 @@ const ELEMENT_FX_UPDATERS = {
   plasma: makePlasmaUpdater,
   darkness: makeDarknessUpdater,
   light: makeLightUpdater,
+  explosion: makeExplosionUpdater,
+  punch: makePunchUpdater,
 };
 
 function showElementEffect(cardEl, effectType) {
