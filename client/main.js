@@ -56,12 +56,14 @@ const TARGET_LABELS = {
 
 // 서버 server/data/arenaTiers.js와 동일한 표시용 정보 (실제 검증은 서버가 담당)
 const ARENA_TIERS = [
-  { id: "free", label: "0원 투기장", entryCost: 0, winReward: 1000 },
-  { id: "t5000", label: "5천원 투기장", entryCost: 2500, winReward: 5000 },
-  { id: "t10000", label: "1만원 투기장", entryCost: 5000, winReward: 10000 },
-  { id: "t20000", label: "2만원 투기장", entryCost: 10000, winReward: 20000 },
-  { id: "t50000", label: "5만원 투기장", entryCost: 25000, winReward: 50000 },
+  { id: "free", label: "0원 투기장", entryCost: 0, winReward: 1000, icon: "🥉" },
+  { id: "t5000", label: "5천원 투기장", entryCost: 2500, winReward: 5000, icon: "🥈" },
+  { id: "t10000", label: "1만원 투기장", entryCost: 5000, winReward: 10000, icon: "🥇" },
+  { id: "t20000", label: "2만원 투기장", entryCost: 10000, winReward: 20000, icon: "💎" },
+  { id: "t50000", label: "5만원 투기장", entryCost: 25000, winReward: 50000, icon: "👑" },
 ];
+
+let currentArenaIndex = 0;
 
 let currentCoins = 0;
 
@@ -1903,38 +1905,78 @@ function renderArenaTierList() {
   document.getElementById("arena-select-error").textContent = "";
   listEl.innerHTML = "";
 
-  for (const tier of ARENA_TIERS) {
+  ARENA_TIERS.forEach((tier, index) => {
+    const offset = index - currentArenaIndex;
+
     const tile = document.createElement("div");
-    tile.className = "arena-tier-tile";
+    tile.className = `arena-tier-tile arena-tier-tile--${tier.id}`;
+    tile.dataset.offset = String(offset);
+    if (Math.abs(offset) > 2) {
+      tile.style.display = "none";
+    }
+
+    const icon = document.createElement("div");
+    icon.className = "arena-tier-icon";
+    icon.textContent = tier.icon;
+    tile.appendChild(icon);
 
     const title = document.createElement("div");
+    title.className = "arena-tier-title";
     title.textContent = tier.label;
     tile.appendChild(title);
 
     const detail = document.createElement("div");
+    detail.className = "arena-tier-detail";
     detail.textContent =
       tier.entryCost > 0
         ? `입장 🪙${tier.entryCost} / 승리시 🪙${tier.winReward}`
         : `무료 입장 / 승리시 🪙${tier.winReward}`;
     tile.appendChild(detail);
 
-    const enterBtn = document.createElement("button");
-    const canAfford = currentCoins >= tier.entryCost;
-    enterBtn.textContent = canAfford ? "입장" : "코인 부족";
-    enterBtn.disabled = !canAfford;
-    enterBtn.addEventListener("click", () => {
-      socket.emit("join_queue", { tier: tier.id });
-      showScreen("waiting");
-    });
-    tile.appendChild(enterBtn);
+    if (offset === 0) {
+      const enterBtn = document.createElement("button");
+      const canAfford = currentCoins >= tier.entryCost;
+      enterBtn.className = "arena-tier-enter-btn";
+      enterBtn.textContent = canAfford ? "입장" : "코인 부족";
+      enterBtn.disabled = !canAfford;
+      enterBtn.addEventListener("click", () => {
+        socket.emit("join_queue", { tier: tier.id });
+        showScreen("waiting");
+      });
+      tile.appendChild(enterBtn);
+    } else {
+      tile.addEventListener("click", () => {
+        currentArenaIndex = index;
+        renderArenaTierList();
+      });
+    }
 
     listEl.appendChild(tile);
-  }
+  });
+
+  document.getElementById("arena-prev-btn").disabled = currentArenaIndex === 0;
+  document.getElementById("arena-next-btn").disabled =
+    currentArenaIndex === ARENA_TIERS.length - 1;
 }
 
 document.getElementById("btn-join-queue").addEventListener("click", () => {
+  currentArenaIndex = 0;
   showScreen("arenaSelect");
   renderArenaTierList();
+});
+
+document.getElementById("arena-prev-btn").addEventListener("click", () => {
+  if (currentArenaIndex > 0) {
+    currentArenaIndex -= 1;
+    renderArenaTierList();
+  }
+});
+
+document.getElementById("arena-next-btn").addEventListener("click", () => {
+  if (currentArenaIndex < ARENA_TIERS.length - 1) {
+    currentArenaIndex += 1;
+    renderArenaTierList();
+  }
 });
 
 document.getElementById("btn-arena-select-back").addEventListener("click", () => {

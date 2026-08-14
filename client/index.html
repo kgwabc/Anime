@@ -305,10 +305,14 @@
     </div>
   </div>
 
-  <div id="screen-arena-select" class="screen hidden">
+  <div id="screen-arena-select" class="screen screen--arena-select hidden">
     <h2>투기장 선택</h2>
     <p>보유 코인: <span id="arena-select-coins">🪙 0</span></p>
-    <div id="arena-tier-list"></div>
+    <div id="arena-carousel">
+      <button id="arena-prev-btn" class="arena-arrow-btn" aria-label="이전 투기장">◀</button>
+      <div id="arena-tier-list"></div>
+      <button id="arena-next-btn" class="arena-arrow-btn" aria-label="다음 투기장">▶</button>
+    </div>
     <p id="arena-select-error" class="error"></p>
     <button id="btn-arena-select-back">뒤로가기</button>
   </div>
