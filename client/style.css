@@ -984,12 +984,15 @@ button:active {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: auto;
   min-width: 22px;
   height: 22px;
+  flex-shrink: 0;
+  white-space: nowrap;
   background: radial-gradient(circle at 35% 30%, #6fa8ff, #1f4fbf 65%, #12306e);
   color: #fff;
   padding: 2px 6px;
-  border-radius: 50%;
+  border-radius: 999px;
   border: 1px solid #9fc2ff;
   font-weight: bold;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
@@ -997,6 +1000,7 @@ button:active {
 
 .card-stats .atk-hp {
   display: flex;
+  flex-wrap: nowrap;
   gap: 4px;
 }
 
@@ -1004,9 +1008,12 @@ button:active {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: auto;
   min-width: 22px;
   height: 22px;
-  border-radius: 50%;
+  flex-shrink: 0;
+  white-space: nowrap;
+  border-radius: 999px;
   font-weight: bold;
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -1057,9 +1064,12 @@ button:active {
 
 #screen-game .cost-badge,
 #screen-game .card-stats .atk-hp span {
+  width: auto;
   min-width: 18px;
   height: 18px;
   font-size: 11px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 #screen-game .card-stats .atk-hp .buff-amount {
@@ -1922,10 +1932,13 @@ button:active {
 
   #screen-game .cost-badge,
   #screen-game .card-stats .atk-hp span {
+    width: auto;
     min-width: 14px;
     height: 14px;
     font-size: 7px;
     padding: 0 1px;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
   .card-stats .atk-hp {
