@@ -1902,9 +1902,20 @@ button:active {
   }
 
   .hand {
-    flex: 0 0 auto;
-    height: 18vh;
+    flex: 1;
     min-height: 0;
+  }
+
+  #opponent-area {
+    flex: 0.8;
+  }
+
+  #my-area {
+    flex: 1.2;
+  }
+
+  #my-hand {
+    flex: 1;
   }
 
   #turn-indicator {
@@ -1919,40 +1930,6 @@ button:active {
   .action-buttons button {
     padding: 3px 6px;
     font-size: 10px;
-  }
-
-  .loading-status {
-    top: 48%;
-  }
-
-  .loading-start-btn {
-    top: 48%;
-  }
-
-  .hud-username,
-  .hud-coins {
-    top: 4%;
-  }
-
-  .hud-logout-btn {
-    top: 8%;
-  }
-
-  .hud-admin-btn {
-    top: 12%;
-  }
-
-  .hud-rulebook-btn {
-    top: 16%;
-  }
-
-  .hud-sound-btn {
-    top: 20%;
-  }
-
-  .lobby-card-hit {
-    top: 24%;
-    height: 66%;
   }
 }
 
