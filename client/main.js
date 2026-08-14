@@ -755,14 +755,14 @@ function renderAdminCards(cards, token) {
     const transformAtkInput = document.createElement("input");
     transformAtkInput.type = "number";
     transformAtkInput.min = "0";
-    transformAtkInput.value = card.transformAtk || 0;
-    transformAtkInput.placeholder = "변신 후 공격력";
+    transformAtkInput.value = card.transformAtk ?? "";
+    transformAtkInput.placeholder = "변신 후 공격력 (비우면 현재 스탯 유지)";
 
     const transformHpInput = document.createElement("input");
     transformHpInput.type = "number";
     transformHpInput.min = "0";
-    transformHpInput.value = card.transformHp || 0;
-    transformHpInput.placeholder = "변신 후 체력";
+    transformHpInput.value = card.transformHp ?? "";
+    transformHpInput.placeholder = "변신 후 체력 (비우면 현재 스탯 유지)";
 
     const transformNameInput = document.createElement("input");
     transformNameInput.type = "text";
@@ -880,8 +880,8 @@ function renderAdminCards(cards, token) {
         fields.skillEffect = skillEffectSelect.value || null;
         fields.transformTriggerEquipId = transformTriggerEquipSelect.value || null;
         fields.transformRequiredCount = Number(transformRequiredCountInput.value) || 2;
-        fields.transformAtk = Number(transformAtkInput.value) || 0;
-        fields.transformHp = Number(transformHpInput.value) || 0;
+        fields.transformAtk = transformAtkInput.value === "" ? null : Number(transformAtkInput.value);
+        fields.transformHp = transformHpInput.value === "" ? null : Number(transformHpInput.value);
         fields.transformName = transformNameInput.value || null;
         fields.transformAttackName = transformAttackNameInput.value || null;
         fields.transformAttackEffect = transformAttackEffectSelect.value || null;
