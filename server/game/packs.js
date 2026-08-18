@@ -4,7 +4,7 @@ const PACKS = {
   premium: { id: "premium", name: "프리미엄 카드팩", cost: 100000, legendaryChance: 0.15 },
 };
 
-const DUPLICATE_REFUND = { common: 3000, legendary: 20000 };
+const DUPLICATE_REFUND = { common: 1000, legendary: 20000 };
 
 function rollCard(pack, allCards, starterCardIds = []) {
   const starterSet = new Set(starterCardIds);
