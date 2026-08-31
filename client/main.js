@@ -3198,7 +3198,7 @@ function equipBadgesHtml(card) {
 const GINTOKI_REVIVED_IMAGE = "assets/gintoki_revived.png";
 
 function cardDisplayImage(card) {
-  if (card.id === "char_gintoki" && card.deathEffectUsed) return GINTOKI_REVIVED_IMAGE;
+  if ((card.catalogId || card.id) === "char_gintoki" && card.deathEffectUsed) return GINTOKI_REVIVED_IMAGE;
   return card.image;
 }
 
