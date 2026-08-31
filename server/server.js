@@ -24,6 +24,15 @@ const { getStageDeckCardIds } = require("./models/StageDecks");
 const { getArenaTier } = require("./data/arenaTiers");
 const { addCoins, deductCoins } = require("./models/User");
 
+function shuffle(array) {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
 const PORT = process.env.PORT || 3001;
 
 const app = express();
@@ -131,7 +140,7 @@ async function handleGameOver(room, roomId, { reason } = {}) {
   io.to(winnerId).emit("game_over", { result: "win", stageId: room.stageId, reason, coinsDelta: winnerCoinsDelta });
   io.to(loserId).emit("game_over", { result: "lose", stageId: room.stageId, reason, coinsDelta: loserCoinsDelta });
 
-  if (room.isAiMatch && winnerId !== room.aiPlayerId) {
+  if (room.isAiMatch && winnerId !== room.aiPlayerId && room.stageId) {
     const winnerUserId = room.players[winnerId].userId;
     await setHighestCleared(winnerUserId, room.stageId);
   }
@@ -375,6 +384,61 @@ io.on("connection", (socket) => {
 
     io.to(socket.id).emit("match_found", room.toClientState(socket.id));
     console.log(`[stage] ${roomId} started (stage ${stage.id})`);
+  });
+
+  socket.on("start_random_ai_match", async () => {
+    if (socketToRoom.has(socket.id)) {
+      socket.emit("stage_error", "이미 진행중인 게임이 있습니다.");
+      return;
+    }
+
+    const currentCards = await listCards();
+    const cardsById = new Map(currentCards.map((card) => [card.id, card]));
+
+    const cardIds = await getDeckByUserId(socket.data.userId);
+    if (!cardIds) {
+      socket.emit("stage_error", "덱이 설정되어 있지 않습니다. 덱 편집에서 먼저 덱을 구성해주세요.");
+      return;
+    }
+    const validation = validateDeck(cardIds, cardsById);
+    if (!validation.ok) {
+      socket.emit("stage_error", validation.reason);
+      return;
+    }
+
+    // 관리자가 카드 에디터에서 "랜덤 AI 매치 카드 풀에 포함"을 체크한 캐릭터 카드만 후보로 사용.
+    // AI 봇 로직(aiPlayer.js)이 스펠/장비를 제대로 다루지 못하므로 캐릭터 카드로만 제한한다.
+    const randomPoolCards = currentCards.filter((card) => card.type === "character" && card.randomAiPool);
+    if (randomPoolCards.length === 0) {
+      socket.emit("stage_error", "관리자가 랜덤 AI 매치 카드 풀을 아직 설정하지 않았습니다.");
+      return;
+    }
+
+    // 카드 한 종류당 최대 2장까지 섞어 30장을 채우되, 풀이 작아 30장을 못 채우면 있는 만큼만 사용한다.
+    const expandedPool = shuffle(randomPoolCards.flatMap((card) => [card, card]));
+    const aiDeckCards = expandedPool.slice(0, 30);
+
+    const aiId = `ai_${socket.id}`;
+    const roomId = `random_ai_room_${socket.id}`;
+    const players = [
+      { id: socket.id, username: socket.data.username, userId: socket.data.userId },
+      { id: aiId, username: "AI (랜덤)", userId: aiId },
+    ];
+    const deckByPlayerId = {
+      [socket.id]: cardIds.map((cardId) => ({ ...cardsById.get(cardId) })),
+      [aiId]: aiDeckCards.map((card) => ({ ...card })),
+    };
+
+    const room = new GameRoom(roomId, players, deckByPlayerId);
+    room.isAiMatch = true;
+    room.aiPlayerId = aiId;
+
+    rooms.set(roomId, room);
+    socketToRoom.set(socket.id, roomId);
+    scheduleTurnTimer(room, roomId);
+
+    io.to(socket.id).emit("match_found", room.toClientState(socket.id));
+    console.log(`[random-ai] ${roomId} started (pool size ${randomPoolCards.length}, deck size ${aiDeckCards.length})`);
   });
 
   socket.on("view_deck", ({ target }) => {

@@ -89,6 +89,7 @@ function validateCardFields(body, { partial, existingType } = {}) {
     transformImage,
     transformAttackName,
     transformAttackEffect,
+    randomAiPool,
   } = body;
   const effectiveType = type !== undefined ? type : existingType;
 
@@ -163,6 +164,9 @@ function validateCardFields(body, { partial, existingType } = {}) {
       !ELEMENT_EFFECTS.includes(transformAttackEffect)
     ) {
       return `transformAttackEffect는 ${ELEMENT_EFFECTS.join("/")} 중 하나이거나 없어야 합니다.`;
+    }
+    if (randomAiPool !== undefined && typeof randomAiPool !== "boolean") {
+      return "randomAiPool는 boolean이어야 합니다.";
     }
   }
   if (effectiveType === "equipment") {

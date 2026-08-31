@@ -711,6 +711,12 @@ function renderAdminCards(cards, token) {
     allowDuplicateEquipInput.checked = !!card.allowDuplicateEquip;
     allowDuplicateEquipLabel.append(allowDuplicateEquipInput, "중복 장착 허용");
 
+    const randomAiPoolLabel = document.createElement("label");
+    const randomAiPoolInput = document.createElement("input");
+    randomAiPoolInput.type = "checkbox";
+    randomAiPoolInput.checked = !!card.randomAiPool;
+    randomAiPoolLabel.append(randomAiPoolInput, "랜덤 AI 매치 카드 풀에 포함");
+
     const attackNameOverrideInput = document.createElement("input");
     attackNameOverrideInput.type = "text";
     attackNameOverrideInput.maxLength = 30;
@@ -858,6 +864,7 @@ function renderAdminCards(cards, token) {
       transformAttackEffectSelect.classList.toggle("hidden", type !== "character");
       transformImageInput.classList.toggle("hidden", type !== "character");
       transformThumbImg.classList.toggle("hidden", type !== "character" || !card.transformImage);
+      randomAiPoolLabel.classList.toggle("hidden", type !== "character");
       equipAtkInput.classList.toggle("hidden", type !== "equipment");
       equipHpInput.classList.toggle("hidden", type !== "equipment");
       overridesAppearanceLabel.classList.toggle("hidden", type !== "equipment");
@@ -913,6 +920,7 @@ function renderAdminCards(cards, token) {
         fields.transformName = transformNameInput.value || null;
         fields.transformAttackName = transformAttackNameInput.value || null;
         fields.transformAttackEffect = transformAttackEffectSelect.value || null;
+        fields.randomAiPool = randomAiPoolInput.checked;
         if (transformImageInput.files[0]) {
           fields.transformImage = await readImageAsCompressedDataUrl(transformImageInput.files[0]);
         }
@@ -970,6 +978,7 @@ function renderAdminCards(cards, token) {
       equipHpInput,
       overridesAppearanceLabel,
       allowDuplicateEquipLabel,
+      randomAiPoolLabel,
       attackNameOverrideInput,
       equipEffectSelect,
       attackEffectOverrideSelect,
@@ -1071,6 +1080,7 @@ document.getElementById("form-new-card").addEventListener("submit", async (e) =>
     fields.skillName = document.getElementById("new-card-skill-name").value || null;
     fields.attackEffect = document.getElementById("new-card-attack-effect").value || null;
     fields.skillEffect = document.getElementById("new-card-skill-effect").value || null;
+    fields.randomAiPool = document.getElementById("new-card-random-ai-pool").checked;
   }
   if (type === "equipment") {
     fields.equipAtkBonus = Number(document.getElementById("new-card-equip-atk").value) || 0;
@@ -1363,6 +1373,11 @@ document.getElementById("btn-open-adventure").addEventListener("click", () => {
 
 document.getElementById("btn-stage-select-back").addEventListener("click", () => {
   showScreen("lobby");
+});
+
+document.getElementById("btn-start-random-ai-match").addEventListener("click", () => {
+  socket.emit("start_random_ai_match");
+  showScreen("waiting");
 });
 
 async function loadStages() {

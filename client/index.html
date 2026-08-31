@@ -182,6 +182,10 @@
             <option value="darkness">🌑 어둠</option>
             <option value="light">💡 빛</option>
           </select>
+          <label>
+            <input type="checkbox" id="new-card-random-ai-pool" />
+            랜덤 AI 매치 카드 풀에 포함
+          </label>
         </span>
 
         <span data-type-group="equipment">
@@ -330,6 +334,12 @@
     <h2>어드벤처 모드</h2>
     <button id="btn-stage-select-back">로비로</button>
     <p id="stage-select-error" class="error"></p>
+    <div class="stage-tile-list">
+      <div class="stage-tile">
+        <div>랜덤 AI 매치 — 매번 무작위로 뽑힌 카드로 AI와 대전</div>
+        <button id="btn-start-random-ai-match">도전</button>
+      </div>
+    </div>
     <div id="stage-list"></div>
   </div>
 

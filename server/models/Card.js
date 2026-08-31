@@ -36,6 +36,7 @@ function rowToCard(row) {
     transformImage: row.transform_image ?? null,
     transformAttackName: row.transform_attack_name ?? null,
     transformAttackEffect: row.transform_attack_effect ?? null,
+    randomAiPool: !!row.random_ai_pool,
   };
 }
 
@@ -111,13 +112,14 @@ async function createCard({
   transformImage,
   transformAttackName,
   transformAttackEffect,
+  randomAiPool,
 }) {
   const id = await generateCardId(name);
   const isCharacter = type === "character";
   const isEquipment = type === "equipment";
   await getClient().execute({
-    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag, rarity, image, attack_name, skill_name, overrides_appearance, attack_name_override, attack_effect, skill_effect, equip_effect, attack_effect_override, allow_duplicate_equip, transform_trigger_equip_id, transform_required_count, transform_atk, transform_hp, transform_name, transform_image, transform_attack_name, transform_attack_effect)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT INTO cards (id, name, series, type, cost, atk, hp, synergy_tags, effects, equip_atk_bonus, equip_hp_bonus, description, matchup_vs_tag, matchup_atk_bonus, required_target_tag, rarity, image, attack_name, skill_name, overrides_appearance, attack_name_override, attack_effect, skill_effect, equip_effect, attack_effect_override, allow_duplicate_equip, transform_trigger_equip_id, transform_required_count, transform_atk, transform_hp, transform_name, transform_image, transform_attack_name, transform_attack_effect, random_ai_pool)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       name,
@@ -153,6 +155,7 @@ async function createCard({
       isCharacter ? transformImage ?? null : null,
       isCharacter ? transformAttackName ?? null : null,
       isCharacter ? transformAttackEffect ?? null : null,
+      randomAiPool ? 1 : 0,
     ],
   });
   return getCardById(id);
@@ -171,7 +174,7 @@ async function updateCard(id, fields) {
           matchup_vs_tag = ?, matchup_atk_bonus = ?, required_target_tag = ?, rarity = ?, image = ?, attack_name = ?, skill_name = ?,
           overrides_appearance = ?, attack_name_override = ?, attack_effect = ?, skill_effect = ?, equip_effect = ?, attack_effect_override = ?,
           allow_duplicate_equip = ?, transform_trigger_equip_id = ?, transform_required_count = ?, transform_atk = ?, transform_hp = ?,
-          transform_name = ?, transform_image = ?, transform_attack_name = ?, transform_attack_effect = ?
+          transform_name = ?, transform_image = ?, transform_attack_name = ?, transform_attack_effect = ?, random_ai_pool = ?
           WHERE id = ?`,
     args: [
       merged.name,
@@ -207,6 +210,7 @@ async function updateCard(id, fields) {
       isCharacter ? merged.transformImage ?? null : null,
       isCharacter ? merged.transformAttackName ?? null : null,
       isCharacter ? merged.transformAttackEffect ?? null : null,
+      merged.randomAiPool ? 1 : 0,
       id,
     ],
   });

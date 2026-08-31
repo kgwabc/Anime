@@ -2221,7 +2221,8 @@ button:active {
   margin: 16px 0 24px;
 }
 
-#stage-list {
+#stage-list,
+.stage-tile-list {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
