@@ -925,6 +925,24 @@ button:active {
   gap: 8px;
 }
 
+#disconnect-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
+  padding: 8px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-main);
+  background: var(--red-deep);
+  border-bottom: 2px solid var(--red);
+}
+
+#disconnect-banner.hidden {
+  display: none;
+}
+
 .card {
   position: relative;
   width: 130px;
@@ -932,6 +950,7 @@ button:active {
   background: #34405c;
   border: 2px solid #4f8cff;
   border-radius: 8px;
+  touch-action: manipulation;
   padding: 0;
   font-size: 12px;
   overflow: hidden;
@@ -1846,6 +1865,55 @@ button:active {
     margin: 16px auto;
     padding: 18px 16px;
     border-radius: 12px;
+  }
+
+  body:has(#screen-shop:not(.hidden)),
+  body:has(#screen-arena-select:not(.hidden)) {
+    overflow: hidden;
+  }
+
+  #screen-arena-select.screen--arena-select {
+    padding: 14px 16px 18px;
+  }
+
+  #screen-shop h2, #screen-arena-select h2 {
+    font-size: 20px;
+    margin: 0 0 8px;
+  }
+
+  #screen-shop > p, #screen-arena-select > p {
+    margin: 4px 0;
+    font-size: 14px;
+  }
+
+  #screen-shop button, #screen-arena-select button {
+    padding: 6px 14px;
+    font-size: 14px;
+  }
+
+  .shop-pack-list {
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 8px;
+    margin: 8px 0;
+  }
+
+  .pack-card {
+    width: 104px;
+    padding: 8px 6px;
+    gap: 4px;
+  }
+
+  .pack-card-name {
+    font-size: 12px;
+  }
+
+  .pack-card-info {
+    font-size: 10px;
+  }
+
+  #arena-carousel {
+    margin: 8px 0;
   }
 
   .arena-arrow-btn {

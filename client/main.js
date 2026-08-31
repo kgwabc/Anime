@@ -245,6 +245,7 @@ function connectSocket(token, username) {
   registerSocketHandlers();
 
   socket.on("connect", async () => {
+    hideDisconnectBanner();
     document.getElementById("lobby-username").textContent = username;
     currentAuthToken = token;
     showScreen("lobby");
@@ -268,6 +269,33 @@ function connectSocket(token, username) {
     console.warn("connect_error:", err.message);
     logout();
   });
+
+  socket.on("disconnect", (reason) => {
+    console.warn("disconnect:", reason);
+    showDisconnectBanner();
+    forceEndCardDrag();
+    pendingSkillTargetCard = null;
+    selectedAttackerId = null;
+  });
+}
+
+function showDisconnectBanner() {
+  document.getElementById("disconnect-banner").classList.remove("hidden");
+}
+
+function hideDisconnectBanner() {
+  document.getElementById("disconnect-banner").classList.add("hidden");
+}
+
+// 아이폰에서 드래그 도중 백그라운드 전환 등으로 pointerup/pointercancel이 발생하지 않으면
+// dragState가 영구히 남아 재연결 후 game_state_update가 계속 무시되므로, 연결이 끊기면
+// 드래그 중이던 카드 엘리먼트를 정리하고 dragState를 강제로 초기화한다.
+function forceEndCardDrag() {
+  if (!dragState) return;
+  dragState.el.remove();
+  dragState = null;
+  pendingRenderState = null;
+  clearDropHints();
 }
 
 // ---------- 관리자 패널 ----------
@@ -1210,7 +1238,7 @@ function renderCardTile(card, { badgeText, buttonText, buttonDisabled, onButtonC
   const cardEl = document.createElement("div");
   cardEl.className = "card";
   if (card.rarity === "legendary") cardEl.classList.add("legendary");
-  if (!card.image) cardEl.classList.add("no-image");
+  if (!cardDisplayImage(card)) cardEl.classList.add("no-image");
   cardEl.innerHTML = cardFaceHtml(card);
   wrapper.appendChild(cardEl);
 
@@ -3167,8 +3195,16 @@ function equipBadgesHtml(card) {
     .join("")}</div>`;
 }
 
+const GINTOKI_REVIVED_IMAGE = "assets/gintoki_revived.png";
+
+function cardDisplayImage(card) {
+  if (card.id === "char_gintoki" && card.deathEffectUsed) return GINTOKI_REVIVED_IMAGE;
+  return card.image;
+}
+
 function cardFaceHtml(card) {
-  const artStyle = card.image ? ` style="background-image:url('${card.image}')"` : "";
+  const displayImage = cardDisplayImage(card);
+  const artStyle = displayImage ? ` style="background-image:url('${displayImage}')"` : "";
   return `
     <div class="card-art"${artStyle}></div>
     <div class="card-stats">
@@ -3206,7 +3242,7 @@ function renderCard(card, role, isMyTurn) {
   el.className = "card";
   el.dataset.cardId = card.id;
   if (card.rarity === "legendary") el.classList.add("legendary");
-  if (!card.image) el.classList.add("no-image");
+  if (!cardDisplayImage(card)) el.classList.add("no-image");
 
   el.innerHTML = cardFaceHtml(card);
 
