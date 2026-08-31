@@ -105,6 +105,12 @@
       <button id="btn-save-starter-cards">스타터 카드 저장</button>
       <p id="admin-starter-error" class="error"></p>
 
+      <h3>랜덤 AI 매치 카드 풀</h3>
+      <p class="admin-hint">체크한 캐릭터 카드만 랜덤 AI 매치의 AI 덱 구성에 사용됩니다.</p>
+      <div id="admin-random-ai-pool-card-list"></div>
+      <button id="btn-save-random-ai-pool">랜덤 AI 카드 풀 저장</button>
+      <p id="admin-random-ai-pool-error" class="error"></p>
+
       <h3>스테이지 관리</h3>
       <p class="admin-hint">새 스테이지를 추가하거나 선택한 스테이지의 이름을 바꿀 수 있습니다.</p>
       <div class="admin-stage-manage-row">
@@ -182,10 +188,6 @@
             <option value="darkness">🌑 어둠</option>
             <option value="light">💡 빛</option>
           </select>
-          <label>
-            <input type="checkbox" id="new-card-random-ai-pool" />
-            랜덤 AI 매치 카드 풀에 포함
-          </label>
         </span>
 
         <span data-type-group="equipment">

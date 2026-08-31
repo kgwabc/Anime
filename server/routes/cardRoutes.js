@@ -2,6 +2,7 @@ const express = require("express");
 
 const { listCards, getCardById, createCard, updateCard, deleteCard } = require("../models/Card");
 const { listStarterCardIds, setStarterCardIds } = require("../models/StarterCards");
+const { listRandomAiPoolCardIds, setRandomAiPoolCardIds } = require("../models/RandomAiPoolCards");
 const { requireAuth, requireAdmin } = require("../auth/middleware");
 
 const router = express.Router();
@@ -89,7 +90,6 @@ function validateCardFields(body, { partial, existingType } = {}) {
     transformImage,
     transformAttackName,
     transformAttackEffect,
-    randomAiPool,
   } = body;
   const effectiveType = type !== undefined ? type : existingType;
 
@@ -164,9 +164,6 @@ function validateCardFields(body, { partial, existingType } = {}) {
       !ELEMENT_EFFECTS.includes(transformAttackEffect)
     ) {
       return `transformAttackEffect는 ${ELEMENT_EFFECTS.join("/")} 중 하나이거나 없어야 합니다.`;
-    }
-    if (randomAiPool !== undefined && typeof randomAiPool !== "boolean") {
-      return "randomAiPool는 boolean이어야 합니다.";
     }
   }
   if (effectiveType === "equipment") {
@@ -292,6 +289,31 @@ router.put("/starter", requireAuth, requireAdmin, async (req, res) => {
   } catch (err) {
     console.error("[set starter cards] error:", err.message);
     return res.status(500).json({ ok: false, message: "스타터 카드 저장 중 오류가 발생했습니다." });
+  }
+});
+
+router.get("/random-ai-pool", requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const cardIds = await listRandomAiPoolCardIds();
+    return res.json({ ok: true, cardIds });
+  } catch (err) {
+    console.error("[get random ai pool cards] error:", err.message);
+    return res.status(500).json({ ok: false, message: "랜덤 AI 카드 풀 조회 중 오류가 발생했습니다." });
+  }
+});
+
+router.put("/random-ai-pool", requireAuth, requireAdmin, async (req, res) => {
+  const { cardIds } = req.body || {};
+  if (!Array.isArray(cardIds) || !cardIds.every((id) => typeof id === "string")) {
+    return res.status(400).json({ ok: false, message: "cardIds는 문자열 배열이어야 합니다." });
+  }
+
+  try {
+    await setRandomAiPoolCardIds(cardIds);
+    return res.json({ ok: true, cardIds });
+  } catch (err) {
+    console.error("[set random ai pool cards] error:", err.message);
+    return res.status(500).json({ ok: false, message: "랜덤 AI 카드 풀 저장 중 오류가 발생했습니다." });
   }
 });
 

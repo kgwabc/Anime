@@ -21,6 +21,7 @@ const { getStageById } = require("./models/Stage");
 const { chooseCardToPlay, chooseAttack } = require("./game/aiPlayer");
 const { getHighestCleared, setHighestCleared } = require("./models/StageProgress");
 const { getStageDeckCardIds } = require("./models/StageDecks");
+const { listRandomAiPoolCardIds } = require("./models/RandomAiPoolCards");
 const { getArenaTier } = require("./data/arenaTiers");
 const { addCoins, deductCoins } = require("./models/User");
 
@@ -406,9 +407,11 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // 관리자가 카드 에디터에서 "랜덤 AI 매치 카드 풀에 포함"을 체크한 캐릭터 카드만 후보로 사용.
-    // AI 봇 로직(aiPlayer.js)이 스펠/장비를 제대로 다루지 못하므로 캐릭터 카드로만 제한한다.
-    const randomPoolCards = currentCards.filter((card) => card.type === "character" && card.randomAiPool);
+    // 관리자 패널의 "랜덤 AI 매치 카드 풀" 체크리스트(스타터 카드 지정과 동일한 방식)에서
+    // 지정한 캐릭터 카드만 후보로 사용. AI 봇 로직(aiPlayer.js)이 스펠/장비를 제대로 다루지
+    // 못하므로 캐릭터 카드로만 제한한다.
+    const poolCardIds = await listRandomAiPoolCardIds();
+    const randomPoolCards = poolCardIds.map((id) => cardsById.get(id)).filter((card) => card && card.type === "character");
     if (randomPoolCards.length === 0) {
       socket.emit("stage_error", "관리자가 랜덤 AI 매치 카드 풀을 아직 설정하지 않았습니다.");
       return;

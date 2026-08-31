@@ -259,6 +259,7 @@ function connectSocket(token, username) {
       await loadAdminCards(token);
       loadAdminUsers(token);
       loadAdminStarterCards(token);
+      loadAdminRandomAiPoolCards(token);
       loadAdminStageDecks(token);
     } else {
       adminToggleBtn.classList.add("hidden");
@@ -711,12 +712,6 @@ function renderAdminCards(cards, token) {
     allowDuplicateEquipInput.checked = !!card.allowDuplicateEquip;
     allowDuplicateEquipLabel.append(allowDuplicateEquipInput, "중복 장착 허용");
 
-    const randomAiPoolLabel = document.createElement("label");
-    const randomAiPoolInput = document.createElement("input");
-    randomAiPoolInput.type = "checkbox";
-    randomAiPoolInput.checked = !!card.randomAiPool;
-    randomAiPoolLabel.append(randomAiPoolInput, "랜덤 AI 매치 카드 풀에 포함");
-
     const attackNameOverrideInput = document.createElement("input");
     attackNameOverrideInput.type = "text";
     attackNameOverrideInput.maxLength = 30;
@@ -864,7 +859,6 @@ function renderAdminCards(cards, token) {
       transformAttackEffectSelect.classList.toggle("hidden", type !== "character");
       transformImageInput.classList.toggle("hidden", type !== "character");
       transformThumbImg.classList.toggle("hidden", type !== "character" || !card.transformImage);
-      randomAiPoolLabel.classList.toggle("hidden", type !== "character");
       equipAtkInput.classList.toggle("hidden", type !== "equipment");
       equipHpInput.classList.toggle("hidden", type !== "equipment");
       overridesAppearanceLabel.classList.toggle("hidden", type !== "equipment");
@@ -920,7 +914,6 @@ function renderAdminCards(cards, token) {
         fields.transformName = transformNameInput.value || null;
         fields.transformAttackName = transformAttackNameInput.value || null;
         fields.transformAttackEffect = transformAttackEffectSelect.value || null;
-        fields.randomAiPool = randomAiPoolInput.checked;
         if (transformImageInput.files[0]) {
           fields.transformImage = await readImageAsCompressedDataUrl(transformImageInput.files[0]);
         }
@@ -978,7 +971,6 @@ function renderAdminCards(cards, token) {
       equipHpInput,
       overridesAppearanceLabel,
       allowDuplicateEquipLabel,
-      randomAiPoolLabel,
       attackNameOverrideInput,
       equipEffectSelect,
       attackEffectOverrideSelect,
@@ -1080,7 +1072,6 @@ document.getElementById("form-new-card").addEventListener("submit", async (e) =>
     fields.skillName = document.getElementById("new-card-skill-name").value || null;
     fields.attackEffect = document.getElementById("new-card-attack-effect").value || null;
     fields.skillEffect = document.getElementById("new-card-skill-effect").value || null;
-    fields.randomAiPool = document.getElementById("new-card-random-ai-pool").checked;
   }
   if (type === "equipment") {
     fields.equipAtkBonus = Number(document.getElementById("new-card-equip-atk").value) || 0;
@@ -1706,6 +1697,79 @@ document.getElementById("btn-save-starter-cards").addEventListener("click", asyn
     }
   } catch (err) {
     errorEl.textContent = "스타터 카드 저장 중 오류가 발생했습니다.";
+  }
+});
+
+// ---------- 관리자: 랜덤 AI 매치 카드 풀 ----------
+
+let allAdminCardsForRandomAiPool = [];
+
+async function loadAdminRandomAiPoolCards(token) {
+  const listEl = document.getElementById("admin-random-ai-pool-card-list");
+  listEl.textContent = "불러오는 중...";
+
+  try {
+    const [cardsRes, poolRes] = await Promise.all([
+      fetch(`${SERVER_URL}/cards`, { headers: { Authorization: `Bearer ${token}` } }),
+      fetch(`${SERVER_URL}/cards/random-ai-pool`, { headers: { Authorization: `Bearer ${token}` } }),
+    ]);
+    const cardsData = await cardsRes.json();
+    const poolData = await poolRes.json();
+    if (!cardsData.ok || !poolData.ok) {
+      listEl.textContent = cardsData.message || poolData.message;
+      return;
+    }
+    // AI 봇 로직(aiPlayer.js)이 스펠/장비를 제대로 다루지 못하므로 캐릭터 카드만 선택지로 제공
+    allAdminCardsForRandomAiPool = cardsData.cards.filter((card) => card.type === "character");
+    renderAdminRandomAiPoolCards(new Set(poolData.cardIds));
+  } catch (err) {
+    listEl.textContent = "랜덤 AI 카드 풀 목록을 불러올 수 없습니다.";
+  }
+}
+
+function renderAdminRandomAiPoolCards(poolCardIds) {
+  const listEl = document.getElementById("admin-random-ai-pool-card-list");
+  listEl.innerHTML = "";
+
+  for (const card of allAdminCardsForRandomAiPool) {
+    const label = document.createElement("label");
+    label.className = "admin-starter-card-row";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.dataset.cardId = card.id;
+    checkbox.checked = poolCardIds.has(card.id);
+    label.appendChild(checkbox);
+
+    const text = document.createElement("span");
+    text.textContent = `${card.name} (${card.rarity === "legendary" ? "전설" : "일반"})`;
+    label.appendChild(text);
+
+    listEl.appendChild(label);
+  }
+}
+
+document.getElementById("btn-save-random-ai-pool").addEventListener("click", async () => {
+  const errorEl = document.getElementById("admin-random-ai-pool-error");
+  errorEl.textContent = "";
+
+  const cardIds = Array.from(
+    document.querySelectorAll("#admin-random-ai-pool-card-list input[type=checkbox]:checked")
+  ).map((el) => el.dataset.cardId);
+
+  try {
+    const res = await fetch(`${SERVER_URL}/cards/random-ai-pool`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${currentAdminToken}` },
+      body: JSON.stringify({ cardIds }),
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      errorEl.textContent = data.message;
+      return;
+    }
+  } catch (err) {
+    errorEl.textContent = "랜덤 AI 카드 풀 저장 중 오류가 발생했습니다.";
   }
 });
 
@@ -3213,7 +3277,10 @@ function equipBadgesHtml(card) {
 const GINTOKI_REVIVED_IMAGE = "assets/gintoki_revived.png";
 
 function cardDisplayImage(card) {
-  if ((card.catalogId || card.id) === "char_gintoki" && card.deathEffectUsed) return GINTOKI_REVIVED_IMAGE;
+  // 운영 DB의 긴토키 카드는 관리자 패널에서 재생성된 적이 있어 id가 "char_gintoki"가 아니라
+  // "card_card_17"처럼 무의미한 값이므로(한글 이름이라 id 생성용 slug가 비어버림), id 대신
+  // 이름으로 판별한다.
+  if (card.name === "사카타 긴토키" && card.deathEffectUsed) return GINTOKI_REVIVED_IMAGE;
   return card.image;
 }
 
