@@ -46,7 +46,7 @@ io.use(socketAuthMiddleware);
 
 const RECONNECT_GRACE_MS = Number(process.env.RECONNECT_GRACE_MS) || 30000;
 const TURN_DURATION_MS = Number(process.env.TURN_DURATION_MS) || 60000;
-const AI_MODE_WIN_REWARD = 500;
+const AI_MODE_WIN_REWARD = 2000;
 
 /** @type {Map<string, Matchmaker>} tierId -> Matchmaker (투기장 티어별로 큐를 분리) */
 const matchmakers = new Map();
