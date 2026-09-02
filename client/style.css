@@ -260,6 +260,42 @@ body:has(#screen-loading:not(.hidden)) {
   z-index: 55;
 }
 
+.cardex-zoom-panel {
+  width: auto;
+  max-width: 92vw;
+  max-height: 92vh;
+  padding: 60px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardex-zoom-close {
+  /* 카드 확대는 transform:scale로 이루어져 레이아웃 박스 크기(=패널 padding 기준)가 실제
+     화면상 커진 카드 크기와 달라진다 — 패널 기준 absolute 배치는 카드 위에 겹쳐 보이므로,
+     뷰포트 기준 fixed로 배치해 카드 크기와 무관하게 항상 화면 모서리에 고정한다. */
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 61;
+}
+
+.card-zoomed {
+  transition: transform 0.15s ease-out;
+  cursor: default;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card.card-zoomed:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
 .admin-panel-header {
   display: flex;
   justify-content: space-between;

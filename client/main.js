@@ -224,6 +224,52 @@ document.getElementById("btn-close-rulebook").addEventListener("click", () => {
   setRulebookOpen(false);
 });
 
+const CARDEX_ZOOM_TILT_MAX_DEG = 14;
+const CARDEX_ZOOM_SCALE = 2.4;
+const cardexZoomCardEl = document.getElementById("cardex-zoom-card");
+
+function cardexZoomTiltTransform(rotateX, rotateY) {
+  return `perspective(900px) scale(${CARDEX_ZOOM_SCALE}) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+}
+
+function setCardexZoomOpen(open) {
+  document.getElementById("cardex-zoom-panel").classList.toggle("hidden", !open);
+  document.getElementById("cardex-zoom-backdrop").classList.toggle("hidden", !open);
+  document.getElementById("cardex-zoom-close").classList.toggle("hidden", !open);
+  if (!open) cardexZoomCardEl.style.transform = cardexZoomTiltTransform(0, 0);
+}
+
+function openCardexZoom(card) {
+  cardexZoomCardEl.classList.toggle("legendary", card.rarity === "legendary");
+  cardexZoomCardEl.classList.toggle("no-image", !cardDisplayImage(card));
+  cardexZoomCardEl.innerHTML = cardFaceHtml(card);
+  cardexZoomCardEl.style.transform = cardexZoomTiltTransform(0, 0);
+  setCardexZoomOpen(true);
+  const nameEl = cardexZoomCardEl.querySelector(".name");
+  if (nameEl) fitCardName(nameEl);
+}
+
+cardexZoomCardEl.addEventListener("pointermove", (e) => {
+  const rect = cardexZoomCardEl.getBoundingClientRect();
+  const px = (e.clientX - rect.left) / rect.width - 0.5;
+  const py = (e.clientY - rect.top) / rect.height - 0.5;
+  const rotateY = px * CARDEX_ZOOM_TILT_MAX_DEG * 2;
+  const rotateX = -py * CARDEX_ZOOM_TILT_MAX_DEG * 2;
+  cardexZoomCardEl.style.transform = cardexZoomTiltTransform(rotateX, rotateY);
+});
+
+cardexZoomCardEl.addEventListener("pointerleave", () => {
+  cardexZoomCardEl.style.transform = cardexZoomTiltTransform(0, 0);
+});
+
+document.getElementById("cardex-zoom-backdrop").addEventListener("click", () => {
+  setCardexZoomOpen(false);
+});
+
+document.getElementById("cardex-zoom-close").addEventListener("click", () => {
+  setCardexZoomOpen(false);
+});
+
 function onAuthenticated(token, username) {
   localStorage.setItem("tcg_token", token);
   localStorage.setItem("tcg_username", username);
@@ -1542,6 +1588,7 @@ async function loadCardDex() {
         onButtonClick: () => {},
       });
       if (!owned) tile.classList.add("card-tile--unowned");
+      tile.querySelector(".card").addEventListener("click", () => openCardexZoom(card));
       gridEl.appendChild(tile);
     }
     gridEl.querySelectorAll(".name").forEach(fitCardName);
