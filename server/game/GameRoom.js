@@ -25,6 +25,54 @@ function buildDeck(deckCards, playerId) {
   }));
 }
 
+// 성진우 카드 전용 하드코딩 소환 시스템 — 관리자 에디터로 만드는 일반화된 카드 효과가 아니라
+// 이 카드 하나에만 적용되는 예외라서 effects 스키마 대신 이름으로 직접 분기한다.
+const JINWOO_CARD_NAME = "성진우";
+
+function makeJinwooCompanion(jinwooCard, { suffix, name, atk, image }) {
+  return {
+    id: `${jinwooCard.id}_${suffix}`,
+    catalogId: `companion_${suffix}`,
+    name,
+    type: "character",
+    cost: 0,
+    atk,
+    hp: null, // 체력 없음 = 전투/효과 데미지에 면역, 성진우가 파괴될 때만 함께 제거됨
+    image,
+    synergyTags: [],
+    effects: [],
+    canAttack: false,
+    hasAttacked: false,
+    summonedBy: jinwooCard.id,
+  };
+}
+
+function summonJinwooCompanions(player, jinwooCard) {
+  const index = player.board.findIndex((card) => card.id === jinwooCard.id);
+  if (index === -1) return;
+
+  const igrit = makeJinwooCompanion(jinwooCard, {
+    suffix: "igrit",
+    name: "이그리트",
+    atk: 6,
+    image: "assets/jinwoo_igrit.webp",
+  });
+  const beru = makeJinwooCompanion(jinwooCard, {
+    suffix: "beru",
+    name: "베르",
+    atk: 4,
+    image: "assets/jinwoo_beru.webp",
+  });
+
+  player.board.splice(index, 0, igrit);
+  player.board.push(beru);
+}
+
+/** 카드가 파괴되어 보드에서 제거될 때, 그 카드가 소환한 동반 카드(있다면)도 함께 제거 */
+function removeWithCompanions(board, cardId) {
+  return board.filter((card) => card.id !== cardId && card.summonedBy !== cardId);
+}
+
 function registerTransformTrigger(target, catalogId) {
   if (!target.transformTriggerEquipId || target.isTransformed) return;
   if (catalogId !== target.transformTriggerEquipId) return;
@@ -160,6 +208,9 @@ class GameRoom {
       card.canAttack = false;
       card.hasAttacked = false;
       player.board.push(card);
+      if (card.name === JINWOO_CARD_NAME) {
+        summonJinwooCompanions(player, card);
+      }
       onPlayEffectResults = applyEffectList(
         this,
         playerId,
@@ -304,10 +355,10 @@ class GameRoom {
           : 0;
       defenderDamage = attacker.atk + matchupBonus;
       counterDamage = defender.atk;
-      defender.hp -= defenderDamage;
-      attacker.hp -= counterDamage;
+      if (defender.hp != null) defender.hp -= defenderDamage;
+      if (attacker.hp != null) attacker.hp -= counterDamage;
 
-      if (defender.hp <= 0) {
+      if (defender.hp != null && defender.hp <= 0) {
         defender.hp = 0; // 오버킬 데미지를 버려서 ON_DEATH 회복이 데미지 양과 무관하게 항상 동일하게 부활 판정되도록 함
         if (!defender.deathEffectUsed) {
           defender.deathEffectUsed = true; // ON_DEATH 스킬은 카드 인스턴스당 한 번만 발동(무한 부활 방지)
@@ -328,12 +379,12 @@ class GameRoom {
         }
         if (defender.hp <= 0) {
           const stillIndex = opponent.board.findIndex((card) => card.id === defender.id);
-          if (stillIndex !== -1) opponent.board.splice(stillIndex, 1);
+          if (stillIndex !== -1) opponent.board = removeWithCompanions(opponent.board, defender.id);
         } else {
           defenderRevived = true;
         }
       }
-      if (attacker.hp <= 0) {
+      if (attacker.hp != null && attacker.hp <= 0) {
         attacker.hp = 0;
         if (!attacker.deathEffectUsed) {
           attacker.deathEffectUsed = true; // ON_DEATH 스킬은 카드 인스턴스당 한 번만 발동(무한 부활 방지)
@@ -353,7 +404,7 @@ class GameRoom {
           }
         }
         if (attacker.hp <= 0) {
-          player.board = player.board.filter((card) => card.id !== attacker.id);
+          player.board = removeWithCompanions(player.board, attacker.id);
         } else {
           attackerRevived = true;
         }

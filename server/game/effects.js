@@ -75,6 +75,8 @@ function applyAction(effect, targets) {
   const results = [];
 
   for (const t of targets) {
+    if (t.kind === "card" && t.ref.hp == null) continue; // 체력 없는 카드(성진우 전용 소환수)는 수치 효과 면역
+
     if (effect.action === "DAMAGE") {
       t.ref.hp = t.kind === "player" ? Math.max(0, t.ref.hp - effect.value) : t.ref.hp - effect.value;
       results.push({ kind: t.kind, id: t.ref.id, action: "DAMAGE", amount: effect.value });
@@ -97,8 +99,8 @@ function applyAction(effect, targets) {
   }
 
   for (const t of targets) {
-    if (t.kind === "card" && t.ref.hp <= 0) {
-      t.owner.board = t.owner.board.filter((card) => card.id !== t.ref.id);
+    if (t.kind === "card" && t.ref.hp != null && t.ref.hp <= 0) {
+      t.owner.board = t.owner.board.filter((card) => card.id !== t.ref.id && card.summonedBy !== t.ref.id);
     }
   }
 

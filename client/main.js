@@ -3185,6 +3185,9 @@ function isValidSkillTarget(card, pendingCard, role) {
 function cardStatsHtml(card) {
   if (card.type === "character") {
     const atkBuff = card.buffAtk ? `<span class="buff-amount">+${card.buffAtk}</span>` : "";
+    if (card.hp == null) {
+      return `<div class="atk-hp"><span class="atk">⚔${card.atk}</span>${atkBuff}</div>`;
+    }
     const hpBuff = card.buffHp ? `<span class="buff-amount">+${card.buffHp}</span>` : "";
     return `<div class="atk-hp"><span class="atk">⚔${card.atk}</span>${atkBuff}<span class="hp">❤${card.hp}</span>${hpBuff}</div>`;
   }
