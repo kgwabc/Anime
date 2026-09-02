@@ -1,7 +1,7 @@
 const PACKS = {
   normal: { id: "normal", name: "일반 카드팩", cost: 5000, legendaryChance: 0.01 },
   gold: { id: "gold", name: "골드 카드팩", cost: 20000, legendaryChance: 0.05 },
-  premium: { id: "premium", name: "프리미엄 카드팩", cost: 100000, legendaryChance: 0.15 },
+  premium: { id: "premium", name: "프리미엄 카드팩", cost: 100000, legendaryChance: 0.5 },
 };
 
 const DUPLICATE_REFUND = { common: 1000, legendary: 20000 };
