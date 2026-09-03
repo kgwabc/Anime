@@ -260,6 +260,23 @@ body:has(#screen-loading:not(.hidden)) {
   z-index: 55;
 }
 
+.quest-item {
+  padding: 12px 0;
+  border-top: 1px solid var(--gold-dim);
+}
+
+.quest-item:first-of-type {
+  border-top: none;
+}
+
+.quest-item h3 {
+  margin: 0 0 6px;
+}
+
+.quest-item p {
+  margin: 4px 0;
+}
+
 .cardex-zoom-panel {
   width: auto;
   max-width: 92vw;
@@ -548,10 +565,26 @@ button:active {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 210, 79, 0.4);
 }
 
-.hud-sound-btn {
+.hud-quest-btn {
   position: absolute;
   right: 2%;
   top: 24%;
+  padding: 5px 12px;
+  font-size: 13px;
+  line-height: 1;
+  background: rgba(10, 8, 20, 0.55);
+  border: 1px solid var(--gold-dim);
+}
+
+.hud-quest-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 210, 79, 0.4);
+}
+
+.hud-sound-btn {
+  position: absolute;
+  right: 2%;
+  top: 28%;
   padding: 5px 12px;
   font-size: 13px;
   line-height: 1;

@@ -11,6 +11,7 @@ const cardRoutes = require("./routes/cardRoutes");
 const deckRoutes = require("./routes/deckRoutes");
 const shopRoutes = require("./routes/shopRoutes");
 const stageRoutes = require("./routes/stageRoutes");
+const questRoutes = require("./routes/questRoutes");
 const { socketAuthMiddleware } = require("./auth/socketAuth");
 const { listCards } = require("./models/Card");
 const { getDeckByUserId } = require("./models/Deck");
@@ -24,6 +25,7 @@ const { getStageDeckCardIds } = require("./models/StageDecks");
 const { listRandomAiPoolCardIds } = require("./models/RandomAiPoolCards");
 const { getArenaTier } = require("./data/arenaTiers");
 const { addCoins, deductCoins } = require("./models/User");
+const { recordWin } = require("./models/Quest");
 
 function shuffle(array) {
   const result = [...array];
@@ -47,6 +49,7 @@ app.use("/cards", cardRoutes);
 app.use("/decks", deckRoutes);
 app.use("/shop", shopRoutes);
 app.use("/stages", stageRoutes);
+app.use("/quests", questRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -122,27 +125,31 @@ async function handleGameOver(room, roomId, { reason } = {}) {
 
   const loserId = room.playerOrder.find((id) => room.players[id].hp <= 0);
   const winnerId = room.getOpponentId(loserId);
+  const winnerUserId = room.players[winnerId].userId;
 
   // 투기장 매치: 입장료는 이미 큐 진입시 차감됐으므로, 승자에게 winReward만 지급하면
   // 결과적으로 승자는 (winReward - entryCost) 순이익, 패자는 -entryCost 순손실이 된다.
   let winnerCoinsDelta = 0;
   let loserCoinsDelta = 0;
   if (room.tier) {
-    const winnerUserId = room.players[winnerId].userId;
     await addCoins(winnerUserId, room.tier.winReward);
     winnerCoinsDelta = room.tier.winReward - room.tier.entryCost;
     loserCoinsDelta = -room.tier.entryCost;
   } else if (room.isAiMatch && winnerId !== room.aiPlayerId) {
-    const winnerUserId = room.players[winnerId].userId;
     await addCoins(winnerUserId, AI_MODE_WIN_REWARD);
     winnerCoinsDelta = AI_MODE_WIN_REWARD;
+  }
+
+  // 퀘스트 진행도는 AI/투기장/일반 매칭 승리 여부와 무관하게 항상 반영한다
+  // (AI 매치의 경우 봇 자신의 "승리"는 winnerId !== room.aiPlayerId 조건으로 제외됨).
+  if (!(room.isAiMatch && winnerId === room.aiPlayerId)) {
+    await recordWin(winnerUserId);
   }
 
   io.to(winnerId).emit("game_over", { result: "win", stageId: room.stageId, reason, coinsDelta: winnerCoinsDelta });
   io.to(loserId).emit("game_over", { result: "lose", stageId: room.stageId, reason, coinsDelta: loserCoinsDelta });
 
   if (room.isAiMatch && winnerId !== room.aiPlayerId && room.stageId) {
-    const winnerUserId = room.players[winnerId].userId;
     await setHighestCleared(winnerUserId, room.stageId);
   }
 

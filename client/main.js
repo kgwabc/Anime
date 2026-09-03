@@ -224,6 +224,71 @@ document.getElementById("btn-close-rulebook").addEventListener("click", () => {
   setRulebookOpen(false);
 });
 
+// ---------- 퀘스트 ----------
+
+function setQuestOpen(open) {
+  document.getElementById("quest-panel").classList.toggle("hidden", !open);
+  document.getElementById("quest-backdrop").classList.toggle("hidden", !open);
+  if (open) refreshQuestPanel();
+}
+
+function renderQuestPanel({ dailyWins, dailyClaimed, standingWins }) {
+  document.getElementById("quest-daily-progress").textContent = `일일 승리: ${Math.min(dailyWins, 1)}/1`;
+  document.getElementById("btn-claim-daily").disabled = dailyClaimed || dailyWins < 1;
+
+  document.getElementById("quest-standing-progress").textContent = `누적 승리: ${Math.min(standingWins, 3)}/3`;
+  document.getElementById("btn-claim-standing").disabled = standingWins < 3;
+}
+
+async function refreshQuestPanel() {
+  try {
+    const res = await fetch(`${SERVER_URL}/quests/mine`, {
+      headers: { Authorization: `Bearer ${currentAuthToken}` },
+    });
+    const data = await res.json();
+    if (data.ok) renderQuestPanel(data);
+  } catch (err) {
+    // 퀘스트 조회 실패는 치명적이지 않으므로 조용히 무시
+  }
+}
+
+async function claimQuest(type) {
+  try {
+    const res = await fetch(`${SERVER_URL}/quests/claim`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${currentAuthToken}`,
+      },
+      body: JSON.stringify({ type }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      setCoinDisplays(data.coins);
+      renderQuestPanel(data);
+    } else {
+      alert(data.message || "퀘스트 보상 수령에 실패했습니다.");
+    }
+  } catch (err) {
+    alert("퀘스트 보상 수령 중 오류가 발생했습니다.");
+  }
+}
+
+document.getElementById("btn-open-quest").addEventListener("click", () => {
+  setQuestOpen(true);
+});
+
+document.getElementById("quest-backdrop").addEventListener("click", () => {
+  setQuestOpen(false);
+});
+
+document.getElementById("btn-close-quest").addEventListener("click", () => {
+  setQuestOpen(false);
+});
+
+document.getElementById("btn-claim-daily").addEventListener("click", () => claimQuest("daily"));
+document.getElementById("btn-claim-standing").addEventListener("click", () => claimQuest("standing"));
+
 const CARDEX_ZOOM_TILT_MAX_DEG = 14;
 const CARDEX_ZOOM_SCALE = 2.4;
 const cardexZoomCardEl = document.getElementById("cardex-zoom-card");

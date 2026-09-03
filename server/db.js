@@ -267,6 +267,16 @@ async function connectDB() {
     )
   `);
   await db.execute(`
+    CREATE TABLE IF NOT EXISTS quest_progress (
+      user_id INTEGER PRIMARY KEY,
+      daily_wins INTEGER NOT NULL DEFAULT 0,
+      daily_date TEXT NOT NULL DEFAULT '',
+      daily_claimed INTEGER NOT NULL DEFAULT 0,
+      standing_wins INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS stage_decks (
       stage_id INTEGER PRIMARY KEY,
       deck_card_ids TEXT NOT NULL DEFAULT '[]',

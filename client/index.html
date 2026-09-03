@@ -71,6 +71,7 @@
       <button id="btn-logout" class="hud-logout-btn" title="로그아웃">로그아웃</button>
       <button id="btn-toggle-admin" class="hud-admin-btn hidden" title="관리자 패널">🛠️ 관리자</button>
       <button id="btn-open-rulebook" class="hud-rulebook-btn" title="룰북 보기">📖 룰북</button>
+      <button id="btn-open-quest" class="hud-quest-btn" title="퀘스트">🎯 퀘스트</button>
       <button id="btn-toggle-sound" class="hud-sound-btn" title="효과음 켜기/끄기">🔊 효과음</button>
 
       <p id="lobby-status" class="lobby-status-toast"></p>
@@ -267,6 +268,26 @@
         <option value="">전체 계열</option>
       </select>
       <div id="admin-card-list"></div>
+    </div>
+
+    <div id="quest-backdrop" class="hidden modal-backdrop"></div>
+    <div id="quest-panel" class="hidden modal-panel">
+      <div class="admin-panel-header">
+        <h2>퀘스트</h2>
+        <button id="btn-close-quest" class="admin-close-btn" title="닫기">✕</button>
+      </div>
+      <div class="quest-item">
+        <h3>일일 퀘스트</h3>
+        <p>AI 매치든 투기장이든 1승 달성 시 보상 수령 가능 (매일 초기화)</p>
+        <p id="quest-daily-progress"></p>
+        <button id="btn-claim-daily" disabled>🪙 5000 받기</button>
+      </div>
+      <div class="quest-item">
+        <h3>상시 퀘스트</h3>
+        <p>AI 매치든 투기장이든 누적 3승 달성 시 보상 수령 가능 (반복 가능)</p>
+        <p id="quest-standing-progress"></p>
+        <button id="btn-claim-standing" disabled>🪙 5000 받기</button>
+      </div>
     </div>
 
     <div id="rulebook-backdrop" class="hidden modal-backdrop"></div>
