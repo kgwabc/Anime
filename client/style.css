@@ -567,8 +567,8 @@ button:active {
 
 .hud-quest-btn {
   position: absolute;
-  right: 2%;
-  top: 24%;
+  left: 2%;
+  top: 16%;
   padding: 5px 12px;
   font-size: 13px;
   line-height: 1;
@@ -584,7 +584,7 @@ button:active {
 .hud-sound-btn {
   position: absolute;
   right: 2%;
-  top: 28%;
+  top: 24%;
   padding: 5px 12px;
   font-size: 13px;
   line-height: 1;
