@@ -233,8 +233,17 @@ function setQuestOpen(open) {
 }
 
 function renderQuestPanel({ dailyWins, dailyClaimed, standingWins }) {
-  document.getElementById("quest-daily-progress").textContent = `일일 승리: ${Math.min(dailyWins, 1)}/1`;
-  document.getElementById("btn-claim-daily").disabled = dailyClaimed || dailyWins < 1;
+  const dailyProgressEl = document.getElementById("quest-daily-progress");
+  const dailyBtn = document.getElementById("btn-claim-daily");
+  if (dailyClaimed) {
+    dailyProgressEl.textContent = "일일 퀘스트 완료! 내일 다시 초기화됩니다.";
+    dailyBtn.textContent = "완료";
+    dailyBtn.disabled = true;
+  } else {
+    dailyProgressEl.textContent = `일일 승리: ${Math.min(dailyWins, 1)}/1`;
+    dailyBtn.textContent = "🪙 5000 받기";
+    dailyBtn.disabled = dailyWins < 1;
+  }
 
   document.getElementById("quest-standing-progress").textContent = `누적 승리: ${Math.min(standingWins, 3)}/3`;
   document.getElementById("btn-claim-standing").disabled = standingWins < 3;

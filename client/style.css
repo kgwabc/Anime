@@ -277,6 +277,20 @@ body:has(#screen-loading:not(.hidden)) {
   margin: 4px 0;
 }
 
+.quest-claim-btn:disabled {
+  background: #4a4a52;
+  color: #9a9aa2;
+  border-color: #6a6a72;
+  opacity: 0.7;
+  cursor: default;
+}
+
+.quest-claim-btn:disabled:hover {
+  filter: none;
+  transform: none;
+  box-shadow: none;
+}
+
 .cardex-zoom-panel {
   width: auto;
   max-width: 92vw;
