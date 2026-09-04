@@ -72,6 +72,7 @@
       <button id="btn-toggle-admin" class="hud-admin-btn hidden" title="관리자 패널">🛠️ 관리자</button>
       <button id="btn-open-rulebook" class="hud-rulebook-btn" title="룰북 보기">📖 룰북</button>
       <button id="btn-open-quest" class="hud-quest-btn" title="퀘스트">🎯 퀘스트</button>
+      <button id="btn-open-ranking" class="hud-ranking-btn" title="랭킹">🏆 랭킹</button>
       <button id="btn-toggle-sound" class="hud-sound-btn" title="효과음 켜기/끄기">🔊 효과음</button>
 
       <p id="lobby-status" class="lobby-status-toast"></p>
@@ -288,6 +289,16 @@
         <p id="quest-standing-progress"></p>
         <button id="btn-claim-standing" class="quest-claim-btn" disabled>🪙 5000 받기</button>
       </div>
+    </div>
+
+    <div id="ranking-backdrop" class="hidden modal-backdrop"></div>
+    <div id="ranking-panel" class="hidden modal-panel">
+      <div class="admin-panel-header">
+        <h2>랭킹</h2>
+        <button id="btn-close-ranking" class="admin-close-btn" title="닫기">✕</button>
+      </div>
+      <p id="ranking-my-score"></p>
+      <ol id="ranking-list" class="ranking-list"></ol>
     </div>
 
     <div id="rulebook-backdrop" class="hidden modal-backdrop"></div>

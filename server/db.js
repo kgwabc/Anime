@@ -36,6 +36,14 @@ async function migrateUsersCoinsColumn(db) {
   }
 }
 
+async function migrateUsersRankColumn(db) {
+  const info = await db.execute("PRAGMA table_info(users)");
+  const existingCols = new Set(info.rows.map((col) => col.name));
+  if (!existingCols.has("rank_score")) {
+    await db.execute("ALTER TABLE users ADD COLUMN rank_score INTEGER NOT NULL DEFAULT 1000");
+  }
+}
+
 async function migrateCardsTable(db) {
   const info = await db.execute("PRAGMA table_info(cards)");
   const existingCols = new Set(info.rows.map((col) => col.name));
@@ -190,10 +198,12 @@ async function connectDB() {
       username TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
       coins INTEGER NOT NULL DEFAULT 5000,
+      rank_score INTEGER NOT NULL DEFAULT 1000,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
   await migrateUsersCoinsColumn(db);
+  await migrateUsersRankColumn(db);
   await db.execute(`
     CREATE TABLE IF NOT EXISTS cards (
       id TEXT PRIMARY KEY,

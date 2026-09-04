@@ -12,6 +12,7 @@ const deckRoutes = require("./routes/deckRoutes");
 const shopRoutes = require("./routes/shopRoutes");
 const stageRoutes = require("./routes/stageRoutes");
 const questRoutes = require("./routes/questRoutes");
+const rankingRoutes = require("./routes/rankingRoutes");
 const { socketAuthMiddleware } = require("./auth/socketAuth");
 const { listCards } = require("./models/Card");
 const { getDeckByUserId } = require("./models/Deck");
@@ -24,7 +25,7 @@ const { getHighestCleared, setHighestCleared } = require("./models/StageProgress
 const { getStageDeckCardIds } = require("./models/StageDecks");
 const { listRandomAiPoolCardIds } = require("./models/RandomAiPoolCards");
 const { getArenaTier } = require("./data/arenaTiers");
-const { addCoins, deductCoins } = require("./models/User");
+const { addCoins, deductCoins, addRankScore } = require("./models/User");
 const { recordWin } = require("./models/Quest");
 
 function shuffle(array) {
@@ -50,6 +51,7 @@ app.use("/decks", deckRoutes);
 app.use("/shop", shopRoutes);
 app.use("/stages", stageRoutes);
 app.use("/quests", questRoutes);
+app.use("/rankings", rankingRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -135,6 +137,9 @@ async function handleGameOver(room, roomId, { reason } = {}) {
     await addCoins(winnerUserId, room.tier.winReward);
     winnerCoinsDelta = room.tier.winReward - room.tier.entryCost;
     loserCoinsDelta = -room.tier.entryCost;
+    const loserUserId = room.players[loserId].userId;
+    await addRankScore(winnerUserId, 50);
+    await addRankScore(loserUserId, -25);
   } else if (room.isAiMatch && winnerId !== room.aiPlayerId) {
     await addCoins(winnerUserId, AI_MODE_WIN_REWARD);
     winnerCoinsDelta = AI_MODE_WIN_REWARD;

@@ -298,6 +298,72 @@ document.getElementById("btn-close-quest").addEventListener("click", () => {
 document.getElementById("btn-claim-daily").addEventListener("click", () => claimQuest("daily"));
 document.getElementById("btn-claim-standing").addEventListener("click", () => claimQuest("standing"));
 
+// ---------- 랭킹 ----------
+
+function setRankingOpen(open) {
+  document.getElementById("ranking-panel").classList.toggle("hidden", !open);
+  document.getElementById("ranking-backdrop").classList.toggle("hidden", !open);
+  if (open) refreshRankingPanel();
+}
+
+function renderRankingPanel({ myScore, myRank, top }) {
+  document.getElementById("ranking-my-score").textContent =
+    myRank != null ? `내 순위: ${myRank}위 (점수: ${myScore})` : `내 점수: ${myScore}`;
+
+  const listEl = document.getElementById("ranking-list");
+  listEl.innerHTML = "";
+  top.forEach((entry, index) => {
+    const li = document.createElement("li");
+
+    const numEl = document.createElement("span");
+    numEl.className = "rank-num";
+    numEl.textContent = String(index + 1);
+
+    const nameEl = document.createElement("span");
+    nameEl.className = "rank-name";
+    nameEl.textContent = entry.username;
+
+    const scoreEl = document.createElement("span");
+    scoreEl.className = "rank-score";
+    scoreEl.textContent = String(entry.rank_score);
+
+    li.append(numEl, nameEl, scoreEl);
+    listEl.appendChild(li);
+  });
+}
+
+async function refreshRankingPanel() {
+  try {
+    const [topRes, mineRes] = await Promise.all([
+      fetch(`${SERVER_URL}/rankings/top`, {
+        headers: { Authorization: `Bearer ${currentAuthToken}` },
+      }),
+      fetch(`${SERVER_URL}/rankings/mine`, {
+        headers: { Authorization: `Bearer ${currentAuthToken}` },
+      }),
+    ]);
+    const topData = await topRes.json();
+    const mineData = await mineRes.json();
+    if (topData.ok && mineData.ok) {
+      renderRankingPanel({ myScore: mineData.myScore, myRank: mineData.myRank, top: topData.top });
+    }
+  } catch (err) {
+    // 랭킹 조회 실패는 치명적이지 않으므로 조용히 무시
+  }
+}
+
+document.getElementById("btn-open-ranking").addEventListener("click", () => {
+  setRankingOpen(true);
+});
+
+document.getElementById("ranking-backdrop").addEventListener("click", () => {
+  setRankingOpen(false);
+});
+
+document.getElementById("btn-close-ranking").addEventListener("click", () => {
+  setRankingOpen(false);
+});
+
 const CARDEX_ZOOM_TILT_MAX_DEG = 14;
 const CARDEX_ZOOM_SCALE = 2.4;
 const cardexZoomCardEl = document.getElementById("cardex-zoom-card");

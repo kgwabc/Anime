@@ -55,6 +55,39 @@ async function deductCoins(userId, amount) {
   return result.rows[0] ? Number(result.rows[0].coins) : null;
 }
 
+async function addRankScore(userId, delta) {
+  const result = await getClient().execute({
+    sql: "UPDATE users SET rank_score = MAX(0, rank_score + ?) WHERE id = ? RETURNING rank_score",
+    args: [delta, userId],
+  });
+  return result.rows[0] ? Number(result.rows[0].rank_score) : null;
+}
+
+async function getLeaderboard(limit = 100) {
+  const result = await getClient().execute({
+    sql: "SELECT username, rank_score FROM users ORDER BY rank_score DESC, username ASC LIMIT ?",
+    args: [limit],
+  });
+  return result.rows;
+}
+
+async function getRankScore(userId) {
+  const result = await getClient().execute({
+    sql: "SELECT rank_score FROM users WHERE id = ? LIMIT 1",
+    args: [userId],
+  });
+  if (!result.rows[0]) return null;
+  const score = Number(result.rows[0].rank_score);
+
+  const rankResult = await getClient().execute({
+    sql: "SELECT COUNT(*) AS higher FROM users WHERE rank_score > ?",
+    args: [score],
+  });
+  const rank = Number(rankResult.rows[0].higher) + 1;
+
+  return { score, rank };
+}
+
 module.exports = {
   findUserByUsername,
   createUser,
@@ -63,4 +96,7 @@ module.exports = {
   addCoins,
   deductCoins,
   getCoins,
+  addRankScore,
+  getLeaderboard,
+  getRankScore,
 };
