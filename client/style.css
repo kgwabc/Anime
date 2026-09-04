@@ -2544,6 +2544,11 @@ button:active {
   box-shadow: 0 16px 34px rgba(0, 0, 0, 0.5), 0 0 24px rgba(215, 155, 255, 0.55);
 }
 
+.arena-tier-tile--t100000[data-offset="0"] {
+  border-color: #ff6a3d;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.5), 0 0 24px rgba(255, 106, 61, 0.55);
+}
+
 .pack-card {
   display: flex;
   flex-direction: column;
