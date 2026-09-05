@@ -483,6 +483,8 @@ io.on("connection", (socket) => {
       playerId: socket.id,
       card: result.card,
       effectResults: result.effectResults,
+      transformedCardId: result.transformedCardId,
+      transformEffect: result.transformEffect,
     });
     broadcastGameState(room);
     handleGameOver(room, roomId);
@@ -504,6 +506,8 @@ io.on("connection", (socket) => {
       card: result.card,
       targetCharacterId,
       effectResults: result.effectResults,
+      transformedCardId: result.transformedCardId,
+      transformEffect: result.transformEffect,
     });
     broadcastGameState(room);
     handleGameOver(room, roomId);

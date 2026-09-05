@@ -74,8 +74,8 @@ function removeWithCompanions(board, cardId) {
 }
 
 function registerTransformTrigger(target, catalogId) {
-  if (!target.transformTriggerEquipId || target.isTransformed) return;
-  if (catalogId !== target.transformTriggerEquipId) return;
+  if (!target.transformTriggerEquipId || target.isTransformed) return false;
+  if (catalogId !== target.transformTriggerEquipId) return false;
   target.transformProgress = (target.transformProgress || 0) + 1;
   if (target.transformProgress >= (target.transformRequiredCount || 2)) {
     target.isTransformed = true;
@@ -85,7 +85,9 @@ function registerTransformTrigger(target, catalogId) {
     if (target.transformImage) target.image = target.transformImage;
     if (target.transformAttackName) target.attackName = target.transformAttackName;
     if (target.transformAttackEffect) target.attackEffect = target.transformAttackEffect;
+    return true;
   }
+  return false;
 }
 
 class GameRoom {
@@ -195,6 +197,8 @@ class GameRoom {
     let onPlaySkillName = null;
     let onPlaySkillEffect = null;
     let onPlayEffectResults = [];
+    let transformedCardId = null;
+    let transformEffect = null;
     if (card.type === "spell") {
       applyEffectList(this, playerId, card.effects, "IMMEDIATE", context, card.requiredTargetTag);
       if (chosenTargetCardId) {
@@ -202,7 +206,10 @@ class GameRoom {
         const targetChar =
           player.board.find((c) => c.id === chosenTargetCardId) ||
           opponent?.board.find((c) => c.id === chosenTargetCardId);
-        if (targetChar) registerTransformTrigger(targetChar, card.catalogId);
+        if (targetChar && registerTransformTrigger(targetChar, card.catalogId)) {
+          transformedCardId = targetChar.id;
+          transformEffect = targetChar.transformEffect || null;
+        }
       }
     } else {
       card.canAttack = false;
@@ -236,6 +243,8 @@ class GameRoom {
         skillEffect: onPlaySkillEffect,
       },
       effectResults: onPlayEffectResults,
+      transformedCardId,
+      transformEffect,
     };
   }
 
@@ -297,7 +306,7 @@ class GameRoom {
       target.attackEffect = card.attackEffectOverride;
     }
 
-    registerTransformTrigger(target, card.catalogId);
+    const transformed = registerTransformTrigger(target, card.catalogId);
 
     const statBonusResult =
       card.equipAtkBonus || card.equipHpBonus
@@ -308,6 +317,8 @@ class GameRoom {
       ok: true,
       card: { id: card.id, type: card.type, name: card.name, image: card.image, equipEffect: card.equipEffect || null },
       effectResults: [...statBonusResult, ...equipEffectResults],
+      transformedCardId: transformed ? target.id : null,
+      transformEffect: transformed ? target.transformEffect || null : null,
     };
   }
 

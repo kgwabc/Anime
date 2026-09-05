@@ -997,6 +997,11 @@ function renderAdminCards(cards, token) {
       card.transformAttackEffect || ""
     );
 
+    const transformEffectSelect = createOptionSelect(
+      [["", "변신 시 이펙트 없음"], ...elementEffectOptions.slice(1)],
+      card.transformEffect || ""
+    );
+
     const transformThumbImg = document.createElement("img");
     transformThumbImg.className = "admin-card-thumb";
     transformThumbImg.title = "변신 후 이미지 (저장된 미리보기)";
@@ -1044,6 +1049,7 @@ function renderAdminCards(cards, token) {
       transformNameInput.classList.toggle("hidden", type !== "character");
       transformAttackNameInput.classList.toggle("hidden", type !== "character");
       transformAttackEffectSelect.classList.toggle("hidden", type !== "character");
+      transformEffectSelect.classList.toggle("hidden", type !== "character");
       transformImageInput.classList.toggle("hidden", type !== "character");
       transformThumbImg.classList.toggle("hidden", type !== "character" || !card.transformImage);
       equipAtkInput.classList.toggle("hidden", type !== "equipment");
@@ -1101,6 +1107,7 @@ function renderAdminCards(cards, token) {
         fields.transformName = transformNameInput.value || null;
         fields.transformAttackName = transformAttackNameInput.value || null;
         fields.transformAttackEffect = transformAttackEffectSelect.value || null;
+        fields.transformEffect = transformEffectSelect.value || null;
         if (transformImageInput.files[0]) {
           fields.transformImage = await readImageAsCompressedDataUrl(transformImageInput.files[0]);
         }
@@ -1152,6 +1159,7 @@ function renderAdminCards(cards, token) {
       transformNameInput,
       transformAttackNameInput,
       transformAttackEffectSelect,
+      transformEffectSelect,
       transformThumbImg,
       transformImageInput,
       equipAtkInput,
@@ -2378,8 +2386,13 @@ function registerSocketHandlers() {
     resultAutoReturnTimer = setTimeout(returnToLobby, 15000);
   });
 
-  socket.on("card_played", ({ playerId, card, targetCharacterId, effectResults }) => {
+  socket.on("card_played", ({ playerId, card, targetCharacterId, effectResults, transformedCardId, transformEffect }) => {
     window.GameSound?.playCardSound();
+
+    if (transformedCardId) {
+      const existing = pendingBuffEffects.get(transformedCardId) || {};
+      pendingBuffEffects.set(transformedCardId, { ...existing, transformEffect });
+    }
 
     if (card?.type === "spell") {
       showSpellEffect(card);
@@ -2391,7 +2404,13 @@ function registerSocketHandlers() {
     }
 
     if (targetCharacterId) {
-      pendingBuffEffects.set(targetCharacterId, { playerId, effectResults, equipEffect: card?.equipEffect || null });
+      const existing = pendingBuffEffects.get(targetCharacterId) || {};
+      pendingBuffEffects.set(targetCharacterId, {
+        ...existing,
+        playerId,
+        effectResults,
+        equipEffect: card?.equipEffect || null,
+      });
       return;
     }
 
@@ -3774,10 +3793,11 @@ function applyPendingCardEffects(boardEl, role) {
       flashClass(card, "card-spread-in", 450);
     }
     if (pendingBuffEffects.has(cardId)) {
-      const { effectResults, equipEffect } = pendingBuffEffects.get(cardId);
+      const { effectResults, equipEffect, transformEffect } = pendingBuffEffects.get(cardId);
       pendingBuffEffects.delete(cardId);
       flashClass(card, "buff-flash", 600);
       if (equipEffect) showElementEffect(card, equipEffect);
+      if (transformEffect) showElementEffect(card, transformEffect);
       showEffectResultPopups(effectResults);
     }
   }
