@@ -2386,10 +2386,10 @@ function registerSocketHandlers() {
     resultAutoReturnTimer = setTimeout(returnToLobby, 15000);
   });
 
-  socket.on("card_played", ({ playerId, card, targetCharacterId, effectResults, transformedCardId, transformEffect }) => {
+  socket.on("card_played", ({ playerId, card, targetCharacterId, effectResults, transformedCards }) => {
     window.GameSound?.playCardSound();
 
-    if (transformedCardId) {
+    for (const { cardId: transformedCardId, transformEffect } of transformedCards || []) {
       const existing = pendingBuffEffects.get(transformedCardId) || {};
       pendingBuffEffects.set(transformedCardId, { ...existing, transformEffect });
     }

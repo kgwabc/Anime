@@ -197,18 +197,12 @@ class GameRoom {
     let onPlaySkillName = null;
     let onPlaySkillEffect = null;
     let onPlayEffectResults = [];
-    let transformedCardId = null;
-    let transformEffect = null;
+    const transformedCards = [];
     if (card.type === "spell") {
       applyEffectList(this, playerId, card.effects, "IMMEDIATE", context, card.requiredTargetTag);
-      if (chosenTargetCardId) {
-        const opponent = this.players[this.getOpponentId(playerId)];
-        const targetChar =
-          player.board.find((c) => c.id === chosenTargetCardId) ||
-          opponent?.board.find((c) => c.id === chosenTargetCardId);
-        if (targetChar && registerTransformTrigger(targetChar, card.catalogId)) {
-          transformedCardId = targetChar.id;
-          transformEffect = targetChar.transformEffect || null;
+      for (const boardChar of player.board) {
+        if (registerTransformTrigger(boardChar, card.catalogId)) {
+          transformedCards.push({ cardId: boardChar.id, transformEffect: boardChar.transformEffect || null });
         }
       }
     } else {
@@ -243,8 +237,7 @@ class GameRoom {
         skillEffect: onPlaySkillEffect,
       },
       effectResults: onPlayEffectResults,
-      transformedCardId,
-      transformEffect,
+      transformedCards,
     };
   }
 
@@ -317,8 +310,7 @@ class GameRoom {
       ok: true,
       card: { id: card.id, type: card.type, name: card.name, image: card.image, equipEffect: card.equipEffect || null },
       effectResults: [...statBonusResult, ...equipEffectResults],
-      transformedCardId: transformed ? target.id : null,
-      transformEffect: transformed ? target.transformEffect || null : null,
+      transformedCards: transformed ? [{ cardId: target.id, transformEffect: target.transformEffect || null }] : [],
     };
   }
 
