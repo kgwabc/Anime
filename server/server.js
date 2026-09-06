@@ -101,8 +101,9 @@ function handleTurnTimeout(roomId) {
   if (!room || room.isGameOver()) return;
 
   const currentPlayerId = room.playerOrder[room.currentPlayerIndex];
-  room.endTurn(currentPlayerId);
+  const endTurnResult = room.endTurn(currentPlayerId);
   if (!room.isGameOver()) scheduleTurnTimer(room, roomId);
+  broadcastSimonEvolutions(room, endTurnResult);
   broadcastGameState(room);
 
   if (!room.isGameOver() && room.isAiMatch && room.isPlayersTurn(room.aiPlayerId)) {
@@ -120,6 +121,16 @@ function broadcastEffect(room, event, payload) {
   for (const playerId of room.playerOrder) {
     io.to(playerId).emit(event, payload);
   }
+}
+
+const SIMON_EVOLVE_MESSAGE = "우리는 일 분 전의 우리보다 진화한다!";
+
+function broadcastSimonEvolutions(room, endTurnResult) {
+  if (!endTurnResult?.simonEvolutions?.length) return;
+  broadcastEffect(room, "simon_evolved", {
+    cardIds: endTurnResult.simonEvolutions.map((e) => e.cardId),
+    message: SIMON_EVOLVE_MESSAGE,
+  });
 }
 
 async function handleGameOver(room, roomId, { reason } = {}) {
@@ -221,6 +232,7 @@ function stepAiTurn(room, roomId) {
     const result = room.endTurn(aiId);
     if (result.ok) {
       scheduleTurnTimer(room, roomId);
+      broadcastSimonEvolutions(room, result);
       broadcastGameState(room);
     }
   }, aiThinkDelay());
@@ -554,6 +566,7 @@ io.on("connection", (socket) => {
     }
 
     scheduleTurnTimer(room, roomId);
+    broadcastSimonEvolutions(room, result);
     broadcastGameState(room);
     if (room.isAiMatch && !room.isGameOver() && room.isPlayersTurn(room.aiPlayerId)) {
       setTimeout(() => stepAiTurn(room, roomId), aiThinkDelay());

@@ -2386,6 +2386,15 @@ function registerSocketHandlers() {
     resultAutoReturnTimer = setTimeout(returnToLobby, 15000);
   });
 
+  socket.on("simon_evolved", ({ cardIds, message }) => {
+    for (const cardId of cardIds || []) {
+      const el =
+        document.getElementById("my-board").querySelector(`.card[data-card-id="${cardId}"]`) ||
+        document.getElementById("opp-board").querySelector(`.card[data-card-id="${cardId}"]`);
+      showSkillNamePopup(el, message, "evolve");
+    }
+  });
+
   socket.on("card_played", ({ playerId, card, targetCharacterId, effectResults, transformedCards }) => {
     window.GameSound?.playCardSound();
 

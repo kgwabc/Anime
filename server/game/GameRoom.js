@@ -29,6 +29,10 @@ function buildDeck(deckCards, playerId) {
 // 이 카드 하나에만 적용되는 예외라서 effects 스키마 대신 이름으로 직접 분기한다.
 const JINWOO_CARD_NAME = "성진우";
 
+// 시몬 카드 전용 하드코딩 성장 시스템 — 매 턴 종료마다 양쪽 보드의 시몬 모두 +1/+1되는,
+// 이 카드 하나에만 적용되는 예외라서 effects 스키마 대신 이름으로 직접 분기한다.
+const SIMON_CARD_NAME = "시몬";
+
 function makeJinwooCompanion(jinwooCard, { suffix, name, atk, image }) {
   return {
     id: `${jinwooCard.id}_${suffix}`,
@@ -470,7 +474,18 @@ class GameRoom {
       card.hasAttacked = false;
     }
 
-    return { ok: true };
+    const simonEvolutions = [];
+    for (const id of this.playerOrder) {
+      for (const card of this.players[id].board) {
+        if (card.name === SIMON_CARD_NAME) {
+          card.atk += 1;
+          card.hp += 1;
+          simonEvolutions.push({ cardId: card.id });
+        }
+      }
+    }
+
+    return { ok: true, simonEvolutions };
   }
 
   isGameOver() {
